@@ -1,0 +1,91 @@
+import {
+  LayoutDashboard,
+  CalendarRange,
+  Compass,
+  Calendar,
+  Truck,
+  Users,
+  ClipboardList,
+  DollarSign,
+  Wrench,
+  Settings,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { NavLink, useLocation } from "react-router-dom";
+import { useState } from "react";
+import { cn } from "@/lib/utils";
+
+const navItems = [
+  { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "Events Hub", url: "/events", icon: CalendarRange },
+  { title: "Discover", url: "/discover", icon: Compass },
+  { title: "Calendar", url: "/calendar", icon: Calendar },
+  { title: "Trailers", url: "/trailers", icon: Truck },
+  { title: "Staff", url: "/staff", icon: Users },
+  { title: "Bookings", url: "/bookings", icon: ClipboardList },
+  { title: "Financials", url: "/financials", icon: DollarSign },
+  { title: "Maintenance", url: "/maintenance", icon: Wrench },
+  { title: "Settings", url: "/settings", icon: Settings },
+];
+
+export function AppSidebar() {
+  const [collapsed, setCollapsed] = useState(false);
+  const location = useLocation();
+
+  return (
+    <aside
+      className={cn(
+        "flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out",
+        collapsed ? "w-[68px]" : "w-[240px]"
+      )}
+      style={{ background: "var(--gradient-sidebar)" }}
+    >
+      {/* Logo */}
+      <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg gradient-warm">
+          <Truck className="h-4 w-4 text-primary-foreground" />
+        </div>
+        {!collapsed && (
+          <span className="text-lg font-bold text-sidebar-accent-foreground tracking-tight">
+            TrailerOS
+          </span>
+        )}
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 space-y-1 px-3 py-4">
+        {navItems.map((item) => {
+          const isActive =
+            item.url === "/"
+              ? location.pathname === "/"
+              : location.pathname.startsWith(item.url);
+
+          return (
+            <NavLink
+              key={item.title}
+              to={item.url}
+              className={cn(
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                isActive
+                  ? "bg-sidebar-accent text-sidebar-primary"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
+              )}
+            >
+              <item.icon className="h-[18px] w-[18px] shrink-0" />
+              {!collapsed && <span>{item.title}</span>}
+            </NavLink>
+          );
+        })}
+      </nav>
+
+      {/* Collapse toggle */}
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className="flex items-center justify-center border-t border-sidebar-border p-3 text-sidebar-muted hover:text-sidebar-accent-foreground transition-colors"
+      >
+        {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+      </button>
+    </aside>
+  );
+}
