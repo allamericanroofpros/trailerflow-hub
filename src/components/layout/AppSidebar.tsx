@@ -82,13 +82,25 @@ export function AppSidebar() {
         })}
       </nav>
 
-      {/* Collapse toggle */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center justify-center border-t border-sidebar-border p-3 text-sidebar-muted hover:text-sidebar-accent-foreground transition-colors"
-      >
-        {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-      </button>
+      {/* Sign out & collapse */}
+      <div className="border-t border-sidebar-border">
+        <button
+          onClick={() => signOut()}
+          className={cn(
+            "flex w-full items-center gap-3 px-6 py-3 text-sm font-medium text-sidebar-muted hover:text-sidebar-accent-foreground transition-colors",
+            collapsed && "justify-center px-3"
+          )}
+        >
+          <LogOut className="h-4 w-4 shrink-0" />
+          {!collapsed && <span>Sign Out</span>}
+        </button>
+        <button
+          onClick={() => setCollapsed(!collapsed)}
+          className="flex w-full items-center justify-center p-3 text-sidebar-muted hover:text-sidebar-accent-foreground transition-colors"
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+        </button>
+      </div>
     </aside>
   );
 }
