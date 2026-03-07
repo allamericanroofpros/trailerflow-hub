@@ -1,55 +1,34 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Sparkles, MapPin, Calendar, Users as UsersIcon, DollarSign, Plus, ChevronRight, AlertTriangle } from "lucide-react";
+import { Sparkles, MapPin, Calendar, Users as UsersIcon, DollarSign, Plus, ChevronRight, AlertTriangle, Loader2 } from "lucide-react";
 import { useState } from "react";
+import { useEventsByStage, useEvent, useCreateEvent, useUpdateEvent } from "@/hooks/useEvents";
+import { useToggleChecklistItem } from "@/hooks/useChecklist";
+import { useTrailers } from "@/hooks/useTrailers";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
 
-interface EventItem {
-  id: string;
-  name: string;
-  date: string;
-  location: string;
-  trailer: string;
-  revenue: string;
-  confidence: number;
-  attendance: string;
-}
+type EventStage = Database["public"]["Enums"]["event_stage"];
 
-const stages = ["Lead", "Applied", "Tentative", "Confirmed", "Completed", "Closed"] as const;
+const stages: EventStage[] = ["lead", "applied", "tentative", "confirmed", "completed", "closed"];
 
-const stageColors: Record<string, string> = {
-  Lead: "border-t-muted-foreground",
-  Applied: "border-t-info",
-  Tentative: "border-t-warning",
-  Confirmed: "border-t-success",
-  Completed: "border-t-primary",
-  Closed: "border-t-border",
+const stageLabels: Record<EventStage, string> = {
+  lead: "Lead",
+  applied: "Applied",
+  tentative: "Tentative",
+  confirmed: "Confirmed",
+  completed: "Completed",
+  closed: "Closed",
 };
 
-const mockEvents: Record<string, EventItem[]> = {
-  Lead: [
-    { id: "1", name: "Summer Food Fest", date: "Jun 14–15", location: "Downtown Park", trailer: "Sweet Scoops", revenue: "$2,800–$4,200", confidence: 65, attendance: "5,000+" },
-    { id: "2", name: "Tech Campus Lunch", date: "Jun 20", location: "Innovation Hub", trailer: "Brew Mobile", revenue: "$800–$1,200", confidence: 40, attendance: "300" },
-  ],
-  Applied: [
-    { id: "3", name: "Riverside Market", date: "May 24", location: "River Walk", trailer: "Kettle Kings", revenue: "$1,400–$1,900", confidence: 55, attendance: "2,000" },
-  ],
-  Tentative: [
-    { id: "4", name: "Corporate Wellness Day", date: "May 18", location: "BioTech Campus", trailer: "Brew Mobile", revenue: "$1,600–$2,200", confidence: 72, attendance: "400" },
-    { id: "5", name: "Spring Wedding Expo", date: "May 25", location: "Grand Hall", trailer: "Sweet Scoops", revenue: "$2,200–$3,100", confidence: 78, attendance: "800" },
-  ],
-  Confirmed: [
-    { id: "6", name: "Founders Day Festival", date: "May 10", location: "City Square", trailer: "Sweet Scoops", revenue: "$3,800–$5,200", confidence: 92, attendance: "8,000" },
-    { id: "7", name: "Little League Finals", date: "May 12", location: "Sports Complex", trailer: "Kettle Kings", revenue: "$1,200–$1,800", confidence: 88, attendance: "1,500" },
-    { id: "8", name: "Art Walk Nights", date: "May 16", location: "Gallery District", trailer: "Brew Mobile", revenue: "$900–$1,400", confidence: 85, attendance: "600" },
-  ],
-  Completed: [
-    { id: "9", name: "Earth Day Market", date: "Apr 22", location: "Green Park", trailer: "Kettle Kings", revenue: "$2,100", confidence: 100, attendance: "3,200" },
-  ],
-  Closed: [
-    { id: "10", name: "Winter Gala (Lost)", date: "Feb 14", location: "Convention Center", trailer: "—", revenue: "—", confidence: 0, attendance: "—" },
-  ],
+const stageColors: Record<EventStage, string> = {
+  lead: "border-t-muted-foreground",
+  applied: "border-t-info",
+  tentative: "border-t-warning",
+  confirmed: "border-t-success",
+  completed: "border-t-primary",
+  closed: "border-t-border",
 };
-
-const selectedEvent = mockEvents.Confirmed[0];
 
 const aiInsights = [
   "Founders Day historically yields 15-20% above forecast. Consider adding a second trailer.",
@@ -57,8 +36,70 @@ const aiInsights = [
   "Sweet Scoops performs 32% better at festivals vs. corporate events.",
 ];
 
+function formatRevenue(low?: number | null, high?: number | null, actual?: number | null): string {
+  if (actual) return `$${actual.toLocaleString()}`;
+  if (low && high) return `$${low.toLocaleString()}–$${high.toLocaleString()}`;
+  if (low) return `$${low.toLocaleString()}+`;
+  return "—";
+}
+
+function formatDate(date?: string | null, endDate?: string | null): string {
+  if (!date) return "TBD";
+  const d = new Date(date + "T00:00:00");
+  const opts: Intl.DateTimeFormatOptions = { month: "short", day: "numeric" };
+  const start = d.toLocaleDateString("en-US", opts);
+  if (endDate && endDate !== date) {
+    const e = new Date(endDate + "T00:00:00");
+    return `${start}–${e.toLocaleDateString("en-US", { day: "numeric" })}`;
+  }
+  return start;
+}
+
 export default function EventsHub() {
-  const [selected, setSelected] = useState<EventItem>(selectedEvent);
+  const { data: grouped, isLoading } = useEventsByStage();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const { data: selectedEvent } = useEvent(selectedId ?? undefined);
+  const { data: trailers } = useTrailers();
+  const createEvent = useCreateEvent();
+  const updateEvent = useUpdateEvent();
+  const toggleChecklist = useToggleChecklistItem();
+  const { user } = useAuth();
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newEventName, setNewEventName] = useState("");
+
+  const handleAddEvent = async () => {
+    if (!newEventName.trim()) return;
+    try {
+      const result = await createEvent.mutateAsync({
+        name: newEventName.trim(),
+        stage: "lead",
+        created_by: user?.id,
+      });
+      setNewEventName("");
+      setShowAddForm(false);
+      setSelectedId(result.id);
+      toast.success("Event added to pipeline");
+    } catch {
+      toast.error("Failed to create event");
+    }
+  };
+
+  const handleStageChange = async (eventId: string, newStage: EventStage) => {
+    try {
+      await updateEvent.mutateAsync({ id: eventId, stage: newStage });
+      toast.success(`Moved to ${stageLabels[newStage]}`);
+    } catch {
+      toast.error("Failed to update stage");
+    }
+  };
+
+  // Auto-select first confirmed event if nothing selected
+  if (!selectedId && grouped) {
+    const firstEvent = grouped.confirmed?.[0] || grouped.lead?.[0] || Object.values(grouped).flat()[0];
+    if (firstEvent) {
+      setSelectedId(firstEvent.id);
+    }
+  }
 
   return (
     <AppLayout>
@@ -68,130 +109,217 @@ export default function EventsHub() {
             <h1 className="text-2xl font-bold tracking-tight">Events Hub</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage your event pipeline from discovery to completion.</p>
           </div>
-          <button className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
-            <Plus className="h-4 w-4" />
-            Add Event
-          </button>
-        </div>
-
-        <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-thin">
-          {/* Kanban Board */}
-          <div className="flex gap-4 min-w-max flex-1">
-            {stages.map((stage) => (
-              <div key={stage} className="w-[260px] shrink-0">
-                <div className="mb-3 flex items-center justify-between">
-                  <h3 className="text-sm font-semibold text-foreground">{stage}</h3>
-                  <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
-                    {mockEvents[stage]?.length || 0}
-                  </span>
-                </div>
-                <div className="space-y-2">
-                  {mockEvents[stage]?.map((event) => (
-                    <button
-                      key={event.id}
-                      onClick={() => setSelected(event)}
-                      className={`w-full rounded-lg border-t-[3px] ${stageColors[stage]} border border-border bg-card p-3.5 text-left shadow-card hover:shadow-card-hover transition-all ${
-                        selected.id === event.id ? "ring-2 ring-primary/30" : ""
-                      }`}
-                    >
-                      <p className="text-sm font-semibold text-card-foreground">{event.name}</p>
-                      <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                        <Calendar className="h-3 w-3" />
-                        {event.date}
-                      </div>
-                      <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                        <MapPin className="h-3 w-3" />
-                        {event.location}
-                      </div>
-                      <div className="mt-3 flex items-center justify-between">
-                        <span className="text-xs font-medium text-primary">{event.revenue}</span>
-                        {event.confidence > 0 && (
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                            event.confidence >= 80
-                              ? "bg-success/10 text-success"
-                              : event.confidence >= 60
-                              ? "bg-warning/10 text-warning"
-                              : "bg-muted text-muted-foreground"
-                          }`}>
-                            {event.confidence}%
-                          </span>
-                        )}
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Selected Event Detail + AI Panel */}
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {/* Event Detail */}
-          <div className="lg:col-span-2 rounded-xl border border-border bg-card p-6 shadow-card">
-            <div className="flex items-start justify-between mb-5">
-              <div>
-                <h2 className="text-lg font-bold text-card-foreground">{selected.name}</h2>
-                <p className="text-sm text-muted-foreground mt-0.5">{selected.date} · {selected.location}</p>
-              </div>
-              <span className="rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
-                {selected.confidence}% confidence
-              </span>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
-              {[
-                { label: "Attendance Est.", value: selected.attendance, icon: UsersIcon },
-                { label: "Forecasted Revenue", value: selected.revenue, icon: DollarSign },
-                { label: "Assigned Trailer", value: selected.trailer, icon: MapPin },
-                { label: "Risk Level", value: "Low", icon: AlertTriangle },
-              ].map((item) => (
-                <div key={item.label} className="rounded-lg bg-background p-3 border border-border">
-                  <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
-                    <item.icon className="h-3 w-3" />
-                    <span className="text-[11px]">{item.label}</span>
-                  </div>
-                  <p className="text-sm font-semibold text-card-foreground">{item.value}</p>
-                </div>
-              ))}
-            </div>
-
-            {/* Checklist */}
-            <div className="mt-6">
-              <h4 className="text-sm font-semibold text-card-foreground mb-3">Event Checklist</h4>
-              <div className="space-y-2">
-                {["Confirm vendor fee", "Assign staff (2 needed)", "Load trailer inventory", "Submit insurance docs", "Route & travel plan"].map((item, i) => (
-                  <label key={item} className="flex items-center gap-3 rounded-lg bg-background border border-border p-3 cursor-pointer hover:shadow-card transition-shadow">
-                    <input type="checkbox" defaultChecked={i < 2} className="rounded border-border text-primary" />
-                    <span className={`text-sm ${i < 2 ? "text-muted-foreground line-through" : "text-card-foreground"}`}>{item}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* AI Insights Panel */}
-          <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold text-card-foreground">AI Insights</h3>
-            </div>
-            <div className="space-y-3">
-              {aiInsights.map((insight, i) => (
-                <div key={i} className="rounded-lg bg-background border border-border p-3.5">
-                  <p className="text-sm text-card-foreground leading-relaxed">{insight}</p>
-                </div>
-              ))}
-            </div>
-            <div className="mt-4 rounded-lg gradient-warm p-4">
-              <p className="text-sm font-medium text-primary-foreground">Suggested Action</p>
-              <p className="text-xs text-primary-foreground/80 mt-1">Deploy Sweet Scoops + Brew Mobile to Founders Day for estimated $6,200–$8,400 combined revenue.</p>
-              <button className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary-foreground underline underline-offset-2">
-                Apply Suggestion <ChevronRight className="h-3 w-3" />
+          {showAddForm ? (
+            <div className="flex items-center gap-2">
+              <input
+                autoFocus
+                value={newEventName}
+                onChange={(e) => setNewEventName(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleAddEvent()}
+                placeholder="Event name..."
+                className="rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              <button
+                onClick={handleAddEvent}
+                disabled={createEvent.isPending}
+                className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {createEvent.isPending ? "Adding..." : "Add"}
+              </button>
+              <button onClick={() => setShowAddForm(false)} className="text-sm text-muted-foreground hover:text-foreground">
+                Cancel
               </button>
             </div>
-          </div>
+          ) : (
+            <button
+              onClick={() => setShowAddForm(true)}
+              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              Add Event
+            </button>
+          )}
         </div>
+
+        {isLoading ? (
+          <div className="flex items-center justify-center py-20">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="flex gap-6 overflow-x-auto pb-4 scrollbar-thin">
+            <div className="flex gap-4 min-w-max flex-1">
+              {stages.map((stage) => {
+                const events = grouped?.[stage] ?? [];
+                return (
+                  <div key={stage} className="w-[260px] shrink-0">
+                    <div className="mb-3 flex items-center justify-between">
+                      <h3 className="text-sm font-semibold text-foreground">{stageLabels[stage]}</h3>
+                      <span className="rounded-full bg-secondary px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                        {events.length}
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      {events.map((event) => (
+                        <button
+                          key={event.id}
+                          onClick={() => setSelectedId(event.id)}
+                          className={`w-full rounded-lg border-t-[3px] ${stageColors[stage]} border border-border bg-card p-3.5 text-left shadow-card hover:shadow-card-hover transition-all ${
+                            selectedId === event.id ? "ring-2 ring-primary/30" : ""
+                          }`}
+                        >
+                          <p className="text-sm font-semibold text-card-foreground">{event.name}</p>
+                          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+                            <Calendar className="h-3 w-3" />
+                            {formatDate(event.event_date, event.event_end_date)}
+                          </div>
+                          <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
+                            <MapPin className="h-3 w-3" />
+                            {event.location || "No location"}
+                          </div>
+                          <div className="mt-3 flex items-center justify-between">
+                            <span className="text-xs font-medium text-primary">
+                              {formatRevenue(event.revenue_forecast_low, event.revenue_forecast_high, event.actual_revenue)}
+                            </span>
+                            {(event.confidence ?? 0) > 0 && (
+                              <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
+                                (event.confidence ?? 0) >= 80
+                                  ? "bg-success/10 text-success"
+                                  : (event.confidence ?? 0) >= 60
+                                  ? "bg-warning/10 text-warning"
+                                  : "bg-muted text-muted-foreground"
+                              }`}>
+                                {event.confidence}%
+                              </span>
+                            )}
+                          </div>
+                        </button>
+                      ))}
+                      {events.length === 0 && (
+                        <p className="text-xs text-muted-foreground text-center py-6 border border-dashed border-border rounded-lg">
+                          No events
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Selected Event Detail + AI Panel */}
+        {selectedEvent && (
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+            <div className="lg:col-span-2 rounded-xl border border-border bg-card p-6 shadow-card">
+              <div className="flex items-start justify-between mb-5">
+                <div>
+                  <h2 className="text-lg font-bold text-card-foreground">{selectedEvent.name}</h2>
+                  <p className="text-sm text-muted-foreground mt-0.5">
+                    {formatDate(selectedEvent.event_date, selectedEvent.event_end_date)} · {selectedEvent.location || "No location"}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  {/* Stage selector */}
+                  <select
+                    value={selectedEvent.stage}
+                    onChange={(e) => handleStageChange(selectedEvent.id, e.target.value as EventStage)}
+                    className="rounded-lg border border-border bg-background px-2 py-1 text-xs font-medium outline-none"
+                  >
+                    {stages.map((s) => (
+                      <option key={s} value={s}>{stageLabels[s]}</option>
+                    ))}
+                  </select>
+                  <span className="rounded-full bg-success/10 px-3 py-1 text-xs font-semibold text-success">
+                    {selectedEvent.confidence ?? 50}% confidence
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                {[
+                  { label: "Attendance Est.", value: selectedEvent.attendance_estimate?.toLocaleString() || "—", icon: UsersIcon },
+                  { label: "Forecasted Revenue", value: formatRevenue(selectedEvent.revenue_forecast_low, selectedEvent.revenue_forecast_high, selectedEvent.actual_revenue), icon: DollarSign },
+                  { label: "Assigned Trailer", value: (selectedEvent as any).trailers?.name || "Unassigned", icon: MapPin },
+                  { label: "Risk Level", value: selectedEvent.risk_level || "Low", icon: AlertTriangle },
+                ].map((item) => (
+                  <div key={item.label} className="rounded-lg bg-background p-3 border border-border">
+                    <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+                      <item.icon className="h-3 w-3" />
+                      <span className="text-[11px]">{item.label}</span>
+                    </div>
+                    <p className="text-sm font-semibold text-card-foreground">{item.value}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Vendor Fee */}
+              {(selectedEvent.vendor_fee ?? 0) > 0 && (
+                <div className="mt-4 rounded-lg bg-background p-3 border border-border">
+                  <span className="text-[11px] text-muted-foreground">Vendor Fee</span>
+                  <p className="text-sm font-semibold text-card-foreground">${selectedEvent.vendor_fee?.toLocaleString()}</p>
+                </div>
+              )}
+
+              {/* Checklist */}
+              <div className="mt-6">
+                <h4 className="text-sm font-semibold text-card-foreground mb-3">Event Checklist</h4>
+                <div className="space-y-2">
+                  {(selectedEvent as any).event_checklist_items?.length > 0 ? (
+                    (selectedEvent as any).event_checklist_items
+                      .sort((a: any, b: any) => a.sort_order - b.sort_order)
+                      .map((item: any) => (
+                        <label key={item.id} className="flex items-center gap-3 rounded-lg bg-background border border-border p-3 cursor-pointer hover:shadow-card transition-shadow">
+                          <input
+                            type="checkbox"
+                            checked={item.completed}
+                            onChange={() => toggleChecklist.mutate({ id: item.id, completed: !item.completed })}
+                            className="rounded border-border text-primary"
+                          />
+                          <span className={`text-sm ${item.completed ? "text-muted-foreground line-through" : "text-card-foreground"}`}>
+                            {item.label}
+                          </span>
+                        </label>
+                      ))
+                  ) : (
+                    <p className="text-xs text-muted-foreground py-3">No checklist items yet. Add them from the database.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* AI Insights Panel */}
+            <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+              <div className="flex items-center gap-2 mb-4">
+                <Sparkles className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-card-foreground">AI Insights</h3>
+              </div>
+              <div className="space-y-3">
+                {aiInsights.map((insight, i) => (
+                  <div key={i} className="rounded-lg bg-background border border-border p-3.5">
+                    <p className="text-sm text-card-foreground leading-relaxed">{insight}</p>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-4 rounded-lg gradient-warm p-4">
+                <p className="text-sm font-medium text-primary-foreground">Suggested Action</p>
+                <p className="text-xs text-primary-foreground/80 mt-1">
+                  {trailers && trailers.length >= 2
+                    ? `Deploy ${trailers[0]?.name} + ${trailers[1]?.name} for maximum revenue coverage.`
+                    : "Add trailers to your fleet to get deployment suggestions."}
+                </p>
+                <button className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary-foreground underline underline-offset-2">
+                  Apply Suggestion <ChevronRight className="h-3 w-3" />
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {!selectedEvent && !isLoading && (
+          <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center">
+            <p className="text-sm text-muted-foreground">Select an event from the pipeline above, or add a new one to get started.</p>
+          </div>
+        )}
       </div>
     </AppLayout>
   );
