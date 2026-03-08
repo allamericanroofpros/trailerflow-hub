@@ -110,6 +110,7 @@ export default function Trailers() {
       staff_required: form.staff_required ? parseInt(form.staff_required) : 1,
       staff_hourly_rate: form.staff_hourly_rate ? parseFloat(form.staff_hourly_rate) : 15,
       avg_food_cost_percent: form.avg_food_cost_percent ? parseFloat(form.avg_food_cost_percent) : 30,
+      target_margin: form.target_margin ? parseFloat(form.target_margin) : 70,
       owner_id: user!.id,
     };
 
