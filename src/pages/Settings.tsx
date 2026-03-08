@@ -484,7 +484,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="mt-4 flex justify-center">
-                  <Button variant="ghost" size="sm" onClick={() => { checkSubscription(); toast.success("Subscription status refreshed"); }}>
+                  <Button variant="ghost" size="sm" onClick={() => { checkSubscription(); refreshOrg(); toast.success("Subscription status refreshed"); }}>
                     Refresh Status
                   </Button>
                 </div>
