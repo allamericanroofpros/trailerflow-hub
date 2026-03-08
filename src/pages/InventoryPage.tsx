@@ -161,7 +161,7 @@ export default function Inventory() {
           cleanPayload[key] = null;
         }
       }
-      await updateItem.mutateAsync(cleanPayload);
+      await updateItem.mutateAsync(cleanPayload as { id: string; [key: string]: any });
       setEditItem(null);
       toast.success("Item updated");
     } catch (e: any) { toast.error(e.message); }
