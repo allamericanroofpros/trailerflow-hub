@@ -93,7 +93,7 @@ export default function POS() {
     items: { name: string; quantity: number; price: number }[];
     subtotal: number; tax: number; tip: number; total: number;
     paymentMethod: string; cashTendered?: number; changeDue?: number;
-    orderId: string;
+    orderId: string; surchargeAmount?: number; surchargeLabel?: string;
   } | null>(null);
 
   const handleExitPOS = () => {
