@@ -23,6 +23,7 @@ import Signup from "./pages/Signup";
 import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
+import ReceiptPage from "./pages/Receipt";
 
 const queryClient = new QueryClient();
 
