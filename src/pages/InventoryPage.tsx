@@ -272,7 +272,7 @@ export default function Inventory() {
             <Label>Current Stock (# of units ordered)</Label>
             <FieldTip tip="How many units you have on hand. E.g. if you have 2 tubs of 2.5 gal ice cream, enter 2 (total = 5 gal)." />
           </div>
-          <Input type="number" value={item.current_stock} onChange={(e) => setItem({ ...item, current_stock: Number(e.target.value) })} className="h-11" />
+          <Input type="number" value={item.current_stock} onChange={(e) => setItem({ ...item, current_stock: e.target.value })} className="h-11" />
           {unitSize > 0 && stock > 0 && (
             <p className="text-[10px] font-semibold text-primary mt-0.5">
               {stock} × {unitSize} {item.unit} = {totalVolume} {item.unit} total
