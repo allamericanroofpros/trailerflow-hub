@@ -507,16 +507,6 @@ export default function POS() {
                       </p>
                     </motion.button>
                   ))}
-                  {/* Open Price / Custom Item */}
-                  <motion.button
-                    whileTap={{ scale: 0.93 }}
-                    onClick={() => setShowCustomItem(true)}
-                    className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-secondary/30 p-5 text-center hover:border-primary/40 hover:shadow-md transition-all min-h-[120px] touch-manipulation"
-                  >
-                    <Tag className="h-7 w-7 text-muted-foreground mb-2" />
-                    <p className="text-sm font-bold text-muted-foreground">Custom Item</p>
-                    <p className="text-xs text-muted-foreground/70 mt-0.5">Open price</p>
-                  </motion.button>
                 </div>
               )}
             </div>
