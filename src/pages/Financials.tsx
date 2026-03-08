@@ -1,7 +1,8 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { DollarSign, TrendingUp, Truck, Plus, Loader2, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { DollarSign, TrendingUp, Truck, Plus, Loader2, ArrowUpRight, ArrowDownRight, Receipt } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from "recharts";
 import { useTransactions, useCreateTransaction } from "@/hooks/useTransactions";
+import { useOrders } from "@/hooks/useOrders";
 import { useTrailers } from "@/hooks/useTrailers";
 import { useEvents } from "@/hooks/useEvents";
 import { Input } from "@/components/ui/input";
