@@ -91,7 +91,7 @@ export default function ReceiptPage() {
               <span className="font-semibold">${Number(order.subtotal).toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm text-muted-foreground">
-              <span>Tax</span>
+              <span>{order.tax_label || "Tax"}</span>
               <span className="font-semibold">${Number(order.tax).toFixed(2)}</span>
             </div>
             {Number(order.tip) > 0 && (
