@@ -91,7 +91,7 @@ export default function AdminUsers() {
                     </td>
                     <td className="px-4 py-3">
                       <Badge
-                        variant={u.globalRole === "super_admin" ? "destructive" : "secondary"}
+                        variant={(u.globalRole as string) === "super_admin" ? "destructive" : "secondary"}
                         className="capitalize"
                       >
                         {u.globalRole}
