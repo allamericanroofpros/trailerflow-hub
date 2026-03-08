@@ -212,25 +212,7 @@ export default function POS() {
     }
   };
 
-  // Generic "Custom Item" row in menu_items table — avoids FK violation on order_items
-  const CUSTOM_ITEM_ID = "f8e25554-daf0-43fb-bb0a-a338af48d445";
-
-  const handleAddCustomItem = () => {
-    if (!customItemName.trim() || !customItemPrice) return;
-    const price = Number(customItemPrice);
-    if (price <= 0) return;
-    const uniqueKey = `${CUSTOM_ITEM_ID}::${Date.now()}`;
-    setCart((prev) => [...prev, {
-      menu_item_id: uniqueKey,
-      name: customItemName.trim(),
-      price,
-      quantity: 1,
-    }]);
-    setShowCustomItem(false);
-    setCustomItemName("");
-    setCustomItemPrice("");
-    toast.success(`Added ${customItemName.trim()}`);
-  };
+  // No custom items — all items come from the menu
 
   const categories = menuItems
     ? Array.from(new Set(menuItems.map((i) => i.category)))
