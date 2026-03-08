@@ -99,7 +99,7 @@ export default function Staff() {
   });
 
   // UI state
-  const [tab, setTab] = useState<"roster" | "schedule">("roster");
+  const [tab, setTab] = useState<"roles" | "roster" | "schedule">(isOwner ? "roles" : "roster");
   const [addingNew, setAddingNew] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", hourly_rate: "", status: "active" });
