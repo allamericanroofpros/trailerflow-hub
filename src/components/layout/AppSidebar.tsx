@@ -24,6 +24,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
+import { OrgSwitcher } from "./OrgSwitcher";
 
 type NavItem = {
   title: string;
