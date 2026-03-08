@@ -46,6 +46,7 @@ export default function Inventory() {
   const emptyNew = {
     name: "", unit: "each", current_stock: 0, par_level: 0, reorder_point: 0,
     cost_per_unit: 0, supplier: "", shelf_life_days: "", unit_size: "", serving_size: "",
+    serving_unit: "", serving_unit_conversion: "",
   };
   const [newItem, setNewItem] = useState(emptyNew);
 
