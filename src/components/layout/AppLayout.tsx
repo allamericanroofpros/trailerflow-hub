@@ -1,6 +1,7 @@
 import { ReactNode } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { TopBar } from "./TopBar";
+import { AIChatDrawer } from "@/components/ai/AIChatDrawer";
 
 export function AppLayout({ children }: { children: ReactNode }) {
   return (
@@ -12,6 +13,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
           {children}
         </main>
       </div>
+      <AIChatDrawer />
     </div>
   );
 }
