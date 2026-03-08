@@ -359,7 +359,7 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
   const avgPrice = menuItems?.length ? (menuItems.reduce((s, i) => s + Number(i.price), 0) / menuItems.length).toFixed(2) : "0.00";
   const nonCustomItems = menuItems?.filter(i => i.category !== "other") || [];
   const avgMargin = nonCustomItems.length
-    ? (nonCustomItems.reduce((s, i) => { const p = Number(i.price), c = Number(i.cost); return s + (p > 0 ? (p - c) / p * 100 : 0); }, 0) / nonCustomItems.length).toFixed(1)
+    ? (nonCustomItems.reduce((s, i) => { const p = Number(i.price), c = computeLiveCost(i, inventoryItems); return s + (p > 0 ? (p - c) / p * 100 : 0); }, 0) / nonCustomItems.length).toFixed(1)
     : "0.0";
 
   return (
