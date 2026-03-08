@@ -140,7 +140,8 @@ export default function Inventory() {
   const handleEditSave = async () => {
     if (!editItem) return;
     try {
-      await updateItem.mutateAsync({
+      // Build a clean payload with only valid, typed fields — avoids JSON serialization errors
+      const cleanPayload: Record<string, any> = {
         id: editItem.id,
         name: editItem.name,
         unit: editItem.unit,
@@ -153,7 +154,14 @@ export default function Inventory() {
         serving_size: editItem.serving_size ? Number(editItem.serving_size) : null,
         serving_unit: editItem.serving_unit || null,
         serving_unit_conversion: editItem.serving_unit_conversion ? Number(editItem.serving_unit_conversion) : null,
-      });
+      };
+      // Ensure no NaN values sneak through
+      for (const key of Object.keys(cleanPayload)) {
+        if (typeof cleanPayload[key] === "number" && isNaN(cleanPayload[key])) {
+          cleanPayload[key] = null;
+        }
+      }
+      await updateItem.mutateAsync(cleanPayload as { id: string; [key: string]: any });
       setEditItem(null);
       toast.success("Item updated");
     } catch (e: any) { toast.error(e.message); }

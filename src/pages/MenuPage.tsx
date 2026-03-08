@@ -133,14 +133,19 @@ export default function MenuPage() {
     if (!form.name.trim()) return toast.error("Name is required");
     if (form.price <= 0) return toast.error("Price must be greater than 0");
     try {
+      // Sanitize modifiers to strip undefined values that cause JSON errors
+      const cleanModifiers = form.modifiers.length > 0
+        ? JSON.parse(JSON.stringify(form.modifiers))
+        : null;
+
       const payload: any = {
         name: form.name,
         description: form.description || null,
         category: form.category,
-        price: form.price,
-        cost: ingredientCost, // auto-calculated
+        price: Number(form.price) || 0,
+        cost: Number(ingredientCost) || 0,
         is_active: form.is_active,
-        modifiers: form.modifiers.length > 0 ? form.modifiers : null,
+        modifiers: cleanModifiers,
         trailer_id: form.trailer_id || null,
       };
 
