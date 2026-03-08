@@ -451,7 +451,7 @@ export default function POS() {
                     <motion.button
                       key={item.id}
                       whileTap={{ scale: 0.93 }}
-                      onClick={() => addToCart({ id: item.id, name: item.name, price: Number(item.price) })}
+                      onClick={() => handleItemTap(item)}
                       className="flex flex-col rounded-2xl border-2 border-border bg-card p-5 text-left hover:border-primary/40 hover:shadow-lg transition-all min-h-[120px] touch-manipulation"
                     >
                       <p className="text-base font-black text-card-foreground line-clamp-2 leading-tight">
