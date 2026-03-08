@@ -291,8 +291,8 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
                   <p className="text-sm font-bold text-card-foreground">Setting PIN for {setupStaffName}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-muted-foreground">New PIN (4-6 digits)</label>
-                  <Input inputMode="numeric" pattern="[0-9]*" maxLength={6} value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, ""))}
+                  <label className="text-xs font-bold text-muted-foreground">New PIN (4 digits)</label>
+                  <Input inputMode="numeric" pattern="[0-9]*" maxLength={4} value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, ""))}
                     className="h-12 text-center text-2xl font-black tracking-[0.5em] rounded-xl border-2" placeholder="Enter PIN" autoFocus />
                 </div>
                 <div>
