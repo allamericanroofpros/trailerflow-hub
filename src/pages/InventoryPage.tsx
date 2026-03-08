@@ -36,7 +36,7 @@ export default function Inventory() {
   const [showAdd, setShowAdd] = useState(false);
   const [newItem, setNewItem] = useState({
     name: "", unit: "each", current_stock: 0, par_level: 0, reorder_point: 0,
-    cost_per_unit: 0, supplier: "", shelf_life_days: "",
+    cost_per_unit: 0, supplier: "", shelf_life_days: "", unit_size: "", serving_size: "",
   });
   const [adjustDialog, setAdjustDialog] = useState<{ id: string; name: string; unit: string } | null>(null);
   const [adjustAmount, setAdjustAmount] = useState("");
@@ -131,12 +131,14 @@ export default function Inventory() {
   const handleAddItem = async () => {
     if (!newItem.name.trim()) return toast.error("Name is required");
     try {
-      const { shelf_life_days, ...rest } = newItem;
+      const { shelf_life_days, unit_size, serving_size, ...rest } = newItem;
       const insertData: any = { ...rest };
       if (shelf_life_days) insertData.shelf_life_days = Number(shelf_life_days);
+      if (unit_size) insertData.unit_size = Number(unit_size);
+      if (serving_size) insertData.serving_size = Number(serving_size);
       await createItem.mutateAsync(insertData);
       setShowAdd(false);
-      setNewItem({ name: "", unit: "each", current_stock: 0, par_level: 0, reorder_point: 0, cost_per_unit: 0, supplier: "", shelf_life_days: "" });
+      setNewItem({ name: "", unit: "each", current_stock: 0, par_level: 0, reorder_point: 0, cost_per_unit: 0, supplier: "", shelf_life_days: "", unit_size: "", serving_size: "" });
       toast.success("Item added");
     } catch (e: any) { toast.error(e.message); }
   };
@@ -204,6 +206,16 @@ export default function Inventory() {
                   <div>
                     <Label>Shelf Life (days)</Label>
                     <Input type="number" min="1" placeholder="e.g. 7" value={newItem.shelf_life_days} onChange={(e) => setNewItem({ ...newItem, shelf_life_days: e.target.value })} className="h-11" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Unit Size (purchase qty)</Label>
+                    <Input type="number" step="0.01" min="0" placeholder="e.g. 50" value={newItem.unit_size} onChange={(e) => setNewItem({ ...newItem, unit_size: e.target.value })} className="h-11" />
+                  </div>
+                  <div>
+                    <Label>Serving Size</Label>
+                    <Input type="number" step="0.01" min="0" placeholder="e.g. 1.5" value={newItem.serving_size} onChange={(e) => setNewItem({ ...newItem, serving_size: e.target.value })} className="h-11" />
                   </div>
                 </div>
                 <div><Label>Supplier</Label><Input value={newItem.supplier} onChange={(e) => setNewItem({ ...newItem, supplier: e.target.value })} className="h-11" /></div>
@@ -302,6 +314,18 @@ export default function Inventory() {
                             <p className="font-semibold text-card-foreground">{shelfLife ? `${shelfLife}d` : `$${Number(item.cost_per_unit).toFixed(2)}`}</p>
                           </div>
                         </div>
+                        {((item as any).unit_size || (item as any).serving_size) && (
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                              <span className="text-muted-foreground">Unit Size</span>
+                              <p className="font-semibold text-card-foreground">{(item as any).unit_size ? `${Number((item as any).unit_size)} ${item.unit}` : "—"}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Serving</span>
+                              <p className="font-semibold text-card-foreground">{(item as any).serving_size ? `${Number((item as any).serving_size)} ${item.unit}` : "—"}</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -316,6 +340,8 @@ export default function Inventory() {
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground">Stock</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground">Par</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Shelf Life</th>
+                        <th className="text-right px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Unit Size</th>
+                        <th className="text-right px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Serving</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Cost/Unit</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">Supplier</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
@@ -346,6 +372,12 @@ export default function Inventory() {
                                   {shelfLife}d
                                 </span>
                               ) : "—"}
+                            </td>
+                            <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">
+                              {(item as any).unit_size ? `${Number((item as any).unit_size)} ${item.unit}` : "—"}
+                            </td>
+                            <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">
+                              {(item as any).serving_size ? `${Number((item as any).serving_size)} ${item.unit}` : "—"}
                             </td>
                             <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">${Number(item.cost_per_unit).toFixed(2)}</td>
                             <td className="text-right px-4 py-3 text-muted-foreground hidden lg:table-cell">{item.supplier || "—"}</td>
