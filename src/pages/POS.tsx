@@ -82,20 +82,49 @@ export default function POS() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  const addToCart = (item: { id: string; name: string; price: number }) => {
+  const addToCart = (item: { id: string; name: string; price: number }, selectedModifiers?: CartItem["selectedModifiers"]) => {
+    const modExtra = selectedModifiers?.reduce((s, m) => s + m.priceAdjust, 0) || 0;
+    const finalPrice = Number(item.price) + modExtra;
+    const modSuffix = selectedModifiers?.length ? ` (${selectedModifiers.map(m => m.label).join(", ")})` : "";
+    const cartKey = item.id + modSuffix;
+
     setCart((prev) => {
-      const existing = prev.find((c) => c.menu_item_id === item.id);
+      const existing = prev.find((c) => c.menu_item_id === cartKey);
       if (existing) {
         return prev.map((c) =>
-          c.menu_item_id === item.id ? { ...c, quantity: c.quantity + 1 } : c
+          c.menu_item_id === cartKey ? { ...c, quantity: c.quantity + 1 } : c
         );
       }
-      return [...prev, { menu_item_id: item.id, name: item.name, price: Number(item.price), quantity: 1 }];
+      return [...prev, { menu_item_id: cartKey, name: item.name + modSuffix, price: finalPrice, quantity: 1, selectedModifiers }];
     });
-    // On compact, briefly show cart indicator
-    if (isCompact && !mobileCartOpen) {
-      // Haptic-like visual pulse handled by AnimatePresence on FAB
+  };
+
+  const handleItemTap = (item: any) => {
+    const modifiers: Modifier[] = Array.isArray(item.modifiers) ? item.modifiers : [];
+    if (modifiers.length > 0) {
+      setShowModifierPicker({ item, modifiers });
+      setPendingModifiers({});
+    } else {
+      addToCart({ id: item.id, name: item.name, price: Number(item.price) });
     }
+  };
+
+  const confirmModifiers = () => {
+    if (!showModifierPicker) return;
+    const { item, modifiers } = showModifierPicker;
+    // Check required
+    for (const mod of modifiers) {
+      if (mod.required && !pendingModifiers[mod.name]) {
+        toast.error(`Please select ${mod.name}`);
+        return;
+      }
+    }
+    const selected = Object.entries(pendingModifiers).map(([groupName, opt]) => ({
+      groupName, ...opt,
+    }));
+    addToCart({ id: item.id, name: item.name, price: Number(item.price) }, selected.length > 0 ? selected : undefined);
+    setShowModifierPicker(null);
+    setPendingModifiers({});
   };
 
   const updateQuantity = (menuItemId: string, delta: number) => {
