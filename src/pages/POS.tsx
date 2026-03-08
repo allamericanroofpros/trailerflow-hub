@@ -169,6 +169,8 @@ export default function POS() {
         tip: tipAmount,
         payment_method: data.paymentMethod,
         payment_received: true,
+        trailer_id: sodData?.trailerId || undefined,
+        event_id: sodData?.eventId || undefined,
         notes: [
           customerName.trim() ? `Customer: ${customerName.trim()}` : "",
           specialInstructions.trim() ? `Instructions: ${specialInstructions.trim()}` : "",
