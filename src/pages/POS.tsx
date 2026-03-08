@@ -51,7 +51,8 @@ const categoryLabels: Record<string, string> = {
 
 export default function POS() {
   const navigate = useNavigate();
-  const { data: menuItems, isLoading: menuLoading } = useMenuItems();
+  const activeTrailerId = sodData?.trailerId || undefined;
+  const { data: menuItems, isLoading: menuLoading } = useMenuItems(activeTrailerId);
   const { data: activeOrders } = useActiveOrders();
   const createOrder = useCreateOrder();
   const updateStatus = useUpdateOrderStatus();
