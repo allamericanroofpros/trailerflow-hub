@@ -103,6 +103,13 @@ export default function SettingsPage() {
   const [taxPercent, setTaxPercent] = useState("0");
   const [taxInclusive, setTaxInclusive] = useState(false);
 
+  // Auto-refresh org data when landing on billing (e.g. returning from Stripe)
+  useEffect(() => {
+    if (activeSection === "billing") {
+      refreshOrg();
+    }
+  }, [activeSection]);
+
   const [paymentSettingsLoaded, setPaymentSettingsLoaded] = useState(false);
 
   useEffect(() => {
