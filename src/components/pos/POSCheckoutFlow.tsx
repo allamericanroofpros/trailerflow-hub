@@ -60,8 +60,12 @@ export default function POSCheckoutFlow({
   const handlePaymentSelect = async (method: "cash" | "card" | "digital") => {
     setSelectedPayment(method);
     if (method === "card") {
-      // Card → show tip screen first
-      setStep("tip");
+      // Card → process payment first, then ask for tip
+      setStep("processing");
+      const result = await processStripePayment(total);
+      if (result.success) {
+        setStep("tip");
+      }
     } else if (method === "cash") {
       setStep("cash");
     } else {
@@ -71,13 +75,9 @@ export default function POSCheckoutFlow({
     }
   };
 
-  const handleCardComplete = async () => {
+  const handleTipComplete = async () => {
     setStep("processing");
-    // TODO: Call real Stripe API here
-    const result = await processStripePayment(total + tipAmount);
-    if (result.success) {
-      await onComplete({ paymentMethod: "card", tip: tipAmount });
-    }
+    await onComplete({ paymentMethod: "card", tip: tipAmount });
   };
 
   const handleCashComplete = async () => {
