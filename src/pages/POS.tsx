@@ -224,6 +224,7 @@ export default function POS() {
         subtotal,
         tax,
         tax_label: taxSettings.label || "Sales Tax",
+        tax_inclusive: taxSettings.inclusive,
         total: grandTotal,
         tip: tipAmount,
         surcharge_amount: surcharge,
