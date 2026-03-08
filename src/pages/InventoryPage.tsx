@@ -202,7 +202,9 @@ export default function Inventory() {
     <TooltipProvider delayDuration={100}>
       <Tooltip>
         <TooltipTrigger asChild>
-          <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help shrink-0" />
+          <button type="button" className="inline-flex">
+            <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help shrink-0" />
+          </button>
         </TooltipTrigger>
         <TooltipContent side="top" className="max-w-[240px] text-xs">
           <p>{tip}</p>

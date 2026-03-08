@@ -22,6 +22,7 @@ import POSConfirmation from "@/components/pos/POSConfirmation";
 import POSOrderHistory from "@/components/pos/POSOrderHistory";
 import POSEndOfDay from "@/components/pos/POSEndOfDay";
 import POSStartOfDay from "@/components/pos/POSStartOfDay";
+import POSTimeClock from "@/components/pos/POSTimeClock";
 
 type Modifier = {
   name: string;
@@ -67,7 +68,7 @@ export default function POS() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [view, setView] = useState<"register" | "orders" | "history" | "sales" | "inventory" | "report">("register");
+  const [view, setView] = useState<"register" | "orders" | "history" | "sales" | "inventory" | "report" | "timeclock">("register");
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showModifierPicker, setShowModifierPicker] = useState<{ item: any; modifiers: Modifier[] } | null>(null);
@@ -417,6 +418,7 @@ export default function POS() {
           {[
             { key: "register" as const, label: "Register", icon: null },
             { key: "orders" as const, label: "Orders", icon: null, badge: activeOrders?.length },
+            { key: "timeclock" as const, label: "Clock", icon: Clock },
             { key: "history" as const, label: "History", icon: Receipt },
             { key: "sales" as const, label: "Sales", icon: BarChart3 },
             { key: "inventory" as const, label: "Stock", icon: Package },
@@ -707,6 +709,8 @@ export default function POS() {
             </div>
           )}
         </div>
+      ) : view === "timeclock" ? (
+        <POSTimeClock eventId={sodData?.eventId} trailerId={sodData?.trailerId} />
       ) : view === "history" ? (
         <POSOrderHistory />
       ) : view === "sales" ? (
