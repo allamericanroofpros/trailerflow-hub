@@ -829,6 +829,10 @@ export type Database = {
           surcharge_flat: number | null
           surcharge_label: string
           surcharge_percent: number
+          tax_enabled: boolean
+          tax_inclusive: boolean
+          tax_label: string
+          tax_percent: number
           updated_at: string
         }
         Insert: {
@@ -851,6 +855,10 @@ export type Database = {
           surcharge_flat?: number | null
           surcharge_label?: string
           surcharge_percent?: number
+          tax_enabled?: boolean
+          tax_inclusive?: boolean
+          tax_label?: string
+          tax_percent?: number
           updated_at?: string
         }
         Update: {
@@ -873,6 +881,10 @@ export type Database = {
           surcharge_flat?: number | null
           surcharge_label?: string
           surcharge_percent?: number
+          tax_enabled?: boolean
+          tax_inclusive?: boolean
+          tax_label?: string
+          tax_percent?: number
           updated_at?: string
         }
         Relationships: []
