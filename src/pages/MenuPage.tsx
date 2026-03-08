@@ -449,10 +449,10 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                   </Select>
                 </div>
                 <div><Label>Trailer</Label>
-                  <Select value={form.trailer_id} onValueChange={(v) => setForm({ ...form, trailer_id: v })}>
+                  <Select value={form.trailer_id || "__all__"} onValueChange={(v) => setForm({ ...form, trailer_id: v === "__all__" ? "" : v })}>
                     <SelectTrigger className="mt-1"><SelectValue placeholder="All trailers" /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="">All Trailers</SelectItem>
+                      <SelectItem value="__all__">All Trailers</SelectItem>
                       {trailers?.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
                     </SelectContent>
                   </Select>
