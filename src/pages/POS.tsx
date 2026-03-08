@@ -71,7 +71,7 @@ export default function POS() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCustomItem, setShowCustomItem] = useState(false);
   const [showModifierPicker, setShowModifierPicker] = useState<{ item: any; modifiers: Modifier[] } | null>(null);
-  const [pendingModifiers, setPendingModifiers] = useState<Record<string, { label: string; priceAdjust: number }>>({});
+  const [pendingModifiers, setPendingModifiers] = useState<Record<string, { label: string; priceAdjust: number }[]>>({});
   const [showEOD, setShowEOD] = useState(false);
   const [customItemName, setCustomItemName] = useState("");
   const [customItemPrice, setCustomItemPrice] = useState("");
@@ -124,14 +124,14 @@ export default function POS() {
     const { item, modifiers } = showModifierPicker;
     // Check required
     for (const mod of modifiers) {
-      if (mod.required && !pendingModifiers[mod.name]) {
+      if (mod.required && (!pendingModifiers[mod.name] || pendingModifiers[mod.name].length === 0)) {
         toast.error(`Please select ${mod.name}`);
         return;
       }
     }
-    const selected = Object.entries(pendingModifiers).map(([groupName, opt]) => ({
-      groupName, ...opt,
-    }));
+    const selected = Object.entries(pendingModifiers).flatMap(([groupName, opts]) =>
+      opts.map((opt) => ({ groupName, ...opt }))
+    );
     addToCart({ id: item.id, name: item.name, price: Number(item.price) }, selected.length > 0 ? selected : undefined);
     setShowModifierPicker(null);
     setPendingModifiers({});
@@ -797,22 +797,41 @@ export default function POS() {
               <div key={mod.name}>
                 <p className="text-sm font-bold text-card-foreground mb-2">{mod.name} {mod.required && <span className="text-destructive">*</span>}</p>
                 <div className="grid grid-cols-2 gap-2">
-                  {mod.options.map((opt) => (
-                    <button
-                      key={opt.label}
-                      onClick={() => setPendingModifiers(prev => ({ ...prev, [mod.name]: { label: opt.label, priceAdjust: opt.priceAdjust } }))}
-                      className={`rounded-xl border-2 p-3 text-left transition-all active:scale-95 touch-manipulation ${
-                        pendingModifiers[mod.name]?.label === opt.label
-                          ? "border-primary bg-primary/10"
-                          : "border-border hover:border-primary/30"
-                      }`}
-                    >
-                      <p className="text-sm font-bold text-card-foreground">{opt.label}</p>
-                      {opt.priceAdjust !== 0 && (
-                        <p className="text-xs text-primary font-semibold">+${opt.priceAdjust.toFixed(2)}</p>
-                      )}
-                    </button>
-                  ))}
+                  {mod.options.map((opt) => {
+                    const isSelected = (pendingModifiers[mod.name] || []).some(s => s.label === opt.label);
+                    return (
+                      <button
+                        key={opt.label}
+                        onClick={() => setPendingModifiers(prev => {
+                          const current = prev[mod.name] || [];
+                          const exists = current.some(s => s.label === opt.label);
+                          return {
+                            ...prev,
+                            [mod.name]: exists
+                              ? current.filter(s => s.label !== opt.label)
+                              : [...current, { label: opt.label, priceAdjust: opt.priceAdjust }],
+                          };
+                        })}
+                        className={`rounded-xl border-2 p-3 text-left transition-all active:scale-95 touch-manipulation flex items-center gap-2 ${
+                          isSelected
+                            ? "border-primary bg-primary/10"
+                            : "border-border hover:border-primary/30"
+                        }`}
+                      >
+                        <div className={`h-5 w-5 rounded border-2 flex items-center justify-center shrink-0 ${
+                          isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"
+                        }`}>
+                          {isSelected && <span className="text-primary-foreground text-xs font-black">✓</span>}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-card-foreground">{opt.label}</p>
+                          {opt.priceAdjust !== 0 && (
+                            <p className="text-xs text-primary font-semibold">+${opt.priceAdjust.toFixed(2)}</p>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             ))}
