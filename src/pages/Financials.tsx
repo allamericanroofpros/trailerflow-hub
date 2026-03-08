@@ -1,43 +1,96 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { DollarSign, Clock, TrendingUp, Truck } from "lucide-react";
-import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip, LineChart, Line, Legend } from "recharts";
-
-const eventPL = [
-  { event: "Founders Day", revenue: 5200, costs: 2100, profit: 3100, hours: 10, revPerHr: 520, profitPerHr: 310 },
-  { event: "Wedding Expo", revenue: 3100, costs: 1400, profit: 1700, hours: 6, revPerHr: 517, profitPerHr: 283 },
-  { event: "Downtown Market", revenue: 1800, costs: 800, profit: 1000, hours: 5, revPerHr: 360, profitPerHr: 200 },
-  { event: "Art Walk", revenue: 1400, costs: 700, profit: 700, hours: 4, revPerHr: 350, profitPerHr: 175 },
-  { event: "Tech Lunch", revenue: 1200, costs: 500, profit: 700, hours: 3, revPerHr: 400, profitPerHr: 233 },
-];
-
-const trailerComparison = [
-  { month: "Oct", "Sweet Scoops": 3200, "Brew Mobile": 2900, "Kettle Kings": 2200 },
-  { month: "Nov", "Sweet Scoops": 2800, "Brew Mobile": 3200, "Kettle Kings": 2600 },
-  { month: "Dec", "Sweet Scoops": 4100, "Brew Mobile": 2600, "Kettle Kings": 3100 },
-  { month: "Jan", "Sweet Scoops": 3600, "Brew Mobile": 3100, "Kettle Kings": 2400 },
-  { month: "Feb", "Sweet Scoops": 4800, "Brew Mobile": 3800, "Kettle Kings": 2800 },
-];
+import { DollarSign, TrendingUp, Truck, Plus, Loader2, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from "recharts";
+import { useTransactions, useCreateTransaction } from "@/hooks/useTransactions";
+import { useTrailers } from "@/hooks/useTrailers";
+import { useEvents } from "@/hooks/useEvents";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { toast } from "sonner";
+import { useMemo, useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Financials() {
+  const { data: transactions, isLoading } = useTransactions();
+  const { data: trailers } = useTrailers();
+  const { data: events } = useEvents();
+  const createTx = useCreateTransaction();
+  const { user } = useAuth();
+
+  const [addingNew, setAddingNew] = useState(false);
+  const [form, setForm] = useState({
+    type: "income", amount: "", description: "", category: "", trailer_id: "", event_id: "", transaction_date: new Date().toISOString().split("T")[0],
+  });
+
+  const resetForm = () => {
+    setForm({ type: "income", amount: "", description: "", category: "", trailer_id: "", event_id: "", transaction_date: new Date().toISOString().split("T")[0] });
+    setAddingNew(false);
+  };
+
+  const handleSave = () => {
+    if (!form.amount) { toast.error("Amount is required"); return; }
+    createTx.mutate({
+      type: form.type,
+      amount: parseFloat(form.amount),
+      description: form.description || null,
+      category: form.category || null,
+      trailer_id: form.trailer_id || null,
+      event_id: form.event_id || null,
+      transaction_date: form.transaction_date,
+      created_by: user?.id,
+    }, {
+      onSuccess: () => { resetForm(); toast.success("Transaction added"); },
+      onError: (e: any) => toast.error(e.message),
+    });
+  };
+
+  const stats = useMemo(() => {
+    if (!transactions?.length) return { totalIncome: 0, totalExpenses: 0, profit: 0, count: 0 };
+    const income = transactions.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
+    const expenses = transactions.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
+    return { totalIncome: income, totalExpenses: expenses, profit: income - expenses, count: transactions.length };
+  }, [transactions]);
+
+  // Chart: monthly income vs expenses
+  const chartData = useMemo(() => {
+    if (!transactions?.length) return [];
+    const byMonth: Record<string, { month: string; income: number; expenses: number }> = {};
+    transactions.forEach(t => {
+      const d = new Date(t.transaction_date);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+      const label = d.toLocaleDateString("en-US", { month: "short", year: "2-digit" });
+      if (!byMonth[key]) byMonth[key] = { month: label, income: 0, expenses: 0 };
+      if (t.type === "income") byMonth[key].income += t.amount;
+      else byMonth[key].expenses += t.amount;
+    });
+    return Object.entries(byMonth).sort(([a], [b]) => a.localeCompare(b)).map(([, v]) => v).slice(-6);
+  }, [transactions]);
+
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Financials</h1>
-          <p className="text-sm text-muted-foreground mt-1">Event-level profitability and fleet comparison.</p>
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Financials</h1>
+            <p className="text-sm text-muted-foreground mt-1">Track income, expenses, and profitability.</p>
+          </div>
+          <Button size="sm" onClick={() => { resetForm(); setAddingNew(true); }} className="gap-1.5">
+            <Plus className="h-3.5 w-3.5" /> Add Transaction
+          </Button>
         </div>
 
-        {/* Summary Cards */}
+        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "Total Revenue (6mo)", value: "$59,600", icon: DollarSign },
-            { label: "Total Profit", value: "$22,700", icon: TrendingUp },
-            { label: "Avg Rev/Hour", value: "$429", icon: Clock },
-            { label: "Best Performer", value: "Sweet Scoops", icon: Truck },
+            { label: "Total Income", value: `$${stats.totalIncome.toLocaleString()}`, icon: ArrowUpRight, color: "text-success" },
+            { label: "Total Expenses", value: `$${stats.totalExpenses.toLocaleString()}`, icon: ArrowDownRight, color: "text-destructive" },
+            { label: "Net Profit", value: `$${stats.profit.toLocaleString()}`, icon: TrendingUp, color: "text-primary" },
+            { label: "Transactions", value: stats.count.toString(), icon: DollarSign, color: "text-info" },
           ].map((s) => (
             <div key={s.label} className="rounded-xl border border-border bg-card p-4 shadow-card">
               <div className="flex items-center gap-2 mb-2">
-                <s.icon className="h-4 w-4 text-primary" />
+                <s.icon className={`h-4 w-4 ${s.color}`} />
                 <p className="text-xs text-muted-foreground">{s.label}</p>
               </div>
               <p className="text-xl font-bold text-card-foreground">{s.value}</p>
@@ -45,70 +98,124 @@ export default function Financials() {
           ))}
         </div>
 
-        {/* Event P&L Table */}
-        <div className="rounded-xl border border-border bg-card shadow-card overflow-hidden">
-          <div className="px-5 py-4 border-b border-border">
-            <h3 className="text-sm font-semibold text-card-foreground">Event-Level P&L</h3>
+        {/* Add Form */}
+        {addingNew && (
+          <div className="rounded-xl border border-primary/20 bg-card p-5 shadow-card">
+            <h3 className="text-sm font-semibold text-card-foreground mb-4">Add Transaction</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Type</label>
+                <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value })}
+                  className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none">
+                  <option value="income">Income</option>
+                  <option value="expense">Expense</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Amount ($) *</label>
+                <Input type="number" step="0.01" value={form.amount} onChange={(e) => setForm({ ...form, amount: e.target.value })} className="mt-1" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Date</label>
+                <Input type="date" value={form.transaction_date} onChange={(e) => setForm({ ...form, transaction_date: e.target.value })} className="mt-1" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Category</label>
+                <Input value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} placeholder="e.g. vendor fee, supplies, fuel" className="mt-1" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Trailer</label>
+                <select value={form.trailer_id} onChange={(e) => setForm({ ...form, trailer_id: e.target.value })}
+                  className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none">
+                  <option value="">None</option>
+                  {trailers?.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground">Event</label>
+                <select value={form.event_id} onChange={(e) => setForm({ ...form, event_id: e.target.value })}
+                  className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none">
+                  <option value="">None</option>
+                  {events?.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
+                </select>
+              </div>
+              <div className="md:col-span-2 lg:col-span-3">
+                <label className="text-xs font-medium text-muted-foreground">Description</label>
+                <Input value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} className="mt-1" />
+              </div>
+            </div>
+            <div className="flex items-center gap-2 mt-4">
+              <Button onClick={handleSave} disabled={createTx.isPending} className="gap-1.5">
+                {createTx.isPending ? "Saving..." : "Save"}
+              </Button>
+              <Button variant="ghost" onClick={resetForm}>Cancel</Button>
+            </div>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="border-b border-border bg-muted/50">
-                  {["Event", "Revenue", "Costs", "Profit", "Hours", "Rev/Hour", "Profit/Hour"].map((h) => (
-                    <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{h}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {eventPL.map((e) => (
-                  <tr key={e.event} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                    <td className="px-4 py-3 font-medium text-card-foreground">{e.event}</td>
-                    <td className="px-4 py-3 text-card-foreground">${e.revenue.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-muted-foreground">${e.costs.toLocaleString()}</td>
-                    <td className="px-4 py-3 font-medium text-success">${e.profit.toLocaleString()}</td>
-                    <td className="px-4 py-3 text-muted-foreground">{e.hours}h</td>
-                    <td className="px-4 py-3 text-card-foreground">${e.revPerHr}</td>
-                    <td className="px-4 py-3 text-card-foreground">${e.profitPerHr}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        )}
 
-        {/* Charts */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Profit by Event */}
+        {/* Chart */}
+        {chartData.length > 0 && (
           <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <h3 className="text-sm font-semibold text-card-foreground mb-4">Profit by Event</h3>
+            <h3 className="text-sm font-semibold text-card-foreground mb-4">Income vs Expenses</h3>
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={eventPL} barSize={28}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(30, 18%, 89%)" vertical={false} />
-                <XAxis dataKey="event" tick={{ fontSize: 11, fill: "hsl(20, 10%, 48%)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: "hsl(20, 10%, 48%)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} />
-                <Tooltip contentStyle={{ backgroundColor: "hsl(0, 0%, 100%)", border: "1px solid hsl(30, 18%, 89%)", borderRadius: "8px", fontSize: "12px" }} />
-                <Bar dataKey="revenue" fill="hsl(16, 65%, 48%)" radius={[4, 4, 0, 0]} name="Revenue" />
-                <Bar dataKey="profit" fill="hsl(152, 55%, 42%)" radius={[4, 4, 0, 0]} name="Profit" />
+              <BarChart data={chartData} barSize={24}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} />
+                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} />
+                <Bar dataKey="income" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} name="Income" />
+                <Bar dataKey="expenses" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} name="Expenses" />
               </BarChart>
             </ResponsiveContainer>
           </div>
+        )}
 
-          {/* Trailer Comparison */}
-          <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <h3 className="text-sm font-semibold text-card-foreground mb-4">Trailer Revenue Comparison</h3>
-            <ResponsiveContainer width="100%" height={260}>
-              <LineChart data={trailerComparison}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(30, 18%, 89%)" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(20, 10%, 48%)" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: "hsl(20, 10%, 48%)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
-                <Tooltip contentStyle={{ backgroundColor: "hsl(0, 0%, 100%)", border: "1px solid hsl(30, 18%, 89%)", borderRadius: "8px", fontSize: "12px" }} />
-                <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "12px" }} />
-                <Line type="monotone" dataKey="Sweet Scoops" stroke="hsl(16, 65%, 48%)" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="Brew Mobile" stroke="hsl(210, 70%, 52%)" strokeWidth={2} dot={{ r: 3 }} />
-                <Line type="monotone" dataKey="Kettle Kings" stroke="hsl(38, 85%, 52%)" strokeWidth={2} dot={{ r: 3 }} />
-              </LineChart>
-            </ResponsiveContainer>
+        {/* Transactions Table */}
+        <div className="rounded-xl border border-border bg-card shadow-card overflow-hidden">
+          <div className="px-5 py-4 border-b border-border">
+            <h3 className="text-sm font-semibold text-card-foreground">All Transactions</h3>
           </div>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-12">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : !transactions?.length ? (
+            <div className="py-12 text-center">
+              <DollarSign className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
+              <p className="text-sm text-muted-foreground">No transactions yet. Add your first transaction above.</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-muted/50">
+                    {["Date", "Type", "Description", "Category", "Event", "Trailer", "Amount"].map((h) => (
+                      <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {transactions.map((t: any) => (
+                    <tr key={t.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                      <td className="px-4 py-3 text-muted-foreground">{t.transaction_date}</td>
+                      <td className="px-4 py-3">
+                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                          t.type === "income" ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
+                        }`}>{t.type}</span>
+                      </td>
+                      <td className="px-4 py-3 text-card-foreground">{t.description || "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{t.category || "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{t.events?.name || "—"}</td>
+                      <td className="px-4 py-3 text-muted-foreground">{t.trailers?.name || "—"}</td>
+                      <td className={`px-4 py-3 font-medium ${t.type === "income" ? "text-success" : "text-destructive"}`}>
+                        {t.type === "income" ? "+" : "-"}${t.amount.toLocaleString()}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </AppLayout>
