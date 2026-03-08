@@ -56,6 +56,8 @@ export default function POS() {
   const createOrder = useCreateOrder();
   const updateStatus = useUpdateOrderStatus();
 
+  const [sodComplete, setSodComplete] = useState(false);
+  const [sodData, setSodData] = useState<{ trailerId: string | null; eventId: string | null; openingCash: number; notes: string } | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [view, setView] = useState<"register" | "orders" | "history" | "sales" | "inventory" | "report">("register");
