@@ -127,19 +127,19 @@ export function useSetStaffPin() {
   return useMutation({
     mutationFn: async ({ staffId, pin }: { staffId: string; pin: string }) => {
       // Check PIN is unique
-      const { data: existing } = await supabase
+      const { data: existing } = await (supabase
         .from("staff_members")
-        .select("id")
-        .eq("pin" as any, pin)
+        .select("id") as any)
+        .eq("pin", pin)
         .neq("id", staffId);
       if (existing && existing.length > 0) {
         throw new Error("This PIN is already taken. Choose another.");
       }
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from("staff_members")
         .update({ pin } as any)
         .eq("id", staffId)
-        .select()
+        .select() as any)
         .single();
       if (error) throw error;
       return data;
