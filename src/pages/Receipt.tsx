@@ -100,6 +100,12 @@ export default function ReceiptPage() {
                 <span className="font-semibold">${Number(order.tip).toFixed(2)}</span>
               </div>
             )}
+            {Number(order.surcharge_amount) > 0 && (
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>{order.surcharge_label || "Non-Cash Adjustment"}</span>
+                <span className="font-semibold">${Number(order.surcharge_amount).toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-lg font-black text-card-foreground pt-2 border-t border-border">
               <span>Total</span>
               <span>${Number(order.total).toFixed(2)}</span>

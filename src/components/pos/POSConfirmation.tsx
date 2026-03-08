@@ -26,12 +26,14 @@ type ConfirmationProps = {
   cashTendered?: number;
   changeDue?: number;
   orderId: string;
+  surchargeAmount?: number;
+  surchargeLabel?: string;
   onDone: () => void;
 };
 
 export default function POSConfirmation({
   orderNumber, items, subtotal, tax, tip, total,
-  paymentMethod, cashTendered, changeDue, orderId, onDone,
+  paymentMethod, cashTendered, changeDue, orderId, surchargeAmount, surchargeLabel, onDone,
 }: ConfirmationProps) {
   const [receiptMode, setReceiptMode] = useState<null | "qr" | "email" | "sms">(null);
   const [email, setEmail] = useState("");
@@ -113,6 +115,12 @@ export default function POSConfirmation({
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>Tip</span>
                 <span className="font-semibold text-success">${tip.toFixed(2)}</span>
+              </div>
+            )}
+            {(surchargeAmount ?? 0) > 0 && (
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>{surchargeLabel || "Non-Cash Adjustment"}</span>
+                <span className="font-semibold">${(surchargeAmount ?? 0).toFixed(2)}</span>
               </div>
             )}
             <div className="flex justify-between text-lg font-black text-card-foreground pt-2 border-t-2 border-border">

@@ -297,6 +297,12 @@ export default function POSOrderHistory() {
                       <span>${Number(selectedOrder.tip).toFixed(2)}</span>
                     </div>
                   )}
+                  {Number(selectedOrder.surcharge_amount) > 0 && (
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>{selectedOrder.surcharge_label || "Non-Cash Adjustment"}</span>
+                      <span>${Number(selectedOrder.surcharge_amount).toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between text-lg font-black text-card-foreground pt-2 border-t border-border">
                     <span>Total</span>
                     <span>${Number(selectedOrder.total).toFixed(2)}</span>
