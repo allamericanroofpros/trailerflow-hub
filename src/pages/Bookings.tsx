@@ -184,7 +184,7 @@ export default function Bookings() {
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Trailer</label>
                 <select value={form.trailer_id} onChange={(e) => setForm({ ...form, trailer_id: e.target.value })}
-                  className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none">
+                  className="mt-1 w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm outline-none">
                   <option value="">Unassigned</option>
                   {trailers?.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
