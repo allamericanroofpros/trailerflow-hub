@@ -165,6 +165,10 @@ export default function Trailers() {
   const activeCount = trailers?.filter((t) => t.status === "active").length || 0;
 
   const handleCopyTrailer = async (source: any) => {
+    if (!ent.canAddTrailer) {
+      setShowUpgrade(true);
+      return;
+    }
     try {
       const payload: any = {
         name: `${source.name} (Copy)`,
