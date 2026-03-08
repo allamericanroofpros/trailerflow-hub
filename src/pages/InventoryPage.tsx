@@ -148,6 +148,8 @@ export default function Inventory() {
         shelf_life_days: editItem.shelf_life_days ? Number(editItem.shelf_life_days) : null,
         unit_size: editItem.unit_size ? Number(editItem.unit_size) : null,
         serving_size: editItem.serving_size ? Number(editItem.serving_size) : null,
+        serving_unit: editItem.serving_unit || null,
+        serving_unit_conversion: editItem.serving_unit_conversion ? Number(editItem.serving_unit_conversion) : null,
       });
       setEditItem(null);
       toast.success("Item updated");
