@@ -78,6 +78,7 @@ export default function Trailers() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<TrailerForm>({ ...defaultForm });
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const { result: validation, isValidating, validate: runValidation, clear: clearValidation } = useTrailerValidation();
 
   const resetForm = () => {
     setForm({ ...defaultForm });
