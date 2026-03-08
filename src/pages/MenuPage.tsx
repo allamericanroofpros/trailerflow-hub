@@ -621,29 +621,85 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                         </button>
                       </div>
                       {mod.options.map((opt, optIdx) => (
-                        <div key={optIdx} className="flex items-center gap-2 ml-3">
-                          <span className="text-muted-foreground/50 text-xs">•</span>
-                          <Input
-                            value={opt.label}
-                            onChange={(e) => updateModifierOption(modIdx, optIdx, "label", e.target.value)}
-                            placeholder="e.g. Large"
-                            className="h-7 text-xs flex-1"
-                          />
-                          <div className="flex items-center gap-1 w-24">
-                            <span className="text-[10px] text-muted-foreground">+$</span>
+                        <div key={optIdx} className="ml-3 space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-muted-foreground/50 text-xs">•</span>
                             <Input
-                              type="number"
-                              step="0.25"
-                              value={opt.priceAdjust}
-                              onChange={(e) => updateModifierOption(modIdx, optIdx, "priceAdjust", Number(e.target.value))}
-                              className="h-7 text-xs"
+                              value={opt.label}
+                              onChange={(e) => updateModifierOption(modIdx, optIdx, "label", e.target.value)}
+                              placeholder="e.g. Large"
+                              className="h-7 text-xs flex-1"
                             />
+                            <div className="flex items-center gap-1 w-24">
+                              <span className="text-[10px] text-muted-foreground">+$</span>
+                              <Input
+                                type="number"
+                                step="0.25"
+                                value={opt.priceAdjust}
+                                onChange={(e) => updateModifierOption(modIdx, optIdx, "priceAdjust", Number(e.target.value))}
+                                className="h-7 text-xs"
+                              />
+                            </div>
+                            {mod.options.length > 1 && (
+                              <button onClick={() => removeModifierOption(modIdx, optIdx)} className="p-0.5 text-muted-foreground hover:text-destructive">
+                                <X className="h-3 w-3" />
+                              </button>
+                            )}
                           </div>
-                          {mod.options.length > 1 && (
-                            <button onClick={() => removeModifierOption(modIdx, optIdx)} className="p-0.5 text-muted-foreground hover:text-destructive">
-                              <X className="h-3 w-3" />
+                          {/* Inventory adjustments for this modifier option */}
+                          <div className="ml-5 space-y-1">
+                            {(opt.inventoryAdjustments || []).map((adj, adjIdx) => {
+                              const invItem = inventoryItems?.find(ii => ii.id === adj.inventoryItemId);
+                              return (
+                                <div key={adjIdx} className="flex items-center gap-1.5">
+                                  <Package className="h-2.5 w-2.5 text-muted-foreground" />
+                                  <select
+                                    value={adj.inventoryItemId}
+                                    onChange={(e) => {
+                                      const newAdjs = [...(opt.inventoryAdjustments || [])];
+                                      newAdjs[adjIdx] = { ...newAdjs[adjIdx], inventoryItemId: e.target.value };
+                                      updateModifierOption(modIdx, optIdx, "inventoryAdjustments", newAdjs);
+                                    }}
+                                    className="rounded border border-border bg-background text-foreground px-1.5 py-0.5 text-[10px] flex-1"
+                                  >
+                                    <option value="">Select item...</option>
+                                    {inventoryItems?.map(ii => <option key={ii.id} value={ii.id}>{ii.name} ({ii.unit})</option>)}
+                                  </select>
+                                  <Input
+                                    type="number"
+                                    step="0.01"
+                                    min="0"
+                                    value={adj.extraQty}
+                                    onChange={(e) => {
+                                      const newAdjs = [...(opt.inventoryAdjustments || [])];
+                                      newAdjs[adjIdx] = { ...newAdjs[adjIdx], extraQty: Number(e.target.value) };
+                                      updateModifierOption(modIdx, optIdx, "inventoryAdjustments", newAdjs);
+                                    }}
+                                    className="h-6 text-[10px] w-16"
+                                  />
+                                  <span className="text-[9px] text-muted-foreground">{invItem?.unit || ""}</span>
+                                  <button
+                                    onClick={() => {
+                                      const newAdjs = (opt.inventoryAdjustments || []).filter((_: any, i: number) => i !== adjIdx);
+                                      updateModifierOption(modIdx, optIdx, "inventoryAdjustments", newAdjs);
+                                    }}
+                                    className="p-0.5 text-muted-foreground hover:text-destructive"
+                                  >
+                                    <X className="h-2.5 w-2.5" />
+                                  </button>
+                                </div>
+                              );
+                            })}
+                            <button
+                              onClick={() => {
+                                const newAdjs = [...(opt.inventoryAdjustments || []), { inventoryItemId: "", extraQty: 1 }];
+                                updateModifierOption(modIdx, optIdx, "inventoryAdjustments", newAdjs);
+                              }}
+                              className="text-[10px] text-primary hover:underline flex items-center gap-0.5"
+                            >
+                              <Plus className="h-2.5 w-2.5" /> Inventory deduction
                             </button>
-                          )}
+                          </div>
                         </div>
                       ))}
                       <Button variant="ghost" size="sm" className="text-[10px] h-6 ml-3 gap-1" onClick={() => addModifierOption(modIdx)}>
