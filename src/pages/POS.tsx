@@ -124,14 +124,14 @@ export default function POS() {
     const { item, modifiers } = showModifierPicker;
     // Check required
     for (const mod of modifiers) {
-      if (mod.required && !pendingModifiers[mod.name]) {
+      if (mod.required && (!pendingModifiers[mod.name] || pendingModifiers[mod.name].length === 0)) {
         toast.error(`Please select ${mod.name}`);
         return;
       }
     }
-    const selected = Object.entries(pendingModifiers).map(([groupName, opt]) => ({
-      groupName, ...opt,
-    }));
+    const selected = Object.entries(pendingModifiers).flatMap(([groupName, opts]) =>
+      opts.map((opt) => ({ groupName, ...opt }))
+    );
     addToCart({ id: item.id, name: item.name, price: Number(item.price) }, selected.length > 0 ? selected : undefined);
     setShowModifierPicker(null);
     setPendingModifiers({});
