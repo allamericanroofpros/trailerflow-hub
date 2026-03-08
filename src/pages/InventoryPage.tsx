@@ -349,7 +349,7 @@ export default function Inventory() {
             <Label>Par Level</Label>
             <FieldTip tip="Target amount to have on hand for each event. Used to calculate ordering needs. Counted in # of units ordered." />
           </div>
-          <Input type="number" value={item.par_level} onChange={(e) => setItem({ ...item, par_level: Number(e.target.value) })} className="h-11" />
+          <Input type="number" value={item.par_level} onChange={(e) => setItem({ ...item, par_level: e.target.value })} className="h-11" />
         </div>
         <div>
           <div className="flex items-center gap-1.5">
