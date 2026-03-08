@@ -48,7 +48,7 @@ const rolePermissions: Record<string, Permission[]> = {
   ],
   staff: [
     "view_dashboard", "view_pos", "view_menu", "view_inventory", "view_calendar",
-    "view_bookings", "view_maintenance",
+    "view_bookings", "view_maintenance", "view_management", "view_timeclock",
     "run_end_of_day",
   ],
 };
