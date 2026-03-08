@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import {
   Users as UsersIcon, AlertTriangle, Clock, Shield, Eye, Plus, Pencil,
-  Trash2, X, Save, Calendar, Loader2, ChevronLeft, ChevronRight,
+  Trash2, X, Save, Calendar, Loader2, ChevronLeft, ChevronRight, UserPlus,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useStaffMembers, useCreateStaffMember, useUpdateStaffMember, useDeleteStaffMember } from "@/hooks/useStaffMembers";
@@ -107,6 +107,42 @@ export default function Staff() {
 
   // Schedule assign form
   const [scheduleForm, setScheduleForm] = useState({ staff_id: "", event_id: "", role: "crew" });
+
+  // Create account form
+  const [showCreateAccount, setShowCreateAccount] = useState(false);
+  const [accountForm, setAccountForm] = useState({ full_name: "", email: "", password: "", role: "staff" });
+  const [creatingAccount, setCreatingAccount] = useState(false);
+
+  const handleCreateAccount = async () => {
+    if (!accountForm.full_name.trim()) return toast.error("Name is required");
+    if (!accountForm.email.trim()) return toast.error("Email is required");
+    if (accountForm.password.length < 6) return toast.error("Password must be at least 6 characters");
+
+    setCreatingAccount(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("create-team-member", {
+        body: {
+          full_name: accountForm.full_name.trim(),
+          email: accountForm.email.trim().toLowerCase(),
+          password: accountForm.password,
+          role: accountForm.role,
+        },
+      });
+      if (res.error) throw new Error(res.error.message || "Failed to create account");
+      if (res.data?.error) throw new Error(res.data.error);
+
+      toast.success(`Account created for ${accountForm.full_name}! They can sign in with their email and password.`);
+      setAccountForm({ full_name: "", email: "", password: "", role: "staff" });
+      setShowCreateAccount(false);
+      qc.invalidateQueries({ queryKey: ["team_roles"] });
+      qc.invalidateQueries({ queryKey: ["staff_members"] });
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setCreatingAccount(false);
+    }
+  };
 
   // Build week days for calendar
   const weekDays = useMemo(() => {
@@ -287,54 +323,113 @@ export default function Staff() {
 
         {/* Roles Tab (Owner only) */}
         {tab === "roles" && isOwner && (
-          <div className="rounded-xl border border-border bg-card p-6 shadow-card">
-            <div className="flex items-center gap-2 mb-2">
-              <Shield className="h-4 w-4 text-primary" />
-              <h3 className="text-sm font-semibold text-card-foreground">User Roles & Permissions</h3>
-            </div>
-            <p className="text-xs text-muted-foreground mb-4">
-              <strong>Owner</strong> = full access. <strong>Manager</strong> = manage operations (no role changes or deletions). <strong>Staff</strong> = POS, calendar, and basic views only.
-            </p>
-            {teamLoading ? (
-              <div className="flex items-center gap-2 py-8 justify-center text-muted-foreground">
-                <Loader2 className="h-4 w-4 animate-spin" /> Loading team...
-              </div>
-            ) : (
-              <div className="space-y-3 max-w-2xl">
-                {teamMembers?.map((member) => (
-                  <div key={member.id} className="flex items-center justify-between rounded-lg border border-border bg-background p-4">
-                    <div>
-                      <p className="text-sm font-medium text-foreground">
-                        {member.profile?.full_name || "Unnamed User"}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {member.profile?.phone || member.profile?.business_name || "No details"}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      {member.user_id === user?.id ? (
-                        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
-                          {member.role} (you)
-                        </span>
-                      ) : (
-                        <select
-                          value={member.role}
-                          onChange={(e) => updateRole.mutate({ id: member.id, role: e.target.value as "owner" | "manager" | "staff" })}
-                          className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground"
-                        >
-                          <option value="owner">Owner</option>
-                          <option value="manager">Manager</option>
-                          <option value="staff">Staff</option>
-                        </select>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {(!teamMembers || teamMembers.length === 0) && (
-                  <p className="text-sm text-muted-foreground py-4 text-center">No users found. New users get the Staff role when they sign up.</p>
+          <div className="space-y-4">
+            {/* Create Account Section */}
+            <div className="rounded-xl border border-border bg-card p-6 shadow-card">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <UserPlus className="h-4 w-4 text-primary" />
+                  <h3 className="text-sm font-semibold text-card-foreground">Create Team Account</h3>
+                </div>
+                {!showCreateAccount && (
+                  <Button size="sm" onClick={() => setShowCreateAccount(true)} className="gap-1.5">
+                    <Plus className="h-3.5 w-3.5" /> New Account
+                  </Button>
                 )}
               </div>
-            )}
+              <p className="text-xs text-muted-foreground mb-4">
+                Create login accounts for your team. They'll sign in with the email and password you set. If their email matches a roster entry, they'll be auto-linked.
+              </p>
+
+              {showCreateAccount && (
+                <div className="rounded-lg border border-primary/20 bg-background p-4 space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Full Name *</label>
+                      <Input value={accountForm.full_name} onChange={(e) => setAccountForm({ ...accountForm, full_name: e.target.value })} className="mt-1 h-10" placeholder="Jane Rivera" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Email *</label>
+                      <Input type="email" value={accountForm.email} onChange={(e) => setAccountForm({ ...accountForm, email: e.target.value })} className="mt-1 h-10" placeholder="jane@example.com" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Password *</label>
+                      <Input type="password" value={accountForm.password} onChange={(e) => setAccountForm({ ...accountForm, password: e.target.value })} className="mt-1 h-10" placeholder="Min 6 characters" />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-muted-foreground">Role</label>
+                      <select
+                        value={accountForm.role}
+                        onChange={(e) => setAccountForm({ ...accountForm, role: e.target.value })}
+                        className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none h-10"
+                      >
+                        <option value="staff">Staff</option>
+                        <option value="manager">Manager</option>
+                        <option value="owner">Owner</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button onClick={handleCreateAccount} disabled={creatingAccount} className="gap-1.5">
+                      {creatingAccount ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
+                      {creatingAccount ? "Creating..." : "Create Account"}
+                    </Button>
+                    <Button variant="ghost" onClick={() => { setShowCreateAccount(false); setAccountForm({ full_name: "", email: "", password: "", role: "staff" }); }}>Cancel</Button>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Existing Roles Management */}
+            <div className="rounded-xl border border-border bg-card p-6 shadow-card">
+              <div className="flex items-center gap-2 mb-2">
+                <Shield className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-card-foreground">User Roles & Permissions</h3>
+              </div>
+              <p className="text-xs text-muted-foreground mb-4">
+                <strong>Owner</strong> = full access. <strong>Manager</strong> = manage operations (no role changes or deletions). <strong>Staff</strong> = POS, calendar, and basic views only.
+              </p>
+              {teamLoading ? (
+                <div className="flex items-center gap-2 py-8 justify-center text-muted-foreground">
+                  <Loader2 className="h-4 w-4 animate-spin" /> Loading team...
+                </div>
+              ) : (
+                <div className="space-y-3 max-w-2xl">
+                  {teamMembers?.map((member) => (
+                    <div key={member.id} className="flex items-center justify-between rounded-lg border border-border bg-background p-4">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          {member.profile?.full_name || "Unnamed User"}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {member.profile?.phone || member.profile?.business_name || "No details"}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {member.user_id === user?.id ? (
+                          <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                            {member.role} (you)
+                          </span>
+                        ) : (
+                          <select
+                            value={member.role}
+                            onChange={(e) => updateRole.mutate({ id: member.id, role: e.target.value as "owner" | "manager" | "staff" })}
+                            className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground"
+                          >
+                            <option value="owner">Owner</option>
+                            <option value="manager">Manager</option>
+                            <option value="staff">Staff</option>
+                          </select>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  {(!teamMembers || teamMembers.length === 0) && (
+                    <p className="text-sm text-muted-foreground py-4 text-center">No team members yet. Create an account above to get started.</p>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
