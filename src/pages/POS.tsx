@@ -662,7 +662,7 @@ export default function POS() {
                           <X className="h-5 w-5" />
                         </button>
                       </div>
-                      <CartContent />
+                      {cartContent}
                     </motion.div>
                   </>
                 )}
