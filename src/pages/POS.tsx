@@ -486,7 +486,7 @@ export default function POS() {
             </>
           )}
         </div>
-      ) : (
+      ) : view === "orders" ? (
         /* ── ORDERS VIEW ── */
         <div className="flex-1 overflow-y-auto p-4">
           {!activeOrders?.length ? (
@@ -564,6 +564,12 @@ export default function POS() {
             </div>
           )}
         </div>
+      ) : view === "sales" ? (
+        <POSSalesView />
+      ) : view === "inventory" ? (
+        <POSInventoryView />
+      ) : (
+        <POSReportView />
       )}
     </div>
   );
