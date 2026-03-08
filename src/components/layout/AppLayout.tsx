@@ -2,6 +2,7 @@ import { ReactNode, useState, useEffect } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { TopBar, TrailerContext } from "./TopBar";
 import { AIChatDrawer } from "@/components/ai/AIChatDrawer";
+import { DemoBanner } from "./OrgSwitcher";
 
 const TRAILER_KEY = "traileros_selected_trailer";
 
@@ -23,6 +24,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
       <div className="flex min-h-screen w-full bg-background">
         <AppSidebar />
         <div className="flex flex-1 flex-col min-w-0">
+          <DemoBanner />
           <TopBar />
           <main className="flex-1 overflow-auto p-6 scrollbar-thin">
             {children}
