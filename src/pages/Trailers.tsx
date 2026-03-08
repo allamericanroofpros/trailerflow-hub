@@ -252,11 +252,27 @@ export default function Trailers() {
           </div>
           <Button
             size="sm"
-            onClick={() => { resetForm(); setAddingNew(true); }}
+            onClick={() => {
+              if (!ent.canAddTrailer) {
+                setShowUpgrade(true);
+                return;
+              }
+              resetForm(); setAddingNew(true);
+            }}
             className="gap-1.5"
+            variant={ent.canAddTrailer ? "default" : "outline"}
           >
-            <Plus className="h-3.5 w-3.5" /> Add Trailer
+            {ent.canAddTrailer ? <Plus className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+            Add Trailer
+            {!ent.canAddTrailer && <span className="text-xs text-muted-foreground ml-1">({ent.trailerCount}/{ent.maxTrailers})</span>}
           </Button>
+          <UpgradeModal
+            open={showUpgrade}
+            onOpenChange={setShowUpgrade}
+            feature="More Trailers"
+            currentPlan={ent.currentPlan}
+            requiredPlan={ent.suggestedUpgrade || "pro"}
+          />
         </div>
 
         {/* Stats */}
