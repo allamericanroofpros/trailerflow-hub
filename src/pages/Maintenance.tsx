@@ -12,6 +12,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrgId } from "@/hooks/useOrgId";
 
 export default function Maintenance() {
+  const orgId = useOrgId();
   const { data: records, isLoading } = useMaintenanceRecords();
   const { data: trailers } = useTrailers();
   const createRecord = useCreateMaintenanceRecord();
