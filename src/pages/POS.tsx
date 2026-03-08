@@ -276,25 +276,14 @@ export default function POS() {
 
         {cart.length > 0 && (
           <>
-            <div className="grid grid-cols-3 gap-2.5">
-              {[
-                { method: "cash" as const, icon: Banknote, label: "Cash" },
-                { method: "card" as const, icon: CreditCard, label: "Card" },
-                { method: "digital" as const, icon: Smartphone, label: "Digital" },
-              ].map(({ method, icon: Icon, label }) => (
-                <Button
-                  key={method}
-                  size="lg"
-                  variant="outline"
-                  className="flex-col gap-1.5 h-auto py-4 text-base font-bold border-2 active:scale-95 active:bg-primary/10 transition-all touch-manipulation"
-                  onClick={() => handleCheckout(method)}
-                  disabled={createOrder.isPending}
-                >
-                  <Icon className="h-6 w-6" />
-                  <span className="text-sm">{label}</span>
-                </Button>
-              ))}
-            </div>
+            <Button
+              size="lg"
+              className="w-full h-14 text-base font-black rounded-xl active:scale-95 touch-manipulation"
+              onClick={() => setShowCheckout(true)}
+              disabled={createOrder.isPending}
+            >
+              Charge ${total.toFixed(2)}
+            </Button>
             <button
               onClick={() => { setCart([]); if (isCompact) setMobileCartOpen(false); }}
               className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-destructive hover:bg-destructive/10 active:bg-destructive/20 transition-colors touch-manipulation"
