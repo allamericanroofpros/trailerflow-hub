@@ -36,6 +36,7 @@ import AdminOrganizations from "./pages/admin/AdminOrganizations";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminSettings from "./pages/admin/AdminSettings";
+import AdminAuditLog from "./pages/admin/AdminAuditLog";
 
 const queryClient = new QueryClient();
 
@@ -64,6 +65,7 @@ const App = () => (
               <Route path="/admin/users" element={<SuperAdminRoute><AdminUsers /></SuperAdminRoute>} />
               <Route path="/admin/analytics" element={<SuperAdminRoute><AdminAnalytics /></SuperAdminRoute>} />
               <Route path="/admin/settings" element={<SuperAdminRoute><AdminSettings /></SuperAdminRoute>} />
+              <Route path="/admin/audit-log" element={<SuperAdminRoute><AdminAuditLog /></SuperAdminRoute>} />
 
               {/* Protected routes */}
               <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
