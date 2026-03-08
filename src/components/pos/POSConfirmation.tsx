@@ -20,6 +20,7 @@ type ConfirmationProps = {
   items: ReceiptItem[];
   subtotal: number;
   tax: number;
+  taxLabel?: string;
   tip: number;
   total: number;
   paymentMethod: string;
@@ -32,7 +33,7 @@ type ConfirmationProps = {
 };
 
 export default function POSConfirmation({
-  orderNumber, items, subtotal, tax, tip, total,
+  orderNumber, items, subtotal, tax, taxLabel, tip, total,
   paymentMethod, cashTendered, changeDue, orderId, surchargeAmount, surchargeLabel, onDone,
 }: ConfirmationProps) {
   const [receiptMode, setReceiptMode] = useState<null | "qr" | "email" | "sms">(null);
@@ -108,7 +109,7 @@ export default function POSConfirmation({
               <span className="font-semibold">${subtotal.toFixed(2)}</span>
             </div>
             <div className="flex justify-between text-sm text-muted-foreground">
-              <span>Tax</span>
+              <span>{taxLabel || "Tax"}</span>
               <span className="font-semibold">${tax.toFixed(2)}</span>
             </div>
             {tip > 0 && (

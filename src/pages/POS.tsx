@@ -93,7 +93,7 @@ export default function POS() {
   const [confirmation, setConfirmation] = useState<{
     orderNumber: number;
     items: { name: string; quantity: number; price: number }[];
-    subtotal: number; tax: number; tip: number; total: number;
+    subtotal: number; tax: number; taxLabel?: string; tip: number; total: number;
     paymentMethod: string; cashTendered?: number; changeDue?: number;
     orderId: string; surchargeAmount?: number; surchargeLabel?: string;
   } | null>(null);
@@ -223,6 +223,7 @@ export default function POS() {
       const newOrder = await createOrder.mutateAsync({
         subtotal,
         tax,
+        tax_label: taxSettings.label || "Sales Tax",
         total: grandTotal,
         tip: tipAmount,
         surcharge_amount: surcharge,
@@ -259,7 +260,7 @@ export default function POS() {
       setConfirmation({
         orderNumber: (newOrder as any).order_number,
         items: cart.map((c) => ({ name: c.name, quantity: c.quantity, price: c.price })),
-        subtotal, tax, tip: tipAmount, total: grandTotal,
+        subtotal, tax, taxLabel: taxSettings.label, tip: tipAmount, total: grandTotal,
         paymentMethod: data.paymentMethod,
         cashTendered: data.cashTendered,
         changeDue,
