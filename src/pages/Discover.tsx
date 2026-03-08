@@ -105,6 +105,7 @@ export default function Discover() {
     );
   }
 
+  const handleSearch = () => {
     const parts: string[] = [];
     if (searchQuery) parts.push(searchQuery);
     if (locationFilter) {
