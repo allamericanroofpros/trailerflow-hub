@@ -314,6 +314,19 @@ export default function Inventory() {
                             <p className="font-semibold text-card-foreground">{shelfLife ? `${shelfLife}d` : `$${Number(item.cost_per_unit).toFixed(2)}`}</p>
                           </div>
                         </div>
+                        {((item as any).unit_size || (item as any).serving_size) && (
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                              <span className="text-muted-foreground">Unit Size</span>
+                              <p className="font-semibold text-card-foreground">{(item as any).unit_size ? `${Number((item as any).unit_size)} ${item.unit}` : "—"}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Serving</span>
+                              <p className="font-semibold text-card-foreground">{(item as any).serving_size ? `${Number((item as any).serving_size)} ${item.unit}` : "—"}</p>
+                            </div>
+                          </div>
+                        )}
+                        </div>
                       </div>
                     );
                   })}
