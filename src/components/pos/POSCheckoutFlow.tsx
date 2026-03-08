@@ -28,7 +28,7 @@ type CheckoutProps = {
   isPending: boolean;
 };
 
-type Step = "payment" | "tip" | "cash" | "processing";
+type Step = "payment" | "tip" | "cash" | "processing" | "card-done";
 
 const tipPresets = [0, 15, 18, 20, 25];
 
