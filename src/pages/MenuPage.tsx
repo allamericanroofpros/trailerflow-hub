@@ -215,7 +215,8 @@ export default function MenuPage() {
         if (i !== idx) return ing;
         if (field === "inventoryItemId") {
           const invItem = inventoryItems?.find(ii => ii.id === value);
-          return { ...ing, inventoryItemId: value, inventoryItemName: invItem?.name || "", unit: invItem?.unit || "" };
+          const servUnit = invItem ? (invItem as any).serving_unit : null;
+          return { ...ing, inventoryItemId: value, inventoryItemName: invItem?.name || "", unit: servUnit || invItem?.unit || "" };
         }
         return { ...ing, [field]: value };
       }),

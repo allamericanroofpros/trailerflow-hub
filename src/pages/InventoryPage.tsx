@@ -122,11 +122,13 @@ export default function Inventory() {
   const handleAddItem = async () => {
     if (!newItem.name.trim()) return toast.error("Name is required");
     try {
-      const { shelf_life_days, unit_size, serving_size, ...rest } = newItem;
+      const { shelf_life_days, unit_size, serving_size, serving_unit, serving_unit_conversion, ...rest } = newItem;
       const insertData: any = { ...rest };
       if (shelf_life_days) insertData.shelf_life_days = Number(shelf_life_days);
       if (unit_size) insertData.unit_size = Number(unit_size);
       if (serving_size) insertData.serving_size = Number(serving_size);
+      if (serving_unit) insertData.serving_unit = serving_unit;
+      if (serving_unit_conversion) insertData.serving_unit_conversion = Number(serving_unit_conversion);
       await createItem.mutateAsync(insertData);
       setShowAdd(false);
       setNewItem(emptyNew);
