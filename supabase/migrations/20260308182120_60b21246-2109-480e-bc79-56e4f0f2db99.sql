@@ -1,0 +1,1 @@
+ALTER TABLE public.inventory_items ADD COLUMN unit_size numeric DEFAULT NULL, ADD COLUMN serving_size numeric DEFAULT NULL;

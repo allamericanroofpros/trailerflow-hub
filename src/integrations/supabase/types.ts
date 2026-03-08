@@ -279,10 +279,12 @@ export type Database = {
           name: string
           par_level: number | null
           reorder_point: number | null
+          serving_size: number | null
           shelf_life_days: number | null
           supplier: string | null
           trailer_id: string | null
           unit: Database["public"]["Enums"]["inventory_unit"]
+          unit_size: number | null
           updated_at: string
         }
         Insert: {
@@ -294,10 +296,12 @@ export type Database = {
           name: string
           par_level?: number | null
           reorder_point?: number | null
+          serving_size?: number | null
           shelf_life_days?: number | null
           supplier?: string | null
           trailer_id?: string | null
           unit?: Database["public"]["Enums"]["inventory_unit"]
+          unit_size?: number | null
           updated_at?: string
         }
         Update: {
@@ -309,10 +313,12 @@ export type Database = {
           name?: string
           par_level?: number | null
           reorder_point?: number | null
+          serving_size?: number | null
           shelf_life_days?: number | null
           supplier?: string | null
           trailer_id?: string | null
           unit?: Database["public"]["Enums"]["inventory_unit"]
+          unit_size?: number | null
           updated_at?: string
         }
         Relationships: [
