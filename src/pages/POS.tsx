@@ -30,6 +30,7 @@ type Modifier = {
   name: string;
   options: { label: string; priceAdjust: number; inventoryAdjustments?: { inventoryItemId: string; extraQty: number }[] }[];
   required: boolean;
+  multiSelect?: boolean;
 };
 
 type CartItem = {
@@ -791,7 +792,8 @@ export default function POS() {
           <div className="space-y-4 mt-2">
             {showModifierPicker?.modifiers.map((mod) => (
               <div key={mod.name}>
-                <p className="text-sm font-bold text-card-foreground mb-2">{mod.name} {mod.required && <span className="text-destructive">*</span>}</p>
+                <p className="text-sm font-bold text-card-foreground mb-1">{mod.name} {mod.required && <span className="text-destructive">*</span>}</p>
+                <p className="text-[10px] text-muted-foreground mb-2">{mod.multiSelect ? "Select multiple" : "Select one"}</p>
                 <div className="grid grid-cols-2 gap-2">
                   {mod.options.map((opt) => {
                     const isSelected = (pendingModifiers[mod.name] || []).some(s => s.label === opt.label);
@@ -801,11 +803,20 @@ export default function POS() {
                         onClick={() => setPendingModifiers(prev => {
                           const current = prev[mod.name] || [];
                           const exists = current.some(s => s.label === opt.label);
+                          if (mod.multiSelect) {
+                            return {
+                              ...prev,
+                              [mod.name]: exists
+                                ? current.filter(s => s.label !== opt.label)
+                                : [...current, { label: opt.label, priceAdjust: opt.priceAdjust, inventoryAdjustments: opt.inventoryAdjustments }],
+                            };
+                          }
+                          // Single select: toggle or replace
                           return {
                             ...prev,
                             [mod.name]: exists
-                              ? current.filter(s => s.label !== opt.label)
-                              : [...current, { label: opt.label, priceAdjust: opt.priceAdjust, inventoryAdjustments: opt.inventoryAdjustments }],
+                              ? []
+                              : [{ label: opt.label, priceAdjust: opt.priceAdjust, inventoryAdjustments: opt.inventoryAdjustments }],
                           };
                         })}
                         className={`rounded-xl border-2 p-3 text-left transition-all active:scale-95 touch-manipulation flex items-center gap-2 ${

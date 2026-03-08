@@ -45,6 +45,7 @@ type Modifier = {
   name: string;
   options: { label: string; priceAdjust: number; inventoryAdjustments?: { inventoryItemId: string; extraQty: number }[] }[];
   required: boolean;
+  multiSelect?: boolean;
 };
 
 type Ingredient = {
@@ -247,7 +248,7 @@ export default function MenuPage() {
 
   // Modifier helpers
   const addModifier = () => {
-    setForm(f => ({ ...f, modifiers: [...f.modifiers, { name: "", options: [{ label: "", priceAdjust: 0 }], required: false }] }));
+    setForm(f => ({ ...f, modifiers: [...f.modifiers, { name: "", options: [{ label: "", priceAdjust: 0 }], required: false, multiSelect: false }] }));
   };
   const removeModifier = (idx: number) => {
     setForm(f => ({ ...f, modifiers: f.modifiers.filter((_, i) => i !== idx) }));
@@ -660,6 +661,15 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                             className="rounded"
                           />
                           Required
+                        </label>
+                        <label className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+                          <input
+                            type="checkbox"
+                            checked={mod.multiSelect ?? false}
+                            onChange={(e) => updateModifier(modIdx, "multiSelect", e.target.checked)}
+                            className="rounded"
+                          />
+                          Multi-select
                         </label>
                         <button onClick={() => removeModifier(modIdx)} className="p-1 text-destructive hover:bg-destructive/10 rounded">
                           <X className="h-3.5 w-3.5" />
