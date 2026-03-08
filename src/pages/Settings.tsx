@@ -33,7 +33,7 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isOwner } = useRoleAccess();
-  const { currentOrg } = useOrg();
+  const { currentOrg, refreshOrg } = useOrg();
   const { subscribed, tier, subscriptionEnd, cancelAtPeriodEnd, loading: subLoading, startCheckout, openPortal, checkSubscription } = useSubscription();
   const qc = useQueryClient();
 
