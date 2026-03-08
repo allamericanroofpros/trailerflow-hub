@@ -51,12 +51,6 @@ const categoryLabels: Record<string, string> = {
 
 export default function POS() {
   const navigate = useNavigate();
-  const activeTrailerId = sodData?.trailerId || undefined;
-  const { data: menuItems, isLoading: menuLoading } = useMenuItems(activeTrailerId);
-  const { data: activeOrders } = useActiveOrders();
-  const createOrder = useCreateOrder();
-  const updateStatus = useUpdateOrderStatus();
-
   const [sodComplete, setSodComplete] = useState(() => {
     return sessionStorage.getItem("pos_sod_complete") === "true";
   });
@@ -64,6 +58,12 @@ export default function POS() {
     const saved = sessionStorage.getItem("pos_sod_data");
     return saved ? JSON.parse(saved) : null;
   });
+
+  const activeTrailerId = sodData?.trailerId || undefined;
+  const { data: menuItems, isLoading: menuLoading } = useMenuItems(activeTrailerId);
+  const { data: activeOrders } = useActiveOrders();
+  const createOrder = useCreateOrder();
+  const updateStatus = useUpdateOrderStatus();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
