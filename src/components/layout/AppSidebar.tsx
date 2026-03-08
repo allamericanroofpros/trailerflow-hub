@@ -29,6 +29,7 @@ const navItems = [
   { title: "Events Hub", url: "/events", icon: CalendarRange },
   { title: "Discover", url: "/discover", icon: Compass },
   { title: "Calendar", url: "/calendar", icon: Calendar },
+  { title: "Fleet", url: "/fleet", icon: BarChart3 },
   { title: "Trailers", url: "/trailers", icon: Truck },
   { title: "Staff", url: "/staff", icon: Users },
   { title: "Bookings", url: "/bookings", icon: ClipboardList },
