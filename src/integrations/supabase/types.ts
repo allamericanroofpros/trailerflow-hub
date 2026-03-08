@@ -704,6 +704,8 @@ export type Database = {
           payment_received: boolean
           status: Database["public"]["Enums"]["order_status"]
           subtotal: number
+          surcharge_amount: number | null
+          surcharge_label: string | null
           tax: number
           tip: number | null
           total: number
@@ -722,6 +724,8 @@ export type Database = {
           payment_received?: boolean
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
+          surcharge_amount?: number | null
+          surcharge_label?: string | null
           tax?: number
           tip?: number | null
           total?: number
@@ -740,6 +744,8 @@ export type Database = {
           payment_received?: boolean
           status?: Database["public"]["Enums"]["order_status"]
           subtotal?: number
+          surcharge_amount?: number | null
+          surcharge_label?: string | null
           tax?: number
           tip?: number | null
           total?: number
@@ -818,6 +824,11 @@ export type Database = {
           stripe_price_id: string | null
           stripe_subscription_id: string | null
           subscription_status: string
+          surcharge_cap: number | null
+          surcharge_enabled: boolean
+          surcharge_flat: number | null
+          surcharge_label: string
+          surcharge_percent: number
           updated_at: string
         }
         Insert: {
@@ -835,6 +846,11 @@ export type Database = {
           stripe_price_id?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string
+          surcharge_cap?: number | null
+          surcharge_enabled?: boolean
+          surcharge_flat?: number | null
+          surcharge_label?: string
+          surcharge_percent?: number
           updated_at?: string
         }
         Update: {
@@ -852,6 +868,11 @@ export type Database = {
           stripe_price_id?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string
+          surcharge_cap?: number | null
+          surcharge_enabled?: boolean
+          surcharge_flat?: number | null
+          surcharge_label?: string
+          surcharge_percent?: number
           updated_at?: string
         }
         Relationships: []
