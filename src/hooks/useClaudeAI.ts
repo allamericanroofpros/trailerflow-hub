@@ -103,7 +103,7 @@ export function useClaudeChat() {
   return { messages, isLoading, send, clearMessages };
 }
 
-export async function claudeNonStreaming(feature: string, messages: { role: string; content: string }[]) {
+export async function claudeNonStreaming(feature: string, messages: { role: string; content: string }[], context?: { org_id?: string | null; trailer_id?: string | null }) {
   const session = await supabase.auth.getSession();
   const token = session.data.session?.access_token;
 
@@ -113,7 +113,14 @@ export async function claudeNonStreaming(feature: string, messages: { role: stri
       "Content-Type": "application/json",
       Authorization: `Bearer ${token || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
     },
-    body: JSON.stringify({ messages, feature, stream: false }),
+    body: JSON.stringify({
+      messages, feature, stream: false,
+      context: {
+        org_id: context?.org_id || null,
+        user_id: session.data.session?.user?.id || null,
+        trailer_id: context?.trailer_id || null,
+      },
+    }),
   });
 
   if (!resp.ok) {
@@ -122,7 +129,6 @@ export async function claudeNonStreaming(feature: string, messages: { role: stri
   }
 
   const data = await resp.json();
-  // OpenAI-compatible response format
   const text = data.choices?.[0]?.message?.content || "";
   return text;
 }
