@@ -93,19 +93,30 @@ export default function SettingsPage() {
   const [surchargePercent, setSurchargePercent] = useState("3.0");
   const [surchargeFlat, setSurchargeFlat] = useState("");
   const [surchargeCap, setSurchargeCap] = useState("");
-  const [surchargeLoaded, setSurchargeLoaded] = useState(false);
+
+  // Tax settings
+  const [taxEnabled, setTaxEnabled] = useState(true);
+  const [taxLabel, setTaxLabel] = useState("Sales Tax");
+  const [taxPercent, setTaxPercent] = useState("0");
+  const [taxInclusive, setTaxInclusive] = useState(false);
+
+  const [paymentSettingsLoaded, setPaymentSettingsLoaded] = useState(false);
 
   useEffect(() => {
-    if (currentOrg && !surchargeLoaded) {
+    if (currentOrg && !paymentSettingsLoaded) {
       const org = currentOrg as any;
       setSurchargeEnabled(org.surcharge_enabled ?? false);
       setSurchargeLabel(org.surcharge_label ?? "Non-Cash Adjustment");
       setSurchargePercent(String(org.surcharge_percent ?? 3.0));
       setSurchargeFlat(org.surcharge_flat != null ? String(org.surcharge_flat) : "");
       setSurchargeCap(org.surcharge_cap != null ? String(org.surcharge_cap) : "");
-      setSurchargeLoaded(true);
+      setTaxEnabled(org.tax_enabled ?? true);
+      setTaxLabel(org.tax_label ?? "Sales Tax");
+      setTaxPercent(String(org.tax_percent ?? 0));
+      setTaxInclusive(org.tax_inclusive ?? false);
+      setPaymentSettingsLoaded(true);
     }
-  }, [currentOrg, surchargeLoaded]);
+  }, [currentOrg, paymentSettingsLoaded]);
 
   const saveSurcharge = useMutation({
     mutationFn: async () => {
