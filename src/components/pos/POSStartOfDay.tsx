@@ -140,7 +140,7 @@ export default function POSStartOfDay({ onComplete }: { onComplete: (data: Start
       onComplete({
         trailerId: selectedTrailer || null,
         eventId: selectedEvent || null,
-        openingCash: Number(openingCash) || 0,
+        openingCash: effectiveCash,
         notes,
       });
       toast.success("You're all set — let's make some money! 🚀");
