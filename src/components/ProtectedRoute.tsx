@@ -1,8 +1,28 @@
 import { useAuth } from "@/contexts/AuthContext";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
+
+const routeToViewKey: Record<string, string> = {
+  "/": "dashboard",
+  "/pos": "pos",
+  "/menu": "menu",
+  "/inventory": "inventory",
+  "/events": "events",
+  "/discover": "discover",
+  "/calendar": "calendar",
+  "/fleet": "fleet",
+  "/trailers": "trailers",
+  "/staff": "staff",
+  "/bookings": "bookings",
+  "/financials": "financials",
+  "/maintenance": "maintenance",
+  "/settings": "settings",
+};
 
 export function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { session, loading } = useAuth();
+  const { canView } = useRoleAccess();
+  const location = useLocation();
 
   if (loading) {
     return (
@@ -14,6 +34,11 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 
   if (!session) {
     return <Navigate to="/login" replace />;
+  }
+
+  const viewKey = routeToViewKey[location.pathname];
+  if (viewKey && !canView(viewKey)) {
+    return <Navigate to="/" replace />;
   }
 
   return <>{children}</>;
