@@ -19,10 +19,13 @@ type CheckoutProps = {
   subtotal: number;
   tax: number;
   total: number;
+  surchargeSettings?: { enabled: boolean; label: string; percent: number; flat: number | null; cap: number | null };
   onComplete: (data: {
     paymentMethod: "cash" | "card" | "digital";
     tip: number;
     cashTendered?: number;
+    surchargeAmount?: number;
+    surchargeLabel?: string;
   }) => Promise<void>;
   onCancel: () => void;
   isPending: boolean;
@@ -48,7 +51,7 @@ const processStripePayment = async (amount: number): Promise<{ success: boolean;
 };
 
 export default function POSCheckoutFlow({
-  cart, subtotal, tax, total, onComplete, onCancel, isPending,
+  cart, subtotal, tax, total, surchargeSettings, onComplete, onCancel, isPending,
 }: CheckoutProps) {
   const [step, setStep] = useState<Step>("payment");
   const [tipType, setTipType] = useState<"percent" | "dollar">("percent");
@@ -57,12 +60,23 @@ export default function POSCheckoutFlow({
   const [cashTendered, setCashTendered] = useState("");
   const [selectedPayment, setSelectedPayment] = useState<"cash" | "card" | "digital" | null>(null);
 
+  // Calculate surcharge for card payments
+  const calcSurchargeAmount = (method: "cash" | "card" | "digital" | null): number => {
+    if (!surchargeSettings?.enabled || method !== "card") return 0;
+    let amt = subtotal * (surchargeSettings.percent / 100);
+    if (surchargeSettings.flat) amt += surchargeSettings.flat;
+    if (surchargeSettings.cap && amt > surchargeSettings.cap) amt = surchargeSettings.cap;
+    return Math.round(amt * 100) / 100;
+  };
+
+  const surchargeAmount = calcSurchargeAmount(selectedPayment);
+
   const tipAmount = tipType === "percent"
     ? subtotal * (tipPercent / 100)
     : Number(tipDollar) || 0;
 
-  // For card: grandTotal includes tip. For cash/digital: no tip.
-  const currentTotal = selectedPayment === "card" ? total + tipAmount : total;
+  // Grand total: base total + surcharge (card only) + tip (card only)
+  const currentTotal = selectedPayment === "card" ? total + surchargeAmount + tipAmount : total;
   const changeDue = Number(cashTendered) - total;
 
   const handlePaymentSelect = async (method: "cash" | "card" | "digital") => {
@@ -85,7 +99,12 @@ export default function POSCheckoutFlow({
 
   const handleTipComplete = async () => {
     setStep("processing");
-    await onComplete({ paymentMethod: "card", tip: tipAmount });
+    await onComplete({
+      paymentMethod: "card",
+      tip: tipAmount,
+      surchargeAmount: surchargeAmount > 0 ? surchargeAmount : undefined,
+      surchargeLabel: surchargeAmount > 0 ? surchargeSettings?.label : undefined,
+    });
   };
 
   const handleCashComplete = async () => {
@@ -151,6 +170,11 @@ export default function POSCheckoutFlow({
                 <p className="text-sm text-muted-foreground mt-1">
                   Charge <span className="font-black text-card-foreground">${total.toFixed(2)}</span>
                 </p>
+                {surchargeSettings?.enabled && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    Card payments include a {surchargeSettings.percent}% {surchargeSettings.label.toLowerCase()}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-3">
@@ -243,11 +267,19 @@ export default function POSCheckoutFlow({
                 />
               )}
 
-              {tipAmount > 0 && (
+              {surchargeAmount > 0 && (
+                <div className="text-center">
+                  <p className="text-xs text-muted-foreground">
+                    {surchargeSettings?.label}: <span className="font-bold text-card-foreground">${surchargeAmount.toFixed(2)}</span>
+                  </p>
+                </div>
+              )}
+
+              {(tipAmount > 0 || surchargeAmount > 0) && (
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">
-                    Tip: <span className="font-black text-success">${tipAmount.toFixed(2)}</span>
-                    {" · "}New total: <span className="font-black text-card-foreground">${(total + tipAmount).toFixed(2)}</span>
+                    {tipAmount > 0 && <>Tip: <span className="font-black text-success">${tipAmount.toFixed(2)}</span>{" · "}</>}
+                    New total: <span className="font-black text-card-foreground">${(total + surchargeAmount + tipAmount).toFixed(2)}</span>
                   </p>
                 </div>
               )}

@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Settings as SettingsIcon, User, Bell, Truck, CreditCard, Shield, Palette, ArrowRight, Users, Loader2, Monitor, Check, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { Settings as SettingsIcon, User, Bell, Truck, CreditCard, Shield, Palette, ArrowRight, Users, Loader2, Monitor, Check, ExternalLink, Receipt } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
@@ -10,11 +10,14 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { useOrg } from "@/contexts/OrgContext";
 
 const baseSections = [
   { id: "profile", title: "Profile", description: "Manage your account details and preferences.", icon: User },
   { id: "pos", title: "POS Terminal", description: "Configure terminal lock mode and register behavior.", icon: Monitor, ownerOnly: true },
+  { id: "payments", title: "Payments & Fees", description: "Card surcharge, fee pass-through, and payment settings.", icon: Receipt, ownerOnly: true },
   { id: "notifications", title: "Notifications", description: "Configure alerts for bookings, events, and maintenance.", icon: Bell },
   { id: "trailers", title: "Trailers", description: "Add, remove, or configure your fleet.", icon: Truck, href: "/trailers" },
   { id: "billing", title: "Billing", description: "Manage subscription, payment methods, and invoices.", icon: CreditCard },
@@ -30,6 +33,7 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isOwner } = useRoleAccess();
+  const { currentOrg } = useOrg();
   const { subscribed, tier, subscriptionEnd, cancelAtPeriodEnd, loading: subLoading, startCheckout, openPortal, checkSubscription } = useSubscription();
   const qc = useQueryClient();
 
@@ -82,6 +86,45 @@ export default function SettingsPage() {
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [timezone, setTimezone] = useState("");
+
+  // Surcharge settings
+  const [surchargeEnabled, setSurchargeEnabled] = useState(false);
+  const [surchargeLabel, setSurchargeLabel] = useState("Non-Cash Adjustment");
+  const [surchargePercent, setSurchargePercent] = useState("3.0");
+  const [surchargeFlat, setSurchargeFlat] = useState("");
+  const [surchargeCap, setSurchargeCap] = useState("");
+  const [surchargeLoaded, setSurchargeLoaded] = useState(false);
+
+  useEffect(() => {
+    if (currentOrg && !surchargeLoaded) {
+      const org = currentOrg as any;
+      setSurchargeEnabled(org.surcharge_enabled ?? false);
+      setSurchargeLabel(org.surcharge_label ?? "Non-Cash Adjustment");
+      setSurchargePercent(String(org.surcharge_percent ?? 3.0));
+      setSurchargeFlat(org.surcharge_flat != null ? String(org.surcharge_flat) : "");
+      setSurchargeCap(org.surcharge_cap != null ? String(org.surcharge_cap) : "");
+      setSurchargeLoaded(true);
+    }
+  }, [currentOrg, surchargeLoaded]);
+
+  const saveSurcharge = useMutation({
+    mutationFn: async () => {
+      if (!currentOrg) throw new Error("No org");
+      const { error } = await supabase.from("organizations").update({
+        surcharge_enabled: surchargeEnabled,
+        surcharge_label: surchargeLabel,
+        surcharge_percent: parseFloat(surchargePercent) || 3.0,
+        surcharge_flat: surchargeFlat ? parseFloat(surchargeFlat) : null,
+        surcharge_cap: surchargeCap ? parseFloat(surchargeCap) : null,
+      } as any).eq("id", currentOrg.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["org_memberships"] });
+      toast.success("Payment settings saved");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
 
   // Sync form state when profile loads
   const profileLoaded = profile && !businessName && !fullName;
@@ -215,6 +258,55 @@ export default function SettingsPage() {
               <p className="text-[11px] text-muted-foreground">
                 <strong>Tip:</strong> Owner-operators who run the trailer solo can leave this off. Turn it on when you have employees working the register so they stay focused on orders.
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Payments & Fees Section */}
+        {activeSection === "payments" && isOwner && (
+          <div className="rounded-xl border border-border bg-card p-6 shadow-card">
+            <div className="flex items-center gap-2 mb-5">
+              <Receipt className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-card-foreground">Payments & Card Fee Pass-Through</h3>
+            </div>
+            <p className="text-xs text-muted-foreground mb-5 max-w-xl">
+              Optionally pass card processing fees to customers. When enabled, a surcharge line item is added to card payments in POS and booking flows. Cash and digital payments are not affected.
+            </p>
+            <div className="space-y-5 max-w-lg">
+              <label className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-card-foreground">Enable Card Surcharge</p>
+                  <p className="text-xs text-muted-foreground">Add a fee to card transactions</p>
+                </div>
+                <Switch checked={surchargeEnabled} onCheckedChange={setSurchargeEnabled} />
+              </label>
+
+              {surchargeEnabled && (
+                <div className="space-y-4 pl-1 border-l-2 border-primary/20 ml-1">
+                  <div className="pl-4">
+                    <label className="text-xs font-medium text-muted-foreground">Fee Label (shown to customer)</label>
+                    <Input value={surchargeLabel} onChange={(e) => setSurchargeLabel(e.target.value)} className="mt-1" placeholder="Non-Cash Adjustment" />
+                  </div>
+                  <div className="pl-4">
+                    <label className="text-xs font-medium text-muted-foreground">Percentage (%)</label>
+                    <Input type="number" step="0.1" min="0" max="10" value={surchargePercent} onChange={(e) => setSurchargePercent(e.target.value)} className="mt-1" />
+                    <p className="text-[11px] text-muted-foreground mt-1">Most businesses charge 2.5% – 3.5%</p>
+                  </div>
+                  <div className="pl-4">
+                    <label className="text-xs font-medium text-muted-foreground">Flat Fee ($) — optional</label>
+                    <Input type="number" step="0.01" min="0" value={surchargeFlat} onChange={(e) => setSurchargeFlat(e.target.value)} className="mt-1" placeholder="0.00" />
+                  </div>
+                  <div className="pl-4">
+                    <label className="text-xs font-medium text-muted-foreground">Maximum Cap ($) — optional</label>
+                    <Input type="number" step="0.01" min="0" value={surchargeCap} onChange={(e) => setSurchargeCap(e.target.value)} className="mt-1" placeholder="No cap" />
+                    <p className="text-[11px] text-muted-foreground mt-1">If set, surcharge will never exceed this amount</p>
+                  </div>
+                </div>
+              )}
+
+              <Button onClick={() => saveSurcharge.mutate()} disabled={saveSurcharge.isPending}>
+                {saveSurcharge.isPending ? "Saving..." : "Save Payment Settings"}
+              </Button>
             </div>
           </div>
         )}

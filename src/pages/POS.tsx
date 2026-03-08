@@ -4,6 +4,7 @@ import { useMenuItems } from "@/hooks/useMenuItems";
 import { useCreateOrder } from "@/hooks/useOrders";
 import { useActiveOrders, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { useOrgId } from "@/hooks/useOrgId";
+import { useSurchargeSettings } from "@/hooks/useSurchargeSettings";
 import { toast } from "sonner";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import {
@@ -56,6 +57,7 @@ const categoryLabels: Record<string, string> = {
 
 export default function POS() {
   const orgId = useOrgId();
+  const surchargeSettings = useSurchargeSettings();
   const navigate = useNavigate();
   const [sodComplete, setSodComplete] = useState(() => {
     return sessionStorage.getItem("pos_sod_complete") === "true";
@@ -204,6 +206,8 @@ export default function POS() {
     paymentMethod: "cash" | "card" | "digital";
     tip: number;
     cashTendered?: number;
+    surchargeAmount?: number;
+    surchargeLabel?: string;
   }) => {
     if (cart.length === 0) return;
     if (!orgId) {
@@ -211,13 +215,16 @@ export default function POS() {
       return;
     }
     const tipAmount = data.tip;
-    const grandTotal = total + tipAmount;
+    const surcharge = data.surchargeAmount || 0;
+    const grandTotal = total + tipAmount + surcharge;
     try {
       const newOrder = await createOrder.mutateAsync({
         subtotal,
         tax,
         total: grandTotal,
         tip: tipAmount,
+        surcharge_amount: surcharge,
+        surcharge_label: data.surchargeLabel || null,
         payment_method: data.paymentMethod,
         payment_received: true,
         org_id: orgId,
@@ -776,6 +783,7 @@ export default function POS() {
           subtotal={subtotal}
           tax={tax}
           total={total}
+          surchargeSettings={surchargeSettings}
           onComplete={handleCheckout}
           onCancel={() => setShowCheckout(false)}
           isPending={createOrder.isPending}

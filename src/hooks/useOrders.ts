@@ -51,6 +51,8 @@ export function useCreateOrder() {
       payment_method?: string;
       payment_received?: boolean;
       tip?: number;
+      surcharge_amount?: number;
+      surcharge_label?: string | null;
       event_id?: string;
       trailer_id?: string;
       notes?: string;

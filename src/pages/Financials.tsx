@@ -1,7 +1,8 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { DollarSign, TrendingUp, Truck, Plus, Loader2, ArrowUpRight, ArrowDownRight } from "lucide-react";
+import { DollarSign, TrendingUp, Truck, Plus, Loader2, ArrowUpRight, ArrowDownRight, Receipt } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from "recharts";
 import { useTransactions, useCreateTransaction } from "@/hooks/useTransactions";
+import { useOrders } from "@/hooks/useOrders";
 import { useTrailers } from "@/hooks/useTrailers";
 import { useEvents } from "@/hooks/useEvents";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import { useOrgId } from "@/hooks/useOrgId";
 
 export default function Financials() {
   const { data: transactions, isLoading } = useTransactions();
+  const { data: orders } = useOrders();
   const { data: trailers } = useTrailers();
   const { data: events } = useEvents();
   const createTx = useCreateTransaction();
@@ -49,11 +51,12 @@ export default function Financials() {
   };
 
   const stats = useMemo(() => {
-    if (!transactions?.length) return { totalIncome: 0, totalExpenses: 0, profit: 0, count: 0 };
+    if (!transactions?.length) return { totalIncome: 0, totalExpenses: 0, profit: 0, count: 0, surchargeRevenue: 0 };
     const income = transactions.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
     const expenses = transactions.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
-    return { totalIncome: income, totalExpenses: expenses, profit: income - expenses, count: transactions.length };
-  }, [transactions]);
+    const surchargeRevenue = (orders || []).reduce((s, o: any) => s + (o.surcharge_amount || 0), 0);
+    return { totalIncome: income, totalExpenses: expenses, profit: income - expenses, count: transactions.length, surchargeRevenue };
+  }, [transactions, orders]);
 
   // Chart: monthly income vs expenses
   const chartData = useMemo(() => {
@@ -84,11 +87,12 @@ export default function Financials() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {[
             { label: "Total Income", value: `$${stats.totalIncome.toLocaleString()}`, icon: ArrowUpRight, color: "text-success" },
             { label: "Total Expenses", value: `$${stats.totalExpenses.toLocaleString()}`, icon: ArrowDownRight, color: "text-destructive" },
             { label: "Net Profit", value: `$${stats.profit.toLocaleString()}`, icon: TrendingUp, color: "text-primary" },
+            { label: "Surcharge Revenue", value: `$${stats.surchargeRevenue.toFixed(2)}`, icon: Receipt, color: "text-amber-600" },
             { label: "Transactions", value: stats.count.toString(), icon: DollarSign, color: "text-info" },
           ].map((s) => (
             <div key={s.label} className="rounded-xl border border-border bg-card p-4 shadow-card">
