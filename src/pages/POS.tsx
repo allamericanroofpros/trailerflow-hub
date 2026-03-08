@@ -206,6 +206,8 @@ export default function POS() {
     paymentMethod: "cash" | "card" | "digital";
     tip: number;
     cashTendered?: number;
+    surchargeAmount?: number;
+    surchargeLabel?: string;
   }) => {
     if (cart.length === 0) return;
     if (!orgId) {
@@ -213,7 +215,8 @@ export default function POS() {
       return;
     }
     const tipAmount = data.tip;
-    const grandTotal = total + tipAmount;
+    const surcharge = data.surchargeAmount || 0;
+    const grandTotal = total + tipAmount + surcharge;
     try {
       const newOrder = await createOrder.mutateAsync({
         subtotal,
