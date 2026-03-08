@@ -2,18 +2,25 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import {
   Sparkles, MapPin, Calendar, Users as UsersIcon, DollarSign, Plus,
   ChevronRight, AlertTriangle, Loader2, Pencil, Search, ExternalLink,
-  X, Save, Trash2, Globe,
+  X, Save, Trash2, Globe, Compass,
 } from "lucide-react";
-import { useState } from "react";
-import { useEventsByStage, useEvent, useCreateEvent, useUpdateEvent, useDeleteEvent } from "@/hooks/useEvents";
+import { useState, useMemo } from "react";
+import { format, addDays } from "date-fns";
+import { useEventsByStage, useEvent, useCreateEvent, useUpdateEvent, useDeleteEvent, useEvents } from "@/hooks/useEvents";
 import { useToggleChecklistItem } from "@/hooks/useChecklist";
 import { useTrailers } from "@/hooks/useTrailers";
+import { useBookings } from "@/hooks/useBookings";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAIDiscovery } from "@/hooks/useAIDiscovery";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { supabase } from "@/integrations/supabase/client";
+import { claudeNonStreaming } from "@/hooks/useClaudeAI";
+import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
 
 type EventStage = Database["public"]["Enums"]["event_stage"];
@@ -51,6 +58,8 @@ function formatDate(date?: string | null, endDate?: string | null): string {
 
 export default function EventsHub() {
   const { data: grouped, isLoading } = useEventsByStage();
+  const { data: allEvents } = useEvents();
+  const { data: existingBookings } = useBookings();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data: selectedEvent } = useEvent(selectedId ?? undefined);
   const { data: trailers } = useTrailers();
@@ -64,6 +73,100 @@ export default function EventsHub() {
   const [editing, setEditing] = useState(false);
   const [aiSearching, setAiSearching] = useState(false);
   const [aiCitations, setAiCitations] = useState<string[]>([]);
+  const [aiForecastLoading, setAiForecastLoading] = useState(false);
+  const [mainTab, setMainTab] = useState<"pipeline" | "discover">("pipeline");
+
+  // Discover state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [submittedQuery, setSubmittedQuery] = useState<string | undefined>();
+  const [locationFilter, setLocationFilter] = useState("");
+  const [radiusMiles, setRadiusMiles] = useState<number>(50);
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const { data: aiEvents, isFetching: discoverFetching } = useAIDiscovery(submittedQuery);
+  const opportunities = aiEvents || [];
+
+  const busyRanges = useMemo(() => {
+    const ranges: { start: string; end: string; name: string }[] = [];
+    (allEvents || []).forEach((e) => {
+      if (e.event_date) ranges.push({ start: e.event_date, end: e.event_end_date || e.event_date, name: e.name });
+    });
+    (existingBookings || []).forEach((b) => {
+      ranges.push({ start: b.event_date, end: b.event_date, name: b.event_name });
+    });
+    return ranges;
+  }, [allEvents, existingBookings]);
+
+  const getOverlaps = (dateStr: string) => {
+    if (!dateStr) return [];
+    try {
+      const eventDate = new Date(dateStr);
+      if (isNaN(eventDate.getTime())) return [];
+      return busyRanges.filter((range) => {
+        const start = addDays(new Date(range.start), -1);
+        const end = addDays(new Date(range.end), 1);
+        return eventDate >= start && eventDate <= end;
+      });
+    } catch { return []; }
+  };
+
+  const handleDiscoverSearch = () => {
+    const parts: string[] = [];
+    if (searchQuery) parts.push(searchQuery);
+    if (locationFilter) parts.push(`within ${radiusMiles} miles of ${locationFilter}`);
+    if (dateRange.from) {
+      const fromStr = format(dateRange.from, "yyyy-MM-dd");
+      parts.push(dateRange.to ? `between ${fromStr} and ${format(dateRange.to, "yyyy-MM-dd")}` : `around ${fromStr}`);
+    }
+    const query = parts.join(" ");
+    if (!query) { toast.error("Enter a search term, location, or date range"); return; }
+    setSubmittedQuery(query);
+  };
+
+  const addToPipeline = (opp: typeof opportunities[0]) => {
+    createEvent.mutate(
+      { name: opp.name, event_type: opp.type, location: opp.location, stage: "lead", source: "ai-discovery", confidence: opp.aiRank },
+      { onSuccess: () => { toast.success(`"${opp.name}" added to pipeline`); setMainTab("pipeline"); }, onError: (e) => toast.error(e.message) }
+    );
+  };
+
+  // AI Forecast for a single event
+  const handleAIForecast = async () => {
+    if (!selectedEvent) return;
+    setAiForecastLoading(true);
+    try {
+      const trailerData = trailers?.find(t => t.id === (selectedEvent as any).trailer_id);
+      const context = `Calculate revenue forecast for this event:
+Event: ${selectedEvent.name}
+Type: ${selectedEvent.event_type || "Unknown"}
+Location: ${selectedEvent.location || "Unknown"}
+Date: ${selectedEvent.event_date || "TBD"}
+Attendance: ${selectedEvent.attendance_estimate || "Unknown"}
+Start: ${selectedEvent.start_time || "Unknown"}, End: ${selectedEvent.end_time || "Unknown"}
+Vendor Fee: $${selectedEvent.vendor_fee || 0}
+${trailerData ? `Trailer: ${trailerData.name}, Avg Ticket: $${trailerData.avg_ticket}, Customers/hr: ${trailerData.avg_customers_per_hour}, Food Cost: ${trailerData.avg_food_cost_percent}%, Staff: ${trailerData.staff_required} @ $${trailerData.staff_hourly_rate}/hr, Fuel: $${trailerData.fuel_cost_per_event}` : "No trailer assigned — use industry averages"}
+
+Return ONLY a JSON object with: revenue_forecast_low (number), revenue_forecast_high (number), confidence (0-100), notes (string with profit math). No markdown.`;
+      const response = await claudeNonStreaming("forecast", [{ role: "user", content: context }]);
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const forecast = JSON.parse(jsonMatch[0]);
+        await updateEvent.mutateAsync({
+          id: selectedEvent.id,
+          revenue_forecast_low: forecast.revenue_forecast_low,
+          revenue_forecast_high: forecast.revenue_forecast_high,
+          confidence: forecast.confidence,
+          notes: selectedEvent.notes ? `${selectedEvent.notes}\n\nAI Forecast: ${forecast.notes}` : `AI Forecast: ${forecast.notes}`,
+        });
+        toast.success("Revenue forecast generated!");
+      } else {
+        toast.error("Couldn't parse forecast");
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Forecast failed");
+    } finally {
+      setAiForecastLoading(false);
+    }
+  };
 
   // Edit form state
   const [editForm, setEditForm] = useState<Record<string, any>>({});
@@ -205,41 +308,169 @@ export default function EventsHub() {
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Events Hub</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage your event pipeline from discovery to completion.</p>
+            <h1 className="text-2xl font-bold tracking-tight">Events</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage your event pipeline and discover new opportunities.</p>
           </div>
-          {showAddForm ? (
-            <div className="flex items-center gap-2">
-              <input
-                autoFocus
-                value={newEventName}
-                onChange={(e) => setNewEventName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAddEvent()}
-                placeholder="Event name..."
-                className="rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-              />
+          <div className="flex items-center gap-2">
+            <div className="flex items-center rounded-lg border border-border bg-card p-1">
               <button
-                onClick={handleAddEvent}
-                disabled={createEvent.isPending}
-                className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                onClick={() => setMainTab("pipeline")}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  mainTab === "pipeline" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                {createEvent.isPending ? "Adding..." : "Add"}
+                <Calendar className="h-3 w-3" /> Pipeline
               </button>
-              <button onClick={() => setShowAddForm(false)} className="text-sm text-muted-foreground hover:text-foreground">
-                Cancel
+              <button
+                onClick={() => setMainTab("discover")}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  mainTab === "discover" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Compass className="h-3 w-3" /> Discover
               </button>
             </div>
-          ) : (
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-              Add Event
-            </button>
-          )}
+            {mainTab === "pipeline" && (
+              showAddForm ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    autoFocus
+                    value={newEventName}
+                    onChange={(e) => setNewEventName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleAddEvent()}
+                    placeholder="Event name..."
+                    className="rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <button onClick={handleAddEvent} disabled={createEvent.isPending} className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50">
+                    {createEvent.isPending ? "Adding..." : "Add"}
+                  </button>
+                  <button onClick={() => setShowAddForm(false)} className="text-sm text-muted-foreground hover:text-foreground">Cancel</button>
+                </div>
+              ) : (
+                <button onClick={() => setShowAddForm(true)} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
+                  <Plus className="h-4 w-4" /> Add Event
+                </button>
+              )
+            )}
+          </div>
         </div>
 
+        {/* ══════════ DISCOVER TAB ══════════ */}
+        {mainTab === "discover" && (
+          <div className="space-y-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 flex-1 max-w-sm">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleDiscoverSearch()}
+                  placeholder="Search events, types..."
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                />
+              </div>
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 min-w-[200px]">
+                <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                <input
+                  value={locationFilter}
+                  onChange={(e) => setLocationFilter(e.target.value)}
+                  placeholder="City, State"
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                />
+              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("min-w-[180px] justify-start text-left font-normal text-sm h-[38px]", !dateRange.from && "text-muted-foreground")}>
+                    <Calendar className="h-4 w-4 mr-2" />
+                    {dateRange.from ? (dateRange.to ? <>{format(dateRange.from, "MMM d")} – {format(dateRange.to, "MMM d")}</> : format(dateRange.from, "MMM d, yyyy")) : "Date range"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarPicker mode="range" selected={dateRange.from ? { from: dateRange.from, to: dateRange.to } : undefined} onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })} numberOfMonths={2} disabled={(date) => date < new Date()} className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
+              <div className="flex items-center rounded-lg border border-border bg-card overflow-hidden">
+                {[10, 25, 50, 100].map((r) => (
+                  <button key={r} onClick={() => setRadiusMiles(r)} className={`px-3 py-2 text-xs font-medium transition-colors border-r border-border last:border-r-0 ${radiusMiles === r ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}>
+                    {r}mi
+                  </button>
+                ))}
+              </div>
+              <button onClick={handleDiscoverSearch} disabled={discoverFetching} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50">
+                {discoverFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                AI Search
+              </button>
+            </div>
+
+            {discoverFetching && (
+              <div className="flex items-center justify-center py-12 gap-3 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="text-sm">AI is finding events for your trailers...</span>
+              </div>
+            )}
+
+            {!submittedQuery && !discoverFetching && opportunities.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <Sparkles className="h-12 w-12 mb-4 text-primary/30" />
+                <p className="text-base font-bold text-card-foreground">Find events perfect for your trailers</p>
+                <p className="text-sm mt-1 text-center max-w-md">Enter your location, pick a date range, and click AI Search to discover profitable events.</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {opportunities.map((opp, idx) => {
+                const overlaps = getOverlaps(opp.date);
+                const hasOverlap = overlaps.length > 0;
+                return (
+                  <div key={`${opp.name}-${idx}`} className={cn("rounded-xl border bg-card p-5 shadow-card hover:shadow-card-hover transition-shadow", hasOverlap ? "border-warning/50" : "border-border")}>
+                    {hasOverlap && (
+                      <div className="flex items-start gap-2 rounded-lg bg-warning/10 border border-warning/20 p-3 mb-4">
+                        <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs font-bold text-warning">Schedule Conflict</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Overlaps with: {overlaps.map(o => o.name).join(", ")}</p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-card-foreground">{opp.name}</p>
+                        <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground"><Calendar className="h-3 w-3" /> {opp.date}</div>
+                        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground"><MapPin className="h-3 w-3" /> {opp.location}</div>
+                      </div>
+                      <div className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1">
+                        <Sparkles className="h-3 w-3 text-primary" />
+                        <span className="text-xs font-bold text-primary">{opp.aiRank}</span>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-center justify-between rounded-lg bg-background border border-border p-3">
+                      <div>
+                        <p className="text-[11px] text-muted-foreground">Profit Estimate</p>
+                        <p className="text-sm font-semibold text-card-foreground">{opp.profitEstimate}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[11px] text-muted-foreground">Attendance</p>
+                        <p className="text-sm font-semibold text-card-foreground">{opp.attendance}</p>
+                      </div>
+                    </div>
+                    {opp.reasoning && <p className="mt-3 text-xs text-muted-foreground line-clamp-2">{opp.reasoning}</p>}
+                    <div className="mt-4 flex items-center gap-2">
+                      <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">{opp.type}</span>
+                      <div className="flex-1" />
+                      <button onClick={() => addToPipeline(opp)} className={cn("inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors", hasOverlap ? "bg-warning/10 text-warning border border-warning/30 hover:bg-warning/20" : "bg-primary text-primary-foreground hover:bg-primary/90")}>
+                        <Plus className="h-3 w-3" /> {hasOverlap ? "Add Anyway" : "Add to Pipeline"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ══════════ PIPELINE TAB ══════════ */}
+        {mainTab === "pipeline" && (
+          <>
         {/* Pipeline Kanban */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
@@ -583,10 +814,19 @@ export default function EventsHub() {
                   ) : null}
                 </div>
               ) : (
-                <div className="rounded-lg bg-background border border-border p-3.5">
+                <div className="rounded-lg bg-background border border-border p-3.5 space-y-3">
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    No forecast yet. Use <strong>"AI Search"</strong> to pull event data or manually enter revenue estimates by clicking Edit.
+                    No forecast yet. Click below to generate one with AI, or manually enter estimates by clicking Edit.
                   </p>
+                  <Button
+                    size="sm"
+                    onClick={handleAIForecast}
+                    disabled={aiForecastLoading}
+                    className="w-full gap-1.5"
+                  >
+                    {aiForecastLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                    {aiForecastLoading ? "Calculating..." : "AI Generate Forecast"}
+                  </Button>
                 </div>
               )}
 
@@ -652,6 +892,8 @@ export default function EventsHub() {
           <div className="rounded-xl border border-dashed border-border bg-card p-12 text-center">
             <p className="text-sm text-muted-foreground">Select an event from the pipeline above, or add a new one to get started.</p>
           </div>
+        )}
+          </>
         )}
       </div>
     </AppLayout>
