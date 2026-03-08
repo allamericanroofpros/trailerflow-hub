@@ -226,8 +226,17 @@ export default function Dashboard() {
             </div>
           </button>
 
-          <RevenueByTypeChart />
-          <TrailerPerformanceChart />
+          {ent.advancedAnalytics ? (
+            <>
+              <RevenueByTypeChart />
+              <TrailerPerformanceChart />
+            </>
+          ) : (
+            <>
+              <AdvancedAnalyticsPlaceholder title="Revenue by Event Type" />
+              <AdvancedAnalyticsPlaceholder title="Trailer Performance" />
+            </>
+          )}
         </div>
 
         {/* Quick Access Buttons */}
