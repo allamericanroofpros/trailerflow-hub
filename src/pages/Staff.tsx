@@ -1,16 +1,16 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import {
   Users as UsersIcon, AlertTriangle, Clock, Shield, Eye, Plus, Pencil,
-  Trash2, X, Save, Calendar, Loader2,
+  Trash2, X, Save, Calendar, Loader2, ChevronLeft, ChevronRight,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useStaffMembers, useCreateStaffMember, useUpdateStaffMember, useDeleteStaffMember } from "@/hooks/useStaffMembers";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfWeek, addDays, isSameDay, addWeeks, subWeeks } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 export default function Staff() {
@@ -103,9 +103,53 @@ export default function Staff() {
   const [addingNew, setAddingNew] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", hourly_rate: "", status: "active" });
+  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
 
   // Schedule assign form
   const [scheduleForm, setScheduleForm] = useState({ staff_id: "", event_id: "", role: "crew" });
+
+  // Build week days for calendar
+  const weekDays = useMemo(() => {
+    return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  }, [weekStart]);
+
+  // Build staff-event calendar data
+  const calendarData = useMemo(() => {
+    if (!staff || !assignments || !events) return [];
+    const activeStaff = staff.filter((s) => s.status === "active");
+    return activeStaff.map((s) => {
+      const staffAssignments = assignments.filter((a: any) => a.staff_id === s.id);
+      const dayMap: Record<string, { eventName: string; eventId: string; assignmentId: string; role: string; stage: string; startTime?: string; endTime?: string }[]> = {};
+      weekDays.forEach((d) => { dayMap[format(d, "yyyy-MM-dd")] = []; });
+      staffAssignments.forEach((a: any) => {
+        const evt = events.find((e) => e.id === a.event_id);
+        if (!evt?.event_date) return;
+        const key = evt.event_date;
+        if (dayMap[key]) {
+          dayMap[key].push({
+            eventName: evt.name,
+            eventId: evt.id,
+            assignmentId: a.id,
+            role: a.role || "crew",
+            stage: evt.stage,
+            startTime: evt.start_time || undefined,
+            endTime: evt.end_time || undefined,
+          });
+        }
+      });
+      return { staff: s, dayMap };
+    });
+  }, [staff, assignments, events, weekDays]);
+
+  // Count staff per day for overlap detection
+  const staffCountByDay = useMemo(() => {
+    const counts: Record<string, number> = {};
+    weekDays.forEach((d) => {
+      const key = format(d, "yyyy-MM-dd");
+      counts[key] = calendarData.filter((row) => row.dayMap[key]?.length > 0).length;
+    });
+    return counts;
+  }, [calendarData, weekDays]);
 
   const resetForm = () => {
     setForm({ name: "", email: "", phone: "", hourly_rate: "", status: "active" });
@@ -354,122 +398,264 @@ export default function Staff() {
           </div>
         )}
 
-        {/* Schedule Tab */}
+        {/* Schedule Tab - Calendar View */}
         {tab === "schedule" && (
-          <div className="space-y-6">
-            {/* Assign Staff to Event */}
-            <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-              <h3 className="text-sm font-semibold text-card-foreground mb-4 flex items-center gap-2">
-                <Calendar className="h-4 w-4 text-primary" />
-                Assign Staff to Event
+          <div className="space-y-4">
+            {/* Assign Staff to Event - Compact */}
+            <div className="rounded-xl border border-border bg-card p-4 shadow-card">
+              <h3 className="text-sm font-semibold text-card-foreground mb-3 flex items-center gap-2">
+                <Plus className="h-4 w-4 text-primary" />
+                Quick Assign
               </h3>
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Staff Member</label>
-                  <select
-                    value={scheduleForm.staff_id}
-                    onChange={(e) => setScheduleForm({ ...scheduleForm, staff_id: e.target.value })}
-                    className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none"
-                  >
-                    <option value="">Select staff...</option>
-                    {staff?.filter((s) => s.status === "active").map((s) => (
-                      <option key={s.id} value={s.id}>{s.name}</option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Event</label>
-                  <select
-                    value={scheduleForm.event_id}
-                    onChange={(e) => setScheduleForm({ ...scheduleForm, event_id: e.target.value })}
-                    className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none"
-                  >
-                    <option value="">Select event...</option>
-                    {events?.map((e) => (
-                      <option key={e.id} value={e.id}>
-                        {e.name} {e.event_date ? `(${format(parseISO(e.event_date), "MMM d")})` : ""}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-medium text-muted-foreground">Role</label>
-                  <Input
-                    value={scheduleForm.role}
-                    onChange={(e) => setScheduleForm({ ...scheduleForm, role: e.target.value })}
-                    placeholder="crew, lead, driver..."
-                    className="mt-1"
-                  />
-                </div>
-                <div className="flex items-end">
-                  <Button
-                    onClick={() => {
-                      if (!scheduleForm.staff_id || !scheduleForm.event_id) {
-                        toast.error("Select both a staff member and event");
-                        return;
-                      }
-                      assignStaff.mutate(scheduleForm, {
-                        onSuccess: () => setScheduleForm({ staff_id: "", event_id: "", role: "crew" }),
-                      });
-                    }}
-                    disabled={assignStaff.isPending}
-                    className="gap-1.5 w-full"
-                  >
-                    <Plus className="h-3.5 w-3.5" />
-                    {assignStaff.isPending ? "Assigning..." : "Assign"}
-                  </Button>
-                </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <select
+                  value={scheduleForm.staff_id}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, staff_id: e.target.value })}
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none"
+                >
+                  <option value="">Staff...</option>
+                  {staff?.filter((s) => s.status === "active").map((s) => (
+                    <option key={s.id} value={s.id}>{s.name}</option>
+                  ))}
+                </select>
+                <select
+                  value={scheduleForm.event_id}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, event_id: e.target.value })}
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none"
+                >
+                  <option value="">Event...</option>
+                  {events?.map((e) => (
+                    <option key={e.id} value={e.id}>
+                      {e.name} {e.event_date ? `(${format(parseISO(e.event_date), "M/d")})` : ""}
+                    </option>
+                  ))}
+                </select>
+                <Input
+                  value={scheduleForm.role}
+                  onChange={(e) => setScheduleForm({ ...scheduleForm, role: e.target.value })}
+                  placeholder="Role (crew, lead...)"
+                  className="h-[38px]"
+                />
+                <Button
+                  onClick={() => {
+                    if (!scheduleForm.staff_id || !scheduleForm.event_id) {
+                      toast.error("Select both staff and event");
+                      return;
+                    }
+                    assignStaff.mutate(scheduleForm, {
+                      onSuccess: () => setScheduleForm({ staff_id: "", event_id: "", role: "crew" }),
+                    });
+                  }}
+                  disabled={assignStaff.isPending}
+                  className="gap-1.5"
+                >
+                  <Plus className="h-3.5 w-3.5" />
+                  Assign
+                </Button>
               </div>
             </div>
 
-            {/* Current Assignments */}
-            <div className="rounded-xl border border-border bg-card shadow-card overflow-hidden">
-              <div className="px-4 py-3 border-b border-border bg-muted/50">
-                <h3 className="text-xs font-semibold text-muted-foreground">Current Assignments</h3>
+            {/* Week Navigation */}
+            <div className="flex items-center justify-between">
+              <Button variant="outline" size="sm" onClick={() => setWeekStart(subWeeks(weekStart, 1))}>
+                <ChevronLeft className="h-4 w-4" />
+              </Button>
+              <div className="text-center">
+                <span className="text-sm font-semibold text-card-foreground">
+                  {format(weekDays[0], "MMM d")} — {format(weekDays[6], "MMM d, yyyy")}
+                </span>
+                <Button variant="ghost" size="sm" className="ml-2 text-xs" onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 0 }))}>
+                  Today
+                </Button>
               </div>
-              {!assignments?.length ? (
-                <div className="py-12 text-center">
-                  <Calendar className="h-10 w-10 text-muted-foreground/30 mx-auto mb-3" />
-                  <p className="text-sm text-muted-foreground">No assignments yet. Assign staff to events above.</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr className="border-b border-border">
-                        {["Staff", "Event", "Date", "Role", ""].map((h) => (
-                          <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{h}</th>
-                        ))}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {assignments.map((a: any) => (
-                        <tr key={a.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                          <td className="px-4 py-3 font-medium text-card-foreground">{a.staff_members?.name || "—"}</td>
-                          <td className="px-4 py-3 text-card-foreground">{a.events?.name || "—"}</td>
-                          <td className="px-4 py-3 text-muted-foreground">
-                            {a.events?.event_date ? format(parseISO(a.events.event_date), "MMM d, yyyy") : "TBD"}
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">
-                              {a.role || "crew"}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <button
-                              onClick={() => unassignStaff.mutate(a.id)}
-                              className="p-1.5 rounded hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"
-                            >
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
+              <Button variant="outline" size="sm" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>
+                <ChevronRight className="h-4 w-4" />
+              </Button>
             </div>
+
+            {/* Calendar Grid */}
+            <div className="rounded-xl border border-border bg-card shadow-card overflow-hidden">
+              {/* Desktop: full grid */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="border-b border-border bg-muted/50">
+                      <th className="px-3 py-2.5 text-left text-xs font-semibold text-muted-foreground w-[140px] sticky left-0 bg-muted/50 z-10">Staff</th>
+                      {weekDays.map((d) => {
+                        const key = format(d, "yyyy-MM-dd");
+                        const isToday = isSameDay(d, new Date());
+                        const count = staffCountByDay[key] || 0;
+                        return (
+                          <th key={key} className={`px-2 py-2.5 text-center text-xs font-semibold min-w-[120px] ${isToday ? "bg-primary/5" : ""}`}>
+                            <div className={`${isToday ? "text-primary" : "text-muted-foreground"}`}>
+                              {format(d, "EEE")}
+                            </div>
+                            <div className={`text-base font-bold mt-0.5 ${isToday ? "text-primary" : "text-card-foreground"}`}>
+                              {format(d, "d")}
+                            </div>
+                            {count > 0 && (
+                              <div className={`text-[10px] mt-0.5 ${count >= 3 ? "text-success" : count >= 2 ? "text-warning" : "text-muted-foreground"}`}>
+                                {count} staff
+                              </div>
+                            )}
+                          </th>
+                        );
+                      })}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {calendarData.length === 0 ? (
+                      <tr>
+                        <td colSpan={8} className="py-12 text-center text-muted-foreground">
+                          <Calendar className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                          <p className="text-sm">No active staff. Add team members in the Roster tab.</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      calendarData.map((row) => (
+                        <tr key={row.staff.id} className="border-b border-border last:border-0">
+                          <td className="px-3 py-2 sticky left-0 bg-card z-10 border-r border-border">
+                            <div className="font-medium text-card-foreground text-xs truncate max-w-[130px]">{row.staff.name}</div>
+                            {row.staff.hourly_rate ? (
+                              <div className="text-[10px] text-muted-foreground">${row.staff.hourly_rate}/hr</div>
+                            ) : null}
+                          </td>
+                          {weekDays.map((d) => {
+                            const key = format(d, "yyyy-MM-dd");
+                            const dayEvents = row.dayMap[key] || [];
+                            const isToday = isSameDay(d, new Date());
+                            return (
+                              <td key={key} className={`px-1 py-1.5 align-top min-w-[120px] ${isToday ? "bg-primary/5" : ""}`}>
+                                {dayEvents.length > 0 ? (
+                                  <div className="space-y-1">
+                                    {dayEvents.map((evt) => {
+                                      const stageColors: Record<string, string> = {
+                                        confirmed: "bg-success/15 text-success border-success/30",
+                                        tentative: "bg-warning/15 text-warning border-warning/30",
+                                        applied: "bg-info/15 text-info border-info/30",
+                                        lead: "bg-muted text-muted-foreground border-border",
+                                      };
+                                      const color = stageColors[evt.stage] || "bg-secondary text-secondary-foreground border-border";
+                                      return (
+                                        <div
+                                          key={evt.assignmentId}
+                                          className={`rounded-md border px-2 py-1.5 text-[10px] leading-tight ${color} group relative`}
+                                        >
+                                          <div className="font-semibold truncate">{evt.eventName}</div>
+                                          <div className="opacity-70">{evt.role}</div>
+                                          {evt.startTime && (
+                                            <div className="opacity-60 mt-0.5">{evt.startTime?.slice(0, 5)}{evt.endTime ? `–${evt.endTime.slice(0, 5)}` : ""}</div>
+                                          )}
+                                          <button
+                                            onClick={() => unassignStaff.mutate(evt.assignmentId)}
+                                            className="absolute -top-1 -right-1 hidden group-hover:flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-destructive-foreground text-[8px]"
+                                          >
+                                            <X className="h-2.5 w-2.5" />
+                                          </button>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                ) : null}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Mobile: day-by-day cards */}
+              <div className="md:hidden divide-y divide-border">
+                {weekDays.map((d) => {
+                  const key = format(d, "yyyy-MM-dd");
+                  const isToday = isSameDay(d, new Date());
+                  const dayAssignments = calendarData.flatMap((row) =>
+                    (row.dayMap[key] || []).map((evt) => ({ ...evt, staffName: row.staff.name }))
+                  );
+                  return (
+                    <div key={key} className={`p-3 ${isToday ? "bg-primary/5" : ""}`}>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className={`text-sm font-semibold ${isToday ? "text-primary" : "text-card-foreground"}`}>
+                          {format(d, "EEE, MMM d")}
+                        </span>
+                        {dayAssignments.length > 0 && (
+                          <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                            dayAssignments.length >= 3 ? "bg-success/10 text-success" : dayAssignments.length >= 2 ? "bg-warning/10 text-warning" : "bg-muted text-muted-foreground"
+                          }`}>
+                            {dayAssignments.length} assigned
+                          </span>
+                        )}
+                      </div>
+                      {dayAssignments.length === 0 ? (
+                        <p className="text-xs text-muted-foreground/50">No staff scheduled</p>
+                      ) : (
+                        <div className="space-y-1.5">
+                          {dayAssignments.map((evt) => {
+                            const stageColors: Record<string, string> = {
+                              confirmed: "bg-success/15 text-success border-success/30",
+                              tentative: "bg-warning/15 text-warning border-warning/30",
+                              applied: "bg-info/15 text-info border-info/30",
+                            };
+                            const color = stageColors[evt.stage] || "bg-secondary text-secondary-foreground border-border";
+                            return (
+                              <div key={evt.assignmentId} className={`flex items-center justify-between rounded-lg border px-3 py-2 ${color}`}>
+                                <div>
+                                  <span className="text-xs font-semibold">{evt.staffName}</span>
+                                  <span className="text-xs opacity-70 ml-2">{evt.eventName}</span>
+                                  {evt.startTime && (
+                                    <span className="text-[10px] opacity-60 ml-1">{evt.startTime.slice(0, 5)}</span>
+                                  )}
+                                </div>
+                                <button
+                                  onClick={() => unassignStaff.mutate(evt.assignmentId)}
+                                  className="p-1 rounded hover:bg-destructive/10 text-current"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+
+            {/* Overlap Warnings */}
+            {(() => {
+              const overlaps: { date: string; events: string[] }[] = [];
+              weekDays.forEach((d) => {
+                const key = format(d, "yyyy-MM-dd");
+                const allEventsOnDay = new Set<string>();
+                calendarData.forEach((row) => {
+                  row.dayMap[key]?.forEach((evt) => allEventsOnDay.add(evt.eventName));
+                });
+                if (allEventsOnDay.size > 1) {
+                  overlaps.push({ date: format(d, "EEE, MMM d"), events: Array.from(allEventsOnDay) });
+                }
+              });
+              if (overlaps.length === 0) return null;
+              return (
+                <div className="rounded-xl border border-warning/30 bg-warning/5 p-4">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertTriangle className="h-4 w-4 text-warning" />
+                    <span className="text-sm font-semibold text-warning">Overlap Detected</span>
+                  </div>
+                  <div className="space-y-1">
+                    {overlaps.map((o) => (
+                      <p key={o.date} className="text-xs text-muted-foreground">
+                        <strong>{o.date}:</strong> {o.events.join(" & ")} — staff split across multiple events
+                      </p>
+                    ))}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
       </div>
