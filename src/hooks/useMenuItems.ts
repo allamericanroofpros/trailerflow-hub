@@ -10,7 +10,7 @@ export function useMenuItems(trailerId?: string) {
         .select("*")
         .eq("is_active", true)
         .order("sort_order", { ascending: true });
-      if (trailerId) query = query.eq("trailer_id", trailerId);
+      if (trailerId) query = query.or(`trailer_id.eq.${trailerId},trailer_id.is.null`);
       const { data, error } = await query;
       if (error) throw error;
       return data;
