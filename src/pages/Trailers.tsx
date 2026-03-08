@@ -157,6 +157,71 @@ export default function Trailers() {
 
   const activeCount = trailers?.filter((t) => t.status === "active").length || 0;
 
+  const handleCopyTrailer = async (source: any) => {
+    try {
+      const payload: any = {
+        name: `${source.name} (Copy)`,
+        type: source.type || null,
+        description: source.description || null,
+        status: "active",
+        hourly_cost: Number(source.hourly_cost) || 0,
+        specialties: source.specialties || null,
+        avg_ticket: Number(source.avg_ticket) || 0,
+        avg_customers_per_hour: Number(source.avg_customers_per_hour) || 0,
+        setup_teardown_hours: Number(source.setup_teardown_hours) || 2,
+        fuel_cost_per_event: Number(source.fuel_cost_per_event) || 0,
+        setup_cost_per_event: Number(source.setup_cost_per_event) || 0,
+        staff_required: Number(source.staff_required) || 1,
+        staff_hourly_rate: Number(source.staff_hourly_rate) || 15,
+        avg_food_cost_percent: Number(source.avg_food_cost_percent) || 30,
+        target_margin: Number(source.target_margin) || 70,
+        owner_id: user!.id,
+      };
+      const { data: newTrailer, error: tErr } = await supabase.from("trailers").insert(payload).select().single();
+      if (tErr) throw tErr;
+
+      // Copy menu items
+      const { data: srcMenuItems } = await supabase.from("menu_items").select("*, menu_item_ingredients(*)").eq("trailer_id", source.id);
+      if (srcMenuItems?.length) {
+        for (const mi of srcMenuItems) {
+          const { data: newMi, error: miErr } = await supabase.from("menu_items").insert({
+            name: mi.name, description: mi.description, category: mi.category,
+            price: mi.price, cost: mi.cost, is_active: mi.is_active, modifiers: mi.modifiers,
+            sort_order: mi.sort_order, trailer_id: newTrailer.id,
+          } as any).select().single();
+          if (miErr) continue;
+          // Copy ingredients
+          const ings = (mi as any).menu_item_ingredients || [];
+          if (ings.length && newMi) {
+            await supabase.from("menu_item_ingredients").insert(
+              ings.map((ing: any) => ({ menu_item_id: newMi.id, inventory_item_id: ing.inventory_item_id, quantity_used: ing.quantity_used }))
+            );
+          }
+        }
+      }
+
+      // Copy inventory items
+      const { data: srcInv } = await supabase.from("inventory_items").select("*").eq("trailer_id", source.id).eq("is_active", true);
+      if (srcInv?.length) {
+        await supabase.from("inventory_items").insert(
+          srcInv.map((inv: any) => ({
+            name: inv.name, unit: inv.unit, current_stock: inv.current_stock,
+            par_level: inv.par_level, reorder_point: inv.reorder_point,
+            cost_per_unit: inv.cost_per_unit, supplier: inv.supplier,
+            shelf_life_days: inv.shelf_life_days, unit_size: inv.unit_size,
+            serving_size: inv.serving_size, trailer_id: newTrailer.id,
+          }))
+        );
+      }
+
+      toast.success(`Copied "${source.name}" — new trailer created with its menu & inventory`);
+      // Refresh
+      window.location.reload();
+    } catch (e: any) {
+      toast.error(e.message || "Failed to copy trailer");
+    }
+  };
+
   // Calculate a quick profit snapshot for each trailer
   const getProfitSnapshot = (t: any) => {
     const ticket = Number(t.avg_ticket) || 0;
