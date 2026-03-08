@@ -21,8 +21,10 @@ import {
   ArrowRight,
   AlertTriangle,
   Loader2,
+  ShoppingCart,
 } from "lucide-react";
 import { useMemo } from "react";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
 
 export default function Dashboard() {
   const navigate = useNavigate();
