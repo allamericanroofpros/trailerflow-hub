@@ -71,7 +71,7 @@ export default function POS() {
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCustomItem, setShowCustomItem] = useState(false);
   const [showModifierPicker, setShowModifierPicker] = useState<{ item: any; modifiers: Modifier[] } | null>(null);
-  const [pendingModifiers, setPendingModifiers] = useState<Record<string, { label: string; priceAdjust: number }>>({});
+  const [pendingModifiers, setPendingModifiers] = useState<Record<string, { label: string; priceAdjust: number }[]>>({});
   const [showEOD, setShowEOD] = useState(false);
   const [customItemName, setCustomItemName] = useState("");
   const [customItemPrice, setCustomItemPrice] = useState("");
