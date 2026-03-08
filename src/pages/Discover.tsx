@@ -30,13 +30,7 @@ export default function Discover() {
   const { data: existingBookings } = useBookings();
   const createEvent = useCreateEvent();
 
-  if (!ent.aiDiscovery) {
-    return (
-      <AppLayout>
-        <UpgradeBanner feature="AI Event Discovery" currentPlan={ent.currentPlan} requiredPlan="pro" />
-      </AppLayout>
-    );
-  }
+  // Gate moved below all hooks
 
 
   const opportunities = aiEvents || [];
