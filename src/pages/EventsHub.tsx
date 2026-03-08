@@ -11,6 +11,7 @@ import { useToggleChecklistItem } from "@/hooks/useChecklist";
 import { useTrailers } from "@/hooks/useTrailers";
 import { useBookings } from "@/hooks/useBookings";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSelectedTrailer } from "@/components/layout/TopBar";
 import { useAIDiscovery } from "@/hooks/useAIDiscovery";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -57,8 +58,9 @@ function formatDate(date?: string | null, endDate?: string | null): string {
 }
 
 export default function EventsHub() {
-  const { data: grouped, isLoading } = useEventsByStage();
-  const { data: allEvents } = useEvents();
+  const { selectedTrailerId } = useSelectedTrailer();
+  const { data: grouped, isLoading } = useEventsByStage(selectedTrailerId);
+  const { data: allEvents } = useEvents(undefined, selectedTrailerId);
   const { data: existingBookings } = useBookings();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data: selectedEvent } = useEvent(selectedId ?? undefined);
