@@ -24,6 +24,8 @@ import { claudeNonStreaming } from "@/hooks/useClaudeAI";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
 import { useOrgId } from "@/hooks/useOrgId";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { UpgradeBanner } from "@/components/UpgradeModal";
 
 type EventStage = Database["public"]["Enums"]["event_stage"];
 
