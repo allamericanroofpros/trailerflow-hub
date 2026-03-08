@@ -446,7 +446,7 @@ export default function POS() {
       <header className="flex h-16 items-center justify-between border-b-2 border-border bg-card px-4 shrink-0">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate("/")}
+            onClick={handleExitPOS}
             className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-muted-foreground hover:bg-secondary hover:text-foreground active:scale-95 transition-all touch-manipulation"
           >
             <ArrowLeft className="h-5 w-5" />
