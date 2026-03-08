@@ -57,7 +57,9 @@ export function useUpdateMenuItem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: { id: string; [key: string]: any }) => {
-      const { data, error } = await supabase.from("menu_items").update(updates as any).eq("id", id).select().single();
+      // Strip any non-column fields that might have leaked in (e.g. nested joins)
+      const { menu_item_ingredients, ...cleanUpdates } = updates as any;
+      const { data, error } = await supabase.from("menu_items").update(cleanUpdates).eq("id", id).select().single();
       if (error) throw error;
       return data;
     },
