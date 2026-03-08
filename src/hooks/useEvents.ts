@@ -7,12 +7,13 @@ type EventInsert = Database["public"]["Tables"]["events"]["Insert"];
 type EventUpdate = Database["public"]["Tables"]["events"]["Update"];
 type EventStage = Database["public"]["Enums"]["event_stage"];
 
-export function useEvents(stage?: EventStage) {
+export function useEvents(stage?: EventStage, trailerId?: string | null) {
   return useQuery({
-    queryKey: ["events", stage],
+    queryKey: ["events", stage, trailerId],
     queryFn: async () => {
       let query = supabase.from("events").select("*, trailers(name)").order("event_date", { ascending: true });
       if (stage) query = query.eq("stage", stage);
+      if (trailerId) query = query.eq("trailer_id", trailerId);
       const { data, error } = await query;
       if (error) throw error;
       return data;
@@ -71,14 +72,16 @@ export function useDeleteEvent() {
   });
 }
 
-export function useEventsByStage() {
+export function useEventsByStage(trailerId?: string | null) {
   return useQuery({
-    queryKey: ["events", "by-stage"],
+    queryKey: ["events", "by-stage", trailerId],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("events")
         .select("*, trailers(name)")
         .order("event_date", { ascending: true });
+      if (trailerId) query = query.eq("trailer_id", trailerId);
+      const { data, error } = await query;
       if (error) throw error;
 
       const stages: EventStage[] = ["lead", "applied", "tentative", "confirmed", "completed", "closed"];
