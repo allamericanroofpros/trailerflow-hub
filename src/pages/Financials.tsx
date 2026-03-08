@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrgId } from "@/hooks/useOrgId";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { useNavigate } from "react-router-dom";
 
 export default function Financials() {
   const { data: transactions, isLoading } = useTransactions();
