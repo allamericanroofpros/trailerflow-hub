@@ -62,6 +62,8 @@ export default function POSStartOfDay({ onComplete }: { onComplete: (data: Start
   const [selectedTrailer, setSelectedTrailer] = useState<string>("");
   const [selectedEvent, setSelectedEvent] = useState<string>("");
   const [openingCash, setOpeningCash] = useState("");
+  const [denomCounts, setDenomCounts] = useState<Record<string, string>>({});
+  const [useDenomCounter, setUseDenomCounter] = useState(true);
   const [inventoryCounts, setInventoryCounts] = useState<Record<string, string>>({});
   const [checklistState, setChecklistState] = useState<boolean[]>(morningChecklist.map(() => false));
   const [notes, setNotes] = useState("");
