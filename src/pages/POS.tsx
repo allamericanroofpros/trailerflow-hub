@@ -22,6 +22,7 @@ import POSConfirmation from "@/components/pos/POSConfirmation";
 import POSOrderHistory from "@/components/pos/POSOrderHistory";
 import POSEndOfDay from "@/components/pos/POSEndOfDay";
 import POSStartOfDay from "@/components/pos/POSStartOfDay";
+import POSTimeClock from "@/components/pos/POSTimeClock";
 import { useStaffByPin } from "@/hooks/useTimeClock";
 import { supabase } from "@/integrations/supabase/client";
 
