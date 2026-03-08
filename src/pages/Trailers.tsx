@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import {
   Truck, Plus, Pencil, Trash2, Save, Loader2, X, DollarSign,
-  Users, Clock, Fuel, ChefHat, Info, Sparkles, CheckCircle, AlertTriangle, XCircle,
+  Users, Clock, Fuel, ChefHat, Info, Sparkles, CheckCircle, AlertTriangle, XCircle, Copy,
 } from "lucide-react";
 import { useState } from "react";
 import {
