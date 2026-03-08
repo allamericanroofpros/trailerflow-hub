@@ -797,22 +797,41 @@ export default function POS() {
               <div key={mod.name}>
                 <p className="text-sm font-bold text-card-foreground mb-2">{mod.name} {mod.required && <span className="text-destructive">*</span>}</p>
                 <div className="grid grid-cols-2 gap-2">
-                  {mod.options.map((opt) => (
-                    <button
-                      key={opt.label}
-                      onClick={() => setPendingModifiers(prev => ({ ...prev, [mod.name]: { label: opt.label, priceAdjust: opt.priceAdjust } }))}
-                      className={`rounded-xl border-2 p-3 text-left transition-all active:scale-95 touch-manipulation ${
-                        pendingModifiers[mod.name]?.label === opt.label
-                          ? "border-primary bg-primary/10"
-                          : "border-border hover:border-primary/30"
-                      }`}
-                    >
-                      <p className="text-sm font-bold text-card-foreground">{opt.label}</p>
-                      {opt.priceAdjust !== 0 && (
-                        <p className="text-xs text-primary font-semibold">+${opt.priceAdjust.toFixed(2)}</p>
-                      )}
-                    </button>
-                  ))}
+                  {mod.options.map((opt) => {
+                    const isSelected = (pendingModifiers[mod.name] || []).some(s => s.label === opt.label);
+                    return (
+                      <button
+                        key={opt.label}
+                        onClick={() => setPendingModifiers(prev => {
+                          const current = prev[mod.name] || [];
+                          const exists = current.some(s => s.label === opt.label);
+                          return {
+                            ...prev,
+                            [mod.name]: exists
+                              ? current.filter(s => s.label !== opt.label)
+                              : [...current, { label: opt.label, priceAdjust: opt.priceAdjust }],
+                          };
+                        })}
+                        className={`rounded-xl border-2 p-3 text-left transition-all active:scale-95 touch-manipulation flex items-center gap-2 ${
+                          isSelected
+                            ? "border-primary bg-primary/10"
+                            : "border-border hover:border-primary/30"
+                        }`}
+                      >
+                        <div className={`h-5 w-5 rounded border-2 flex items-center justify-center shrink-0 ${
+                          isSelected ? "border-primary bg-primary" : "border-muted-foreground/40"
+                        }`}>
+                          {isSelected && <span className="text-primary-foreground text-xs font-black">✓</span>}
+                        </div>
+                        <div>
+                          <p className="text-sm font-bold text-card-foreground">{opt.label}</p>
+                          {opt.priceAdjust !== 0 && (
+                            <p className="text-xs text-primary font-semibold">+${opt.priceAdjust.toFixed(2)}</p>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             ))}
