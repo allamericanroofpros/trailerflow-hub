@@ -127,6 +127,10 @@ export default function SettingsPage() {
         surcharge_percent: parseFloat(surchargePercent) || 3.0,
         surcharge_flat: surchargeFlat ? parseFloat(surchargeFlat) : null,
         surcharge_cap: surchargeCap ? parseFloat(surchargeCap) : null,
+        tax_enabled: taxEnabled,
+        tax_label: taxLabel,
+        tax_percent: parseFloat(taxPercent) || 0,
+        tax_inclusive: taxInclusive,
       } as any).eq("id", currentOrg.id);
       if (error) throw error;
     },
