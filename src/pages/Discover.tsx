@@ -30,7 +30,7 @@ export default function Discover() {
   const { data: existingBookings } = useBookings();
   const createEvent = useCreateEvent();
 
-  // Gate moved below all hooks
+  
 
 
   const opportunities = aiEvents || [];
