@@ -1,0 +1,1 @@
+UPDATE public.staff_members SET pin = '1210' WHERE id = '99e87b48-4dbb-432c-a02b-b1982f309e8e';
