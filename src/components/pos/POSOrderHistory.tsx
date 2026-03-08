@@ -287,10 +287,19 @@ export default function POSOrderHistory() {
                     <span>Subtotal</span>
                     <span>${Number(selectedOrder.subtotal).toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between text-sm text-muted-foreground">
-                    <span>{selectedOrder.tax_label || "Tax"}</span>
-                    <span>${Number(selectedOrder.tax).toFixed(2)}</span>
-                  </div>
+                  {selectedOrder.tax_inclusive ? (
+                    Number(selectedOrder.tax) > 0 && (
+                      <div className="flex justify-between text-xs text-muted-foreground/70 italic">
+                        <span>Includes {selectedOrder.tax_label || "Tax"}</span>
+                        <span>${Number(selectedOrder.tax).toFixed(2)}</span>
+                      </div>
+                    )
+                  ) : (
+                    <div className="flex justify-between text-sm text-muted-foreground">
+                      <span>{selectedOrder.tax_label || "Tax"}</span>
+                      <span>${Number(selectedOrder.tax).toFixed(2)}</span>
+                    </div>
+                  )}
                   {Number(selectedOrder.tip) > 0 && (
                     <div className="flex justify-between text-sm text-success">
                       <span>Tip</span>
