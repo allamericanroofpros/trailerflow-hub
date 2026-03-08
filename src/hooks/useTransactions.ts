@@ -30,3 +30,14 @@ export function useCreateTransaction() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["transactions"] }),
   });
 }
+
+export function useDeleteTransaction() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("transactions").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["transactions"] }),
+  });
+}

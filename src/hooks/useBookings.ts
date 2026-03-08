@@ -43,3 +43,14 @@ export function useUpdateBooking() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["bookings"] }),
   });
 }
+
+export function useDeleteBooking() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("bookings").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["bookings"] }),
+  });
+}

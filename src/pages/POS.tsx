@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMenuItems } from "@/hooks/useMenuItems";
 import { useCreateOrder } from "@/hooks/useOrders";
@@ -8,7 +8,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "
 import {
   ShoppingCart, Plus, Minus, Trash2, CreditCard, Banknote,
   Smartphone, ChefHat, Clock, CheckCircle, Loader2, ArrowLeft,
-  Truck, X, ChevronUp, BarChart3, Package, FileText, Tag, Receipt, Moon,
+  Truck, X, BarChart3, Package, FileText, Receipt, Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -70,12 +70,9 @@ export default function POS() {
   const [view, setView] = useState<"register" | "orders" | "history" | "sales" | "inventory" | "report">("register");
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
-  const [showCustomItem, setShowCustomItem] = useState(false);
   const [showModifierPicker, setShowModifierPicker] = useState<{ item: any; modifiers: Modifier[] } | null>(null);
-  const [pendingModifiers, setPendingModifiers] = useState<Record<string, { label: string; priceAdjust: number }[]>>({});
+  const [pendingModifiers, setPendingModifiers] = useState<Record<string, { label: string; priceAdjust: number; inventoryAdjustments?: { inventoryItemId: string; extraQty: number }[] }[]>>({});
   const [showEOD, setShowEOD] = useState(false);
-  const [customItemName, setCustomItemName] = useState("");
-  const [customItemPrice, setCustomItemPrice] = useState("");
   const [specialInstructions, setSpecialInstructions] = useState("");
   const [confirmation, setConfirmation] = useState<{
     orderNumber: number;
@@ -176,7 +173,6 @@ export default function POS() {
           specialInstructions.trim() ? `Instructions: ${specialInstructions.trim()}` : "",
         ].filter(Boolean).join(" | ") || undefined,
         items: cart.map((c) => {
-          const isCustom = c.menu_item_id.startsWith(CUSTOM_ITEM_ID);
           const modifiersForDb = c.selectedModifiers?.length
             ? c.selectedModifiers.map(m => ({
                 name: m.groupName,
@@ -188,11 +184,10 @@ export default function POS() {
               }))
             : undefined;
           return {
-            menu_item_id: isCustom ? CUSTOM_ITEM_ID : c.menu_item_id.split(" (")[0],
+            menu_item_id: c.menu_item_id.split(" (")[0],
             quantity: c.quantity,
             unit_price: c.price,
             modifiers: modifiersForDb,
-            notes: isCustom ? `Custom: ${c.name}` : undefined,
           };
         }),
       });
@@ -216,25 +211,7 @@ export default function POS() {
     }
   };
 
-  // Generic "Custom Item" row in menu_items table — avoids FK violation on order_items
-  const CUSTOM_ITEM_ID = "f8e25554-daf0-43fb-bb0a-a338af48d445";
-
-  const handleAddCustomItem = () => {
-    if (!customItemName.trim() || !customItemPrice) return;
-    const price = Number(customItemPrice);
-    if (price <= 0) return;
-    const uniqueKey = `${CUSTOM_ITEM_ID}::${Date.now()}`;
-    setCart((prev) => [...prev, {
-      menu_item_id: uniqueKey,
-      name: customItemName.trim(),
-      price,
-      quantity: 1,
-    }]);
-    setShowCustomItem(false);
-    setCustomItemName("");
-    setCustomItemPrice("");
-    toast.success(`Added ${customItemName.trim()}`);
-  };
+  // No custom items — all items come from the menu
 
   const categories = menuItems
     ? Array.from(new Set(menuItems.map((i) => i.category)))
@@ -761,45 +738,6 @@ export default function POS() {
         />
       )}
 
-      {/* Custom Item Dialog */}
-      <Dialog open={showCustomItem} onOpenChange={setShowCustomItem}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Add Custom Item</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-2">
-            <div>
-              <label className="text-sm font-bold text-muted-foreground">Item Name</label>
-              <Input
-                value={customItemName}
-                onChange={(e) => setCustomItemName(e.target.value)}
-                placeholder="e.g. Extra sauce"
-                className="mt-1 h-12 rounded-xl border-2 text-base"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-bold text-muted-foreground">Price ($)</label>
-              <Input
-                type="number"
-                step="0.01"
-                min="0"
-                value={customItemPrice}
-                onChange={(e) => setCustomItemPrice(e.target.value)}
-                placeholder="0.00"
-                className="mt-1 h-12 rounded-xl border-2 text-base"
-              />
-            </div>
-            <Button
-              className="w-full h-12 font-black rounded-xl"
-              onClick={handleAddCustomItem}
-              disabled={!customItemName.trim() || !customItemPrice || Number(customItemPrice) <= 0}
-            >
-              Add to Order
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
       {/* Modifier Picker Dialog */}
       <Dialog open={!!showModifierPicker} onOpenChange={(v) => { if (!v) setShowModifierPicker(null); }}>
         <DialogContent className="max-w-sm">
@@ -823,7 +761,7 @@ export default function POS() {
                             ...prev,
                             [mod.name]: exists
                               ? current.filter(s => s.label !== opt.label)
-                              : [...current, { label: opt.label, priceAdjust: opt.priceAdjust }],
+                              : [...current, { label: opt.label, priceAdjust: opt.priceAdjust, inventoryAdjustments: opt.inventoryAdjustments }],
                           };
                         })}
                         className={`rounded-xl border-2 p-3 text-left transition-all active:scale-95 touch-manipulation flex items-center gap-2 ${
