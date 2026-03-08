@@ -88,14 +88,36 @@ export default function MenuPage() {
   const [aiPriceLoading, setAiPriceLoading] = useState(false);
   const [aiSuggestedPrice, setAiSuggestedPrice] = useState<number | null>(null);
 
-  // Estimated cost from ingredients
-  const ingredientCost = useMemo(() => {
+  // Estimated cost from base ingredients
+  const baseIngredientCost = useMemo(() => {
     return form.ingredients.reduce((sum, ing) => {
       const invItem = inventoryItems?.find(ii => ii.id === ing.inventoryItemId);
       const costPerUnit = Number(invItem?.cost_per_unit) || 0;
       return sum + costPerUnit * ing.quantityUsed;
     }, 0);
   }, [form.ingredients, inventoryItems]);
+
+  // Cost from modifier inventory adjustments (average across all options)
+  const modifierCostRange = useMemo(() => {
+    if (!form.modifiers.length || !inventoryItems) return { min: 0, max: 0, avg: 0 };
+    let minCost = 0, maxCost = 0;
+    form.modifiers.forEach(mod => {
+      const optionCosts = mod.options.map(opt => {
+        return (opt.inventoryAdjustments || []).reduce((sum, adj) => {
+          const invItem = inventoryItems.find(ii => ii.id === adj.inventoryItemId);
+          return sum + (Number(invItem?.cost_per_unit) || 0) * adj.extraQty;
+        }, 0);
+      });
+      if (optionCosts.length > 0) {
+        minCost += Math.min(...optionCosts);
+        maxCost += Math.max(...optionCosts);
+      }
+    });
+    return { min: minCost, max: maxCost, avg: (minCost + maxCost) / 2 };
+  }, [form.modifiers, inventoryItems]);
+
+  // Total ingredient cost (base + average modifier cost)
+  const ingredientCost = baseIngredientCost + modifierCostRange.avg;
 
   // Get target margin from selected trailer
   const selectedTrailer = trailers?.find(t => t.id === form.trailer_id);
