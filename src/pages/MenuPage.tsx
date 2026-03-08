@@ -683,6 +683,7 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                           <div className="ml-5 space-y-1">
                             {(opt.inventoryAdjustments || []).map((adj, adjIdx) => {
                               const invItem = inventoryItems?.find(ii => ii.id === adj.inventoryItemId);
+                              const adjCost = (Number(invItem?.cost_per_unit) || 0) * adj.extraQty;
                               return (
                                 <div key={adjIdx} className="flex items-center gap-1.5">
                                   <Package className="h-2.5 w-2.5 text-muted-foreground" />
@@ -711,6 +712,9 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                                     className="h-6 text-[10px] w-16"
                                   />
                                   <span className="text-[9px] text-muted-foreground">{invItem?.unit || ""}</span>
+                                  {adjCost > 0 && (
+                                    <span className="text-[9px] font-medium text-warning">${adjCost.toFixed(2)}</span>
+                                  )}
                                   <button
                                     onClick={() => {
                                       const newAdjs = (opt.inventoryAdjustments || []).filter((_: any, i: number) => i !== adjIdx);
@@ -723,6 +727,18 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                                 </div>
                               );
                             })}
+                            {/* Show total cost for this option */}
+                            {(() => {
+                              const optCost = (opt.inventoryAdjustments || []).reduce((sum, adj) => {
+                                const invItem = inventoryItems?.find(ii => ii.id === adj.inventoryItemId);
+                                return sum + (Number(invItem?.cost_per_unit) || 0) * adj.extraQty;
+                              }, 0);
+                              return optCost > 0 ? (
+                                <span className="text-[10px] font-semibold text-warning">
+                                  Option cost: ${optCost.toFixed(2)}
+                                </span>
+                              ) : null;
+                            })()}
                             <button
                               onClick={() => {
                                 const newAdjs = [...(opt.inventoryAdjustments || []), { inventoryItemId: "", extraQty: 1 }];
