@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useTrailers } from "@/hooks/useTrailers";
 import { useMenuItems } from "@/hooks/useMenuItems";
-import { useInventory } from "@/hooks/useInventory";
+import { useInventoryItems } from "@/hooks/useInventory";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { useBookings } from "@/hooks/useBookings";
 import { useOrg } from "@/contexts/OrgContext";
