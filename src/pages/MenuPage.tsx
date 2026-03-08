@@ -71,6 +71,36 @@ const emptyForm: FormState = {
   ingredients: [], modifiers: [],
 };
 
+// Compute live cost from ingredients + modifiers using current inventory prices
+function computeLiveCost(item: any, allInventory?: any[]): number {
+  // Base recipe cost from menu_item_ingredients join
+  let baseCost = 0;
+  const ingredients = item.menu_item_ingredients || [];
+  for (const ing of ingredients) {
+    const costPerUnit = Number(ing.inventory_items?.cost_per_unit) || 0;
+    baseCost += costPerUnit * Number(ing.quantity_used);
+  }
+
+  // Modifier average cost
+  const modifiers = Array.isArray(item.modifiers) ? item.modifiers as any[] : [];
+  let modAvg = 0;
+  if (modifiers.length > 0 && allInventory) {
+    for (const mod of modifiers) {
+      const optCosts = (mod.options || []).map((opt: any) => {
+        return (opt.inventoryAdjustments || []).reduce((sum: number, adj: any) => {
+          const invItem = allInventory.find((ii: any) => ii.id === adj.inventoryItemId);
+          return sum + (Number(invItem?.cost_per_unit) || 0) * (Number(adj.extraQty) || 0);
+        }, 0);
+      });
+      if (optCosts.length > 0) {
+        modAvg += (Math.min(...optCosts) + Math.max(...optCosts)) / 2;
+      }
+    }
+  }
+
+  return baseCost + modAvg;
+}
+
 export default function MenuPage() {
   const { data: menuItems, isLoading } = useAllMenuItems();
   const { data: inventoryItems } = useInventoryItems();
