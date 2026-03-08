@@ -51,11 +51,12 @@ export default function Financials() {
   };
 
   const stats = useMemo(() => {
-    if (!transactions?.length) return { totalIncome: 0, totalExpenses: 0, profit: 0, count: 0 };
+    if (!transactions?.length) return { totalIncome: 0, totalExpenses: 0, profit: 0, count: 0, surchargeRevenue: 0 };
     const income = transactions.filter(t => t.type === "income").reduce((s, t) => s + t.amount, 0);
     const expenses = transactions.filter(t => t.type === "expense").reduce((s, t) => s + t.amount, 0);
-    return { totalIncome: income, totalExpenses: expenses, profit: income - expenses, count: transactions.length };
-  }, [transactions]);
+    const surchargeRevenue = (orders || []).reduce((s, o: any) => s + (o.surcharge_amount || 0), 0);
+    return { totalIncome: income, totalExpenses: expenses, profit: income - expenses, count: transactions.length, surchargeRevenue };
+  }, [transactions, orders]);
 
   // Chart: monthly income vs expenses
   const chartData = useMemo(() => {
