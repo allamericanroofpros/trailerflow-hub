@@ -4,7 +4,9 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { OrgProvider } from "@/contexts/OrgContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
+import { SuperAdminRoute } from "@/components/SuperAdminRoute";
 import Dashboard from "./pages/Dashboard";
 import POS from "./pages/POS";
 import MenuPage from "./pages/MenuPage";
@@ -27,45 +29,59 @@ import ReceiptPage from "./pages/Receipt";
 import PublicBooking from "./pages/PublicBooking";
 import FleetOverview from "./pages/FleetOverview";
 import OrdersQueue from "./pages/OrdersQueue";
+import AdminOverview from "./pages/admin/AdminOverview";
+import AdminOrganizations from "./pages/admin/AdminOrganizations";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminAnalytics from "./pages/admin/AdminAnalytics";
+import AdminSettings from "./pages/admin/AdminSettings";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <AuthProvider>
-      <TooltipProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <Routes>
-            {/* Public routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/receipt/:orderId" element={<ReceiptPage />} />
-            <Route path="/book" element={<PublicBooking />} />
+      <OrgProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <Routes>
+              {/* Public routes */}
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/forgot-password" element={<ForgotPassword />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/receipt/:orderId" element={<ReceiptPage />} />
+              <Route path="/book" element={<PublicBooking />} />
 
-            {/* Protected routes */}
-            <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
-            <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
-            <Route path="/menu" element={<ProtectedRoute><MenuPage /></ProtectedRoute>} />
-            <Route path="/inventory" element={<ProtectedRoute><InventoryPage /></ProtectedRoute>} />
-            <Route path="/events" element={<ProtectedRoute><EventsHub /></ProtectedRoute>} />
-            <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
-            <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
-            <Route path="/trailers" element={<ProtectedRoute><Trailers /></ProtectedRoute>} />
-            <Route path="/fleet" element={<ProtectedRoute><FleetOverview /></ProtectedRoute>} />
-            <Route path="/staff" element={<ProtectedRoute><Staff /></ProtectedRoute>} />
-            <Route path="/bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
-            <Route path="/financials" element={<ProtectedRoute><Financials /></ProtectedRoute>} />
-            <Route path="/maintenance" element={<ProtectedRoute><Maintenance /></ProtectedRoute>} />
-            <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
-            <Route path="/orders-queue" element={<ProtectedRoute><OrdersQueue /></ProtectedRoute>} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
+              {/* Super Admin routes */}
+              <Route path="/admin" element={<SuperAdminRoute><AdminOverview /></SuperAdminRoute>} />
+              <Route path="/admin/organizations" element={<SuperAdminRoute><AdminOrganizations /></SuperAdminRoute>} />
+              <Route path="/admin/users" element={<SuperAdminRoute><AdminUsers /></SuperAdminRoute>} />
+              <Route path="/admin/analytics" element={<SuperAdminRoute><AdminAnalytics /></SuperAdminRoute>} />
+              <Route path="/admin/settings" element={<SuperAdminRoute><AdminSettings /></SuperAdminRoute>} />
+
+              {/* Protected routes */}
+              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
+              <Route path="/menu" element={<ProtectedRoute><MenuPage /></ProtectedRoute>} />
+              <Route path="/inventory" element={<ProtectedRoute><InventoryPage /></ProtectedRoute>} />
+              <Route path="/events" element={<ProtectedRoute><EventsHub /></ProtectedRoute>} />
+              <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
+              <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
+              <Route path="/trailers" element={<ProtectedRoute><Trailers /></ProtectedRoute>} />
+              <Route path="/fleet" element={<ProtectedRoute><FleetOverview /></ProtectedRoute>} />
+              <Route path="/staff" element={<ProtectedRoute><Staff /></ProtectedRoute>} />
+              <Route path="/bookings" element={<ProtectedRoute><Bookings /></ProtectedRoute>} />
+              <Route path="/financials" element={<ProtectedRoute><Financials /></ProtectedRoute>} />
+              <Route path="/maintenance" element={<ProtectedRoute><Maintenance /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+              <Route path="/orders-queue" element={<ProtectedRoute><OrdersQueue /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </TooltipProvider>
+      </OrgProvider>
     </AuthProvider>
   </QueryClientProvider>
 );

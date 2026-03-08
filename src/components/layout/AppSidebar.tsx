@@ -102,8 +102,20 @@ export function AppSidebar() {
         })}
       </nav>
 
-      {/* Sign out & collapse */}
+      {/* Super admin link + Sign out & collapse */}
       <div className="border-t border-sidebar-border">
+        {role === "super_admin" && (
+          <NavLink
+            to="/admin"
+            className={cn(
+              "flex w-full items-center gap-3 px-6 py-3 text-sm font-medium text-amber-400 hover:text-amber-300 transition-colors",
+              collapsed && "justify-center px-3"
+            )}
+          >
+            <Shield className="h-4 w-4 shrink-0" />
+            {!collapsed && <span>Admin Panel</span>}
+          </NavLink>
+        )}
         <button
           onClick={() => signOut()}
           className={cn(
