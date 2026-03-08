@@ -109,7 +109,7 @@ export default function SettingsPage() {
     if (activeSection === "billing") {
       refreshOrg();
     }
-  }, [activeSection]);
+  }, [activeSection, refreshOrg]);
 
   const [paymentSettingsLoaded, setPaymentSettingsLoaded] = useState(false);
 
