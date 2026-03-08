@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useTrailerValidation } from "@/hooks/useTrailerValidation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrgId } from "@/hooks/useOrgId";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";

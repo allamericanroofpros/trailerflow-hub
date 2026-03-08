@@ -66,6 +66,7 @@ export default function Bookings() {
       guest_count: form.guest_count ? parseInt(form.guest_count) : null,
       notes: form.notes || null,
       status: form.status,
+      org_id: orgId,
       balance_due: form.total_price
         ? parseFloat(form.total_price) - (form.deposit_paid && form.deposit_amount ? parseFloat(form.deposit_amount) : 0)
         : null,
