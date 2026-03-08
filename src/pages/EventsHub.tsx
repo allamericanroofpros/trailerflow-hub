@@ -2,18 +2,25 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import {
   Sparkles, MapPin, Calendar, Users as UsersIcon, DollarSign, Plus,
   ChevronRight, AlertTriangle, Loader2, Pencil, Search, ExternalLink,
-  X, Save, Trash2, Globe,
+  X, Save, Trash2, Globe, Compass,
 } from "lucide-react";
-import { useState } from "react";
-import { useEventsByStage, useEvent, useCreateEvent, useUpdateEvent, useDeleteEvent } from "@/hooks/useEvents";
+import { useState, useMemo } from "react";
+import { format, addDays } from "date-fns";
+import { useEventsByStage, useEvent, useCreateEvent, useUpdateEvent, useDeleteEvent, useEvents } from "@/hooks/useEvents";
 import { useToggleChecklistItem } from "@/hooks/useChecklist";
 import { useTrailers } from "@/hooks/useTrailers";
+import { useBookings } from "@/hooks/useBookings";
 import { useAuth } from "@/contexts/AuthContext";
+import { useAIDiscovery } from "@/hooks/useAIDiscovery";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { supabase } from "@/integrations/supabase/client";
+import { claudeNonStreaming } from "@/hooks/useClaudeAI";
+import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
 
 type EventStage = Database["public"]["Enums"]["event_stage"];
