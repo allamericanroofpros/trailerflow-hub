@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import {
   Package, AlertTriangle, Plus, ArrowDown, ArrowUp,
   Loader2, Search, ShoppingCart, CalendarDays, Clock,
-  Pencil, Trash2, ArrowUpDown, SortAsc, SortDesc,
+  Pencil, Trash2, ArrowUpDown, SortAsc, SortDesc, HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const units = ["oz", "lb", "g", "kg", "ml", "l", "gal", "each", "dozen", "case"];
 
@@ -187,36 +188,116 @@ export default function Inventory() {
 
   const totalOrderCost = orderingNeeds.reduce((s, n) => s + n.totalCost, 0);
 
-  const ItemFormFields = ({ item, setItem, isEdit = false }: { item: any; setItem: (v: any) => void; isEdit?: boolean }) => (
+  // Common conversion presets
+  const conversionPresets: Record<string, Record<string, number>> = {
+    gal: { oz: 128, cup: 16, pint: 8, quart: 4, ml: 3785, l: 3.785 },
+    lb: { oz: 16, g: 453.6, kg: 0.4536 },
+    kg: { g: 1000, lb: 2.205, oz: 35.27 },
+    l: { ml: 1000, oz: 33.81, gal: 0.264, cup: 4.227 },
+    dozen: { each: 12 },
+    case: { each: 24 },
+  };
+
+  const FieldTip = ({ tip }: { tip: string }) => (
+    <TooltipProvider delayDuration={100}>
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <HelpCircle className="h-3.5 w-3.5 text-muted-foreground/60 hover:text-muted-foreground cursor-help shrink-0" />
+        </TooltipTrigger>
+        <TooltipContent side="top" className="max-w-[240px] text-xs">
+          <p>{tip}</p>
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
+  );
+
+  const ItemFormFields = ({ item, setItem, isEdit = false }: { item: any; setItem: (v: any) => void; isEdit?: boolean }) => {
+    const presets = conversionPresets[item.unit] || {};
+    const unitSize = Number(item.unit_size) || 0;
+    const stock = Number(item.current_stock) || 0;
+    const totalVolume = unitSize > 0 ? stock * unitSize : stock;
+
+    return (
     <div className="space-y-3 mt-2">
-      <div><Label>Name</Label><Input value={item.name} onChange={(e) => setItem({ ...item, name: e.target.value })} className="h-11" /></div>
+      <div>
+        <div className="flex items-center gap-1.5">
+          <Label>Name</Label>
+          <FieldTip tip="The name of this inventory item (e.g. Ice Cream Mix, Burger Buns, Cooking Oil)." />
+        </div>
+        <Input value={item.name} onChange={(e) => setItem({ ...item, name: e.target.value })} className="h-11" />
+      </div>
+
       <div className="grid grid-cols-2 gap-3">
-        <div><Label>Stock Unit (counting)</Label>
+        <div>
+          <div className="flex items-center gap-1.5">
+            <Label>Stock Unit</Label>
+            <FieldTip tip="The unit you count and ORDER in. If you order gallons, pick gal. If you order cases, pick case." />
+          </div>
           <Select value={item.unit} onValueChange={(v) => setItem({ ...item, unit: v })}>
             <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
             <SelectContent>{units.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
           </Select>
-          <p className="text-[10px] text-muted-foreground mt-0.5">Unit staff counts in (e.g. gal)</p>
         </div>
-        {!isEdit && (
-          <div><Label>Current Stock</Label><Input type="number" value={item.current_stock} onChange={(e) => setItem({ ...item, current_stock: Number(e.target.value) })} className="h-11" /></div>
-        )}
+        <div>
+          <div className="flex items-center gap-1.5">
+            <Label>Unit Size</Label>
+            <FieldTip tip="Size of each unit you order. E.g. if you buy 2.5 gal tubs of ice cream, enter 2.5. Leave blank if 1 unit = 1 stock unit." />
+          </div>
+          <Input
+            type="number" step="0.01" min="0"
+            placeholder="e.g. 2.5"
+            value={item.unit_size || ""}
+            onChange={(e) => setItem({ ...item, unit_size: e.target.value })}
+            className="h-11"
+          />
+          {unitSize > 0 && <p className="text-[10px] text-muted-foreground mt-0.5">Each unit = {unitSize} {item.unit}</p>}
+        </div>
       </div>
-      {/* Serving unit for recipes */}
+
+      {!isEdit && (
+        <div>
+          <div className="flex items-center gap-1.5">
+            <Label>Current Stock (# of units ordered)</Label>
+            <FieldTip tip="How many units you have on hand. E.g. if you have 2 tubs of 2.5 gal ice cream, enter 2 (total = 5 gal)." />
+          </div>
+          <Input type="number" value={item.current_stock} onChange={(e) => setItem({ ...item, current_stock: Number(e.target.value) })} className="h-11" />
+          {unitSize > 0 && stock > 0 && (
+            <p className="text-[10px] font-semibold text-primary mt-0.5">
+              {stock} × {unitSize} {item.unit} = {totalVolume} {item.unit} total
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Serving unit for recipes — with conversion presets */}
       <div className="rounded-lg border border-border bg-secondary/30 p-3 space-y-2">
-        <p className="text-xs font-bold text-muted-foreground">Recipe / Serving Unit (optional)</p>
-        <p className="text-[10px] text-muted-foreground">If recipes use a different unit than how you count stock. E.g. stock in gallons, recipes in oz.</p>
+        <div className="flex items-center gap-1.5">
+          <p className="text-xs font-bold text-muted-foreground">Recipe / Serving Unit</p>
+          <FieldTip tip="If your recipes use a DIFFERENT unit than your stock unit. E.g. you stock in gallons but recipes call for ounces. This lets the system auto-convert deductions." />
+        </div>
         <div className="grid grid-cols-2 gap-3">
-          <div><Label className="text-[10px]">Serving Unit</Label>
-            <Select value={item.serving_unit || "__same__"} onValueChange={(v) => setItem({ ...item, serving_unit: v === "__same__" ? "" : v })}>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <Label className="text-[10px]">Serving Unit</Label>
+              <FieldTip tip="The unit your recipes/modifiers use to measure portions. E.g. oz for scoops of ice cream." />
+            </div>
+            <Select value={item.serving_unit || "__same__"} onValueChange={(v) => {
+              const newUnit = v === "__same__" ? "" : v;
+              const autoConversion = newUnit && presets[newUnit] ? presets[newUnit] : "";
+              setItem({ ...item, serving_unit: newUnit, serving_unit_conversion: autoConversion || item.serving_unit_conversion });
+            }}>
               <SelectTrigger className="h-9"><SelectValue placeholder="Same as stock" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="__same__">Same as stock unit</SelectItem>
-                {units.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+                {units.map((u) => <SelectItem key={u} value={u}>{u}{presets[u] ? ` (auto: ${presets[u]} per ${item.unit})` : ""}</SelectItem>)}
               </SelectContent>
             </Select>
           </div>
-          <div><Label className="text-[10px]">Serving units per 1 stock unit</Label>
+          <div>
+            <div className="flex items-center gap-1.5">
+              <Label className="text-[10px]">Per 1 {item.unit}</Label>
+              <FieldTip tip={`How many serving units are in 1 ${item.unit}. E.g. 1 gal = 128 oz. This is auto-filled for common conversions.`} />
+            </div>
             <Input
               type="number" step="0.01" min="0"
               placeholder="e.g. 128"
@@ -229,22 +310,91 @@ export default function Inventory() {
             )}
           </div>
         </div>
+        {/* Quick conversion presets */}
+        {item.serving_unit && Object.keys(presets).length > 0 && !presets[item.serving_unit] && (
+          <p className="text-[10px] text-warning">No auto-conversion for {item.unit} → {item.serving_unit}. Enter manually.</p>
+        )}
+        {Object.keys(presets).length > 0 && !item.serving_unit && (
+          <div className="flex flex-wrap gap-1">
+            <span className="text-[10px] text-muted-foreground">Quick set:</span>
+            {Object.entries(presets).map(([unit, factor]) => (
+              <button
+                key={unit}
+                type="button"
+                onClick={() => setItem({ ...item, serving_unit: unit, serving_unit_conversion: factor })}
+                className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+              >
+                {unit} ({factor}/{item.unit})
+              </button>
+            ))}
+          </div>
+        )}
       </div>
+
       <div className="grid grid-cols-2 gap-3">
-        <div><Label>Par Level</Label><Input type="number" value={item.par_level} onChange={(e) => setItem({ ...item, par_level: Number(e.target.value) })} className="h-11" /></div>
-        <div><Label>Reorder Point</Label><Input type="number" value={item.reorder_point} onChange={(e) => setItem({ ...item, reorder_point: Number(e.target.value) })} className="h-11" /></div>
+        <div>
+          <div className="flex items-center gap-1.5">
+            <Label>Par Level</Label>
+            <FieldTip tip="Target amount to have on hand for each event. Used to calculate ordering needs. Counted in # of units ordered." />
+          </div>
+          <Input type="number" value={item.par_level} onChange={(e) => setItem({ ...item, par_level: Number(e.target.value) })} className="h-11" />
+        </div>
+        <div>
+          <div className="flex items-center gap-1.5">
+            <Label>Reorder Point</Label>
+            <FieldTip tip="When stock falls to this level, a low-stock alert appears. Set below par to give yourself time to reorder." />
+          </div>
+          <Input type="number" value={item.reorder_point} onChange={(e) => setItem({ ...item, reorder_point: Number(e.target.value) })} className="h-11" />
+        </div>
       </div>
+
       <div className="grid grid-cols-2 gap-3">
-        <div><Label>Cost/Unit ($)</Label><Input type="number" step="0.01" value={item.cost_per_unit} onChange={(e) => setItem({ ...item, cost_per_unit: Number(e.target.value) })} className="h-11" /></div>
-        <div><Label>Shelf Life (days)</Label><Input type="number" min="1" placeholder="e.g. 7" value={item.shelf_life_days || ""} onChange={(e) => setItem({ ...item, shelf_life_days: e.target.value })} className="h-11" /></div>
+        <div>
+          <div className="flex items-center gap-1.5">
+            <Label>Cost / Unit ($)</Label>
+            <FieldTip tip="How much you pay for ONE unit. E.g. if a 2.5 gal tub costs $18, enter $18. Used to calculate recipe costs and margins." />
+          </div>
+          <Input type="number" step="0.01" value={item.cost_per_unit} onChange={(e) => setItem({ ...item, cost_per_unit: Number(e.target.value) })} className="h-11" />
+          {unitSize > 0 && Number(item.cost_per_unit) > 0 && (
+            <p className="text-[10px] text-muted-foreground mt-0.5">
+              ${(Number(item.cost_per_unit) / unitSize).toFixed(3)} per {item.unit}
+              {item.serving_unit && item.serving_unit_conversion
+                ? ` · $${(Number(item.cost_per_unit) / (unitSize * Number(item.serving_unit_conversion))).toFixed(4)} per ${item.serving_unit}`
+                : ""}
+            </p>
+          )}
+        </div>
+        <div>
+          <div className="flex items-center gap-1.5">
+            <Label>Shelf Life (days)</Label>
+            <FieldTip tip="How many days this item stays fresh after receiving. Used to flag spoilage risks when you're overstocked on perishables." />
+          </div>
+          <Input type="number" min="1" placeholder="e.g. 7" value={item.shelf_life_days || ""} onChange={(e) => setItem({ ...item, shelf_life_days: e.target.value })} className="h-11" />
+        </div>
       </div>
+
       <div className="grid grid-cols-2 gap-3">
-        <div><Label>Unit Size</Label><Input type="number" step="0.01" min="0" placeholder="e.g. 50" value={item.unit_size || ""} onChange={(e) => setItem({ ...item, unit_size: e.target.value })} className="h-11" /></div>
-        <div><Label>Serving Size</Label><Input type="number" step="0.01" min="0" placeholder="e.g. 1.5" value={item.serving_size || ""} onChange={(e) => setItem({ ...item, serving_size: e.target.value })} className="h-11" /></div>
+        <div>
+          <div className="flex items-center gap-1.5">
+            <Label>Serving Size</Label>
+            <FieldTip tip="Default portion size for one serving in the serving unit. E.g. 4 oz for a scoop of ice cream. Used for reference only." />
+          </div>
+          <Input type="number" step="0.01" min="0" placeholder="e.g. 4" value={item.serving_size || ""} onChange={(e) => setItem({ ...item, serving_size: e.target.value })} className="h-11" />
+          {item.serving_size && item.serving_unit && (
+            <p className="text-[10px] text-muted-foreground mt-0.5">{item.serving_size} {item.serving_unit || item.unit} per serving</p>
+          )}
+        </div>
+        <div>
+          <div className="flex items-center gap-1.5">
+            <Label>Supplier</Label>
+            <FieldTip tip="Where you order this from. Helps when building order lists." />
+          </div>
+          <Input value={item.supplier || ""} onChange={(e) => setItem({ ...item, supplier: e.target.value })} className="h-11" />
+        </div>
       </div>
-      <div><Label>Supplier</Label><Input value={item.supplier || ""} onChange={(e) => setItem({ ...item, supplier: e.target.value })} className="h-11" /></div>
     </div>
-  );
+    );
+  };
 
   return (
     <AppLayout>
@@ -341,7 +491,14 @@ export default function Inventory() {
                         <div className="grid grid-cols-3 gap-2 text-xs">
                           <div>
                             <span className="text-muted-foreground">Stock</span>
-                            <p className={`font-bold ${isLow ? "text-destructive" : "text-card-foreground"}`}>{Number(item.current_stock).toFixed(1)} {item.unit}</p>
+                            <p className={`font-bold ${isLow ? "text-destructive" : "text-card-foreground"}`}>
+                              {Number(item.current_stock).toFixed(1)} units
+                            </p>
+                            {(item as any).unit_size && Number((item as any).unit_size) > 0 && (
+                              <p className="text-[10px] text-muted-foreground">
+                                = {(Number(item.current_stock) * Number((item as any).unit_size)).toFixed(1)} {item.unit}
+                              </p>
+                            )}
                           </div>
                           <div><span className="text-muted-foreground">Par</span><p className="font-semibold text-card-foreground">{Number(item.par_level).toFixed(1)}</p></div>
                           <div><span className="text-muted-foreground">Cost</span><p className="font-semibold text-card-foreground">${Number(item.cost_per_unit).toFixed(2)}</p></div>
@@ -388,12 +545,21 @@ export default function Inventory() {
                                 {isLow && <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />}
                                 <div>
                                   <p className="font-medium text-card-foreground">{item.name}</p>
-                                  <p className="text-xs text-muted-foreground">{item.unit}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {item.unit}
+                                    {(item as any).unit_size ? ` · ${(item as any).unit_size} ${item.unit}/unit` : ""}
+                                    {(item as any).serving_unit ? ` · recipes in ${(item as any).serving_unit}` : ""}
+                                  </p>
                                 </div>
                               </div>
                             </td>
                             <td className={`text-right px-4 py-3 font-semibold ${isLow ? "text-destructive" : "text-card-foreground"}`}>
                               {Number(item.current_stock).toFixed(1)}
+                              {(item as any).unit_size && Number((item as any).unit_size) > 0 && (
+                                <span className="block text-[10px] font-normal text-muted-foreground">
+                                  = {(Number(item.current_stock) * Number((item as any).unit_size)).toFixed(1)} {item.unit}
+                                </span>
+                              )}
                             </td>
                             <td className="text-right px-4 py-3 text-muted-foreground">{Number(item.par_level).toFixed(1)}</td>
                             <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">
