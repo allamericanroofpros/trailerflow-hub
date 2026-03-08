@@ -7,6 +7,7 @@ import { useState } from "react";
 import {
   useTrailers, useCreateTrailer, useUpdateTrailer, useDeleteTrailer,
 } from "@/hooks/useTrailers";
+import { supabase } from "@/integrations/supabase/client";
 import { useTrailerValidation } from "@/hooks/useTrailerValidation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
