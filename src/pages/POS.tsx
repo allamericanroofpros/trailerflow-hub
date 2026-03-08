@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useMenuItems } from "@/hooks/useMenuItems";
 import { useCreateOrder } from "@/hooks/useOrders";
 import { useActiveOrders, useUpdateOrderStatus } from "@/hooks/useOrders";
+import { useOrgId } from "@/hooks/useOrgId";
 import { toast } from "sonner";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import {
@@ -54,6 +55,7 @@ const categoryLabels: Record<string, string> = {
 };
 
 export default function POS() {
+  const orgId = useOrgId();
   const navigate = useNavigate();
   const [sodComplete, setSodComplete] = useState(() => {
     return sessionStorage.getItem("pos_sod_complete") === "true";
@@ -204,6 +206,10 @@ export default function POS() {
     cashTendered?: number;
   }) => {
     if (cart.length === 0) return;
+    if (!orgId) {
+      toast.error("Organization context missing. Please reload.");
+      return;
+    }
     const tipAmount = data.tip;
     const grandTotal = total + tipAmount;
     try {
@@ -214,6 +220,7 @@ export default function POS() {
         tip: tipAmount,
         payment_method: data.paymentMethod,
         payment_received: true,
+        org_id: orgId,
         trailer_id: sodData?.trailerId || undefined,
         event_id: sodData?.eventId || undefined,
         notes: [

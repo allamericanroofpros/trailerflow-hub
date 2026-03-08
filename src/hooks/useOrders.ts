@@ -57,6 +57,11 @@ export function useCreateOrder() {
       org_id?: string;
       items: { menu_item_id: string; quantity: number; unit_price: number; modifiers?: any; notes?: string; org_id?: string }[];
     }) => {
+      // Defensive check: org_id is required
+      if (!order.org_id) {
+        throw new Error("Cannot create order: organization context is missing. Please reload and try again.");
+      }
+
       const { items, ...orderData } = order;
       const { data: newOrder, error: orderError } = await supabase
         .from("orders")
@@ -69,6 +74,7 @@ export function useCreateOrder() {
         const orderItems = items.map((item) => ({
           ...item,
           order_id: newOrder.id,
+          org_id: order.org_id,
         }));
         const { error: itemsError } = await supabase.from("order_items").insert(orderItems as any);
         if (itemsError) throw itemsError;

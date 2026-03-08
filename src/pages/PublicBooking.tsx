@@ -20,7 +20,7 @@ export default function PublicBooking() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("trailers")
-        .select("id, name, type, description, specialties, image_url, status, avg_ticket, avg_customers_per_hour, avg_food_cost_percent, staff_required, setup_teardown_hours")
+        .select("id, name, type, description, specialties, image_url, status, avg_ticket, avg_customers_per_hour, avg_food_cost_percent, staff_required, setup_teardown_hours, org_id")
         .eq("status", "active")
         .order("name");
       if (error) throw error;
@@ -134,6 +134,8 @@ export default function PublicBooking() {
     }
     setSubmitting(true);
     try {
+      // Derive org_id from the selected trailer
+      const trailerObj = trailers?.find(t => t.id === selectedTrailer);
       const { error } = await supabase.from("bookings").insert({
         client_name: form.client_name,
         client_email: form.client_email,
@@ -149,6 +151,7 @@ export default function PublicBooking() {
         end_time: form.end_time || null,
         status: "pending",
         total_price: pricing?.typical || null,
+        org_id: (trailerObj as any)?.org_id || null,
       });
       if (error) throw error;
       setStep("success");

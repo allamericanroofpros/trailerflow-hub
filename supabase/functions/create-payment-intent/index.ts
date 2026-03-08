@@ -18,7 +18,7 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    const { amount, description, metadata } = await req.json();
+    const { amount, description, metadata, org_id } = await req.json();
 
     if (!amount || amount <= 0) {
       throw new Error("Invalid amount");
@@ -31,7 +31,7 @@ serve(async (req) => {
       amount: amountCents,
       currency: "usd",
       description: description || "POS Sale",
-      metadata: metadata || {},
+      metadata: { ...(metadata || {}), ...(org_id ? { org_id } : {}) },
       // For in-person style payments, auto-confirm with automatic payment methods
       automatic_payment_methods: {
         enabled: true,
