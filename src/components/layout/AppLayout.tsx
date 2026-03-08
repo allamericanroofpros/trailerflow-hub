@@ -1,10 +1,22 @@
-import { ReactNode, useState } from "react";
+import { ReactNode, useState, useEffect } from "react";
 import { AppSidebar } from "./AppSidebar";
 import { TopBar, TrailerContext } from "./TopBar";
 import { AIChatDrawer } from "@/components/ai/AIChatDrawer";
 
+const TRAILER_KEY = "traileros_selected_trailer";
+
 export function AppLayout({ children }: { children: ReactNode }) {
-  const [selectedTrailerId, setSelectedTrailerId] = useState<string | null>(null);
+  const [selectedTrailerId, setSelectedTrailerId] = useState<string | null>(() => {
+    return localStorage.getItem(TRAILER_KEY);
+  });
+
+  useEffect(() => {
+    if (selectedTrailerId) {
+      localStorage.setItem(TRAILER_KEY, selectedTrailerId);
+    } else {
+      localStorage.removeItem(TRAILER_KEY);
+    }
+  }, [selectedTrailerId]);
 
   return (
     <TrailerContext.Provider value={{ selectedTrailerId, setSelectedTrailerId }}>

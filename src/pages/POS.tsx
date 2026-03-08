@@ -183,6 +183,7 @@ export default function POS() {
         orderId: (newOrder as any).id,
       });
       setCart([]);
+      setCustomerName("");
       setMobileCartOpen(false);
       setShowCheckout(false);
     } catch (e: any) {
