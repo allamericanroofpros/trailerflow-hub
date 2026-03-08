@@ -762,7 +762,7 @@ export default function POS() {
                             ...prev,
                             [mod.name]: exists
                               ? current.filter(s => s.label !== opt.label)
-                              : [...current, { label: opt.label, priceAdjust: opt.priceAdjust }],
+                              : [...current, { label: opt.label, priceAdjust: opt.priceAdjust, inventoryAdjustments: opt.inventoryAdjustments }],
                           };
                         })}
                         className={`rounded-xl border-2 p-3 text-left transition-all active:scale-95 touch-manipulation flex items-center gap-2 ${

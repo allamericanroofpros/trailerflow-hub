@@ -1,15 +1,16 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
-export function useOrders(eventId?: string) {
+export function useOrders(filters?: { eventId?: string; trailerId?: string }) {
   return useQuery({
-    queryKey: ["orders", eventId],
+    queryKey: ["orders", filters],
     queryFn: async () => {
       let query = supabase
         .from("orders")
         .select("*, order_items(*, menu_items(name, price))")
         .order("created_at", { ascending: false });
-      if (eventId) query = query.eq("event_id", eventId);
+      if (filters?.eventId) query = query.eq("event_id", filters.eventId);
+      if (filters?.trailerId) query = query.eq("trailer_id", filters.trailerId);
       const { data, error } = await query;
       if (error) throw error;
       return data;

@@ -24,7 +24,7 @@ export function useAllMenuItems() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("menu_items")
-        .select("*, menu_item_ingredients(*, inventory_items(name, unit, cost_per_unit))")
+        .select("*, menu_item_ingredients(*, inventory_items(name, unit, cost_per_unit, serving_unit, serving_unit_conversion))")
         .order("sort_order", { ascending: true });
       if (error) throw error;
       return data;

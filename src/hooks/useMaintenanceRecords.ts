@@ -42,3 +42,14 @@ export function useUpdateMaintenanceRecord() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["maintenance_records"] }),
   });
 }
+
+export function useDeleteMaintenanceRecord() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("maintenance_records").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["maintenance_records"] }),
+  });
+}
