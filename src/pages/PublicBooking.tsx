@@ -20,7 +20,7 @@ export default function PublicBooking() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("trailers")
-        .select("id, name, type, description, specialties, image_url, status, avg_ticket, avg_customers_per_hour, avg_food_cost_percent, staff_required, setup_teardown_hours")
+        .select("id, name, type, description, specialties, image_url, status, avg_ticket, avg_customers_per_hour, avg_food_cost_percent, staff_required, setup_teardown_hours, org_id")
         .eq("status", "active")
         .order("name");
       if (error) throw error;

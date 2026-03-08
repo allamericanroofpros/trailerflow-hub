@@ -31,7 +31,7 @@ serve(async (req) => {
       amount: amountCents,
       currency: "usd",
       description: description || "POS Sale",
-      metadata: metadata || {},
+      metadata: { ...(metadata || {}), ...(org_id ? { org_id } : {}) },
       // For in-person style payments, auto-confirm with automatic payment methods
       automatic_payment_methods: {
         enabled: true,
