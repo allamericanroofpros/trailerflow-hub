@@ -16,23 +16,36 @@ interface DiscoveryEvent {
 export function useAIDiscovery(searchQuery?: string) {
   return useQuery({
     queryKey: ["ai-discovery", searchQuery],
+    enabled: !!searchQuery,
     queryFn: async () => {
       const [eventsRes, trailersRes, profileRes] = await Promise.all([
         supabase.from("events").select("name, event_type, location, actual_revenue, attendance_estimate").limit(10),
-        supabase.from("trailers").select("name, type, menu_items"),
+        supabase.from("trailers").select("name, type, description"),
         supabase.from("profiles").select("business_name").limit(1).single(),
       ]);
 
+      const trailerInfo = (trailersRes.data || []).map((t) =>
+        `${t.name} (${t.type}): ${t.description || "No description"}`
+      ).join("\n");
+
       const context = `My food trailer business context:
 Business: ${profileRes.data?.business_name || "Food trailer business"}
-Trailers: ${JSON.stringify(trailersRes.data || [])}
+Our trailers and what they sell:
+${trailerInfo || "No trailers configured yet"}
 Past events: ${JSON.stringify(eventsRes.data || [])}
 Today: ${new Date().toISOString().split("T")[0]}
-${searchQuery ? `User search: "${searchQuery}"` : "Find the best upcoming event opportunities near me."}
 
-You MUST return a JSON array containing EXACTLY 6 event recommendations. Each object must have these fields: name, date, location, type, profitEstimate, aiRank (0-100), attendance, reasoning.
+User search: "${searchQuery}"
 
-Important: Return diverse locations relevant to the search. If a location or radius is specified, ALL 6 events must be within that area. Use realistic event names, dates within the next 2 months, and realistic US locations. Return ONLY the JSON array, no other text.`;
+You MUST return a JSON array containing EXACTLY 6 REAL event recommendations. Each object must have these fields: name, date, location, type, profitEstimate, aiRank (0-100), attendance, reasoning.
+
+CRITICAL RULES:
+- If a location and radius is specified (e.g. "within 50 miles of Vermilion, Ohio"), ALL 6 events MUST be real events that occur within that geographic area.
+- Use REAL event names that actually exist or are highly likely to exist in 2026 (county fairs, festivals, farmers markets, community events).
+- Dates must be within the next 3 months from today.
+- The profitEstimate should consider what our trailers sell (soft serve ice cream and mini pancakes) and estimate realistic revenue for those products at that type of event.
+- The reasoning should explain why this event is good specifically for our trailer offerings.
+- Return ONLY the JSON array, no other text or markdown.`;
 
       const response = await claudeNonStreaming("discovery", [{ role: "user", content: context }]);
 
@@ -47,7 +60,7 @@ Important: Return diverse locations relevant to the search. If a location or rad
 
       return [] as DiscoveryEvent[];
     },
-    staleTime: 1000 * 60 * 15, // 15 min cache
+    staleTime: 1000 * 60 * 15,
     retry: 1,
   });
 }

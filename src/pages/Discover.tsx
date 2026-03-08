@@ -5,15 +5,6 @@ import { useAIDiscovery } from "@/hooks/useAIDiscovery";
 import { toast } from "sonner";
 import { useCreateEvent } from "@/hooks/useEvents";
 
-const fallbackOpportunities = [
-  { name: "Bay Area Food Truck Rally", date: "Jun 8–9", location: "San Francisco, CA", type: "Festival", profitEstimate: "$3,400–$5,100", aiRank: 96, attendance: "15,000", reasoning: "" },
-  { name: "Sunset Concert Series", date: "Jun 14", location: "Santa Cruz, CA", type: "Concert", profitEstimate: "$1,800–$2,600", aiRank: 88, attendance: "4,000", reasoning: "" },
-  { name: "Tech Park Lunch Pop-up", date: "Jun 18", location: "Palo Alto, CA", type: "Corporate", profitEstimate: "$900–$1,400", aiRank: 82, attendance: "500", reasoning: "" },
-  { name: "Oakland Night Market", date: "Jun 21", location: "Oakland, CA", type: "Market", profitEstimate: "$2,200–$3,500", aiRank: 90, attendance: "8,000", reasoning: "" },
-  { name: "Marina Green Festival", date: "Jul 4", location: "San Francisco, CA", type: "Festival", profitEstimate: "$4,000–$6,200", aiRank: 94, attendance: "20,000", reasoning: "" },
-  { name: "SJ Craft Beer & Bites", date: "Jul 12", location: "San Jose, CA", type: "Festival", profitEstimate: "$2,800–$4,000", aiRank: 85, attendance: "10,000", reasoning: "" },
-];
-
 export default function Discover() {
   const [searchQuery, setSearchQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState<string | undefined>();
@@ -23,7 +14,7 @@ export default function Discover() {
   const { data: aiEvents, isLoading, isFetching } = useAIDiscovery(submittedQuery);
   const createEvent = useCreateEvent();
 
-  const opportunities = aiEvents?.length ? aiEvents : fallbackOpportunities;
+  const opportunities = aiEvents || [];
 
   // Extract unique locations for quick filter chips
   const uniqueLocations = useMemo(() => {
@@ -40,10 +31,17 @@ export default function Discover() {
   }, [opportunities, locationFilter]);
 
   const handleSearch = () => {
-    const parts = [searchQuery];
-    if (locationFilter) parts.push(`within ${radiusMiles} miles of ${locationFilter}`);
-    const query = parts.filter(Boolean).join(" ");
-    setSubmittedQuery(query || undefined);
+    const parts: string[] = [];
+    if (searchQuery) parts.push(searchQuery);
+    if (locationFilter) {
+      parts.push(`within ${radiusMiles} miles of ${locationFilter}`);
+    }
+    const query = parts.join(" ");
+    if (!query) {
+      toast.error("Enter a search term or location to discover events");
+      return;
+    }
+    setSubmittedQuery(query);
   };
 
   const addToPipeline = (opp: typeof opportunities[0]) => {
@@ -68,7 +66,7 @@ export default function Discover() {
       <div className="space-y-6 animate-fade-in">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Discover Events</h1>
-          <p className="text-sm text-muted-foreground mt-1">AI-powered event discovery to grow your business.</p>
+          <p className="text-sm text-muted-foreground mt-1">AI-powered event discovery tailored to your trailers and location.</p>
         </div>
 
         {/* Search + Location Filters */}
@@ -97,7 +95,7 @@ export default function Discover() {
                   }}
                   onFocus={() => setShowLocationDropdown(true)}
                   onBlur={() => setTimeout(() => setShowLocationDropdown(false), 150)}
-                  placeholder="Filter by city or area..."
+                  placeholder="City, State (e.g. Vermilion, OH)"
                   className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
                 />
                 {locationFilter && (
@@ -150,7 +148,8 @@ export default function Discover() {
             </div>
             <button
               onClick={handleSearch}
-              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
+              disabled={isFetching}
+              className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
               {isFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               AI Search
@@ -188,26 +187,38 @@ export default function Discover() {
           )}
         </div>
 
-        {isLoading && (
+        {/* Loading state */}
+        {isFetching && (
           <div className="flex items-center justify-center py-12 gap-3 text-muted-foreground">
             <Loader2 className="h-5 w-5 animate-spin" />
-            <span className="text-sm">AI is analyzing events for you...</span>
+            <span className="text-sm">AI is finding events for your trailers...</span>
+          </div>
+        )}
+
+        {/* Empty state - no search yet */}
+        {!submittedQuery && !isFetching && opportunities.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+            <Sparkles className="h-12 w-12 mb-4 text-primary/30" />
+            <p className="text-base font-bold text-card-foreground">Find events perfect for your trailers</p>
+            <p className="text-sm mt-1 text-center max-w-md">
+              Enter your location (e.g. "Vermilion, OH"), select a radius, and click AI Search to discover upcoming events ideal for Cone Corral and Sweet Stack Corral.
+            </p>
           </div>
         )}
 
         {/* Empty state for location filter */}
-        {!isLoading && filteredOpportunities.length === 0 && locationFilter && (
+        {!isFetching && submittedQuery && filteredOpportunities.length === 0 && (
           <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
             <MapPin className="h-10 w-10 mb-3 text-muted-foreground/20" />
-            <p className="text-base font-bold">No events found in "{locationFilter}"</p>
-            <p className="text-sm mt-1">Try a different location or clear the filter.</p>
+            <p className="text-base font-bold">No events found</p>
+            <p className="text-sm mt-1">Try adjusting your search or expanding the radius.</p>
           </div>
         )}
 
         {/* Results */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {filteredOpportunities.map((opp) => (
-            <div key={opp.name} className="rounded-xl border border-border bg-card p-5 shadow-card hover:shadow-card-hover transition-shadow">
+          {filteredOpportunities.map((opp, idx) => (
+            <div key={`${opp.name}-${idx}`} className="rounded-xl border border-border bg-card p-5 shadow-card hover:shadow-card-hover transition-shadow">
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-sm font-semibold text-card-foreground">{opp.name}</p>
