@@ -208,7 +208,7 @@ export default function Bookings() {
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Status</label>
                 <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as any })}
-                  className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none">
+                  className="mt-1 w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm outline-none">
                   <option value="pending">Pending</option>
                   <option value="confirmed">Confirmed</option>
                   <option value="cancelled">Cancelled</option>
