@@ -619,6 +619,66 @@ export default function POS() {
       ) : (
         <POSReportView />
       )}
+
+      {/* Checkout Flow */}
+      {showCheckout && cart.length > 0 && (
+        <POSCheckoutFlow
+          cart={cart}
+          subtotal={subtotal}
+          tax={tax}
+          total={total}
+          onComplete={handleCheckout}
+          onCancel={() => setShowCheckout(false)}
+          isPending={createOrder.isPending}
+        />
+      )}
+
+      {/* Order Confirmation */}
+      {confirmation && (
+        <POSConfirmation
+          {...confirmation}
+          onDone={() => setConfirmation(null)}
+        />
+      )}
+
+      {/* Custom Item Dialog */}
+      <Dialog open={showCustomItem} onOpenChange={setShowCustomItem}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Add Custom Item</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div>
+              <label className="text-sm font-bold text-muted-foreground">Item Name</label>
+              <Input
+                value={customItemName}
+                onChange={(e) => setCustomItemName(e.target.value)}
+                placeholder="e.g. Extra sauce"
+                className="mt-1 h-12 rounded-xl border-2 text-base"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-bold text-muted-foreground">Price ($)</label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                value={customItemPrice}
+                onChange={(e) => setCustomItemPrice(e.target.value)}
+                placeholder="0.00"
+                className="mt-1 h-12 rounded-xl border-2 text-base"
+              />
+            </div>
+            <Button
+              className="w-full h-12 font-black rounded-xl"
+              onClick={handleAddCustomItem}
+              disabled={!customItemName.trim() || !customItemPrice || Number(customItemPrice) <= 0}
+            >
+              Add to Order
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
