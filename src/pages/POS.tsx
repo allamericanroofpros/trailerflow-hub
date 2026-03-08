@@ -868,6 +868,58 @@ export default function POS() {
       >
         <Moon className="h-4 w-4" /> End of Day
       </button>
+
+      {/* Admin PIN Exit Gate */}
+      <Dialog open={showExitGate} onOpenChange={setShowExitGate}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center">Admin PIN Required</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground text-center">Enter an owner or manager PIN to exit the POS terminal.</p>
+
+          <div className="flex justify-center gap-3 my-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-12 w-10 rounded-xl border-2 flex items-center justify-center text-xl font-black transition-all ${
+                  i < exitPin.length ? "border-primary bg-primary/10 text-primary" : i === exitPin.length ? "border-primary/50 animate-pulse" : "border-border text-transparent"
+                }`}
+              >
+                {i < exitPin.length ? "•" : ""}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 max-w-[260px] mx-auto">
+            {["1","2","3","4","5","6","7","8","9","clear","0","back"].map((key, i) => {
+              if (key === "clear") return (
+                <button key={i} onClick={() => setExitPin("")}
+                  className="h-14 rounded-xl border-2 border-border bg-background flex items-center justify-center hover:bg-secondary active:scale-90 touch-manipulation text-xs font-bold text-muted-foreground uppercase">
+                  Clear
+                </button>
+              );
+              if (key === "back") return (
+                <button key={i} onClick={() => setExitPin(prev => prev.slice(0, -1))}
+                  className="h-14 rounded-xl border-2 border-border bg-background flex items-center justify-center hover:bg-secondary active:scale-90 touch-manipulation">
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              );
+              return (
+                <button key={i} onClick={() => setExitPin(prev => prev.length < 6 ? prev + key : prev)}
+                  className="h-14 rounded-xl border-2 border-border bg-background text-lg font-black text-card-foreground hover:bg-secondary active:scale-90 active:bg-primary/10 touch-manipulation transition-all">
+                  {key}
+                </button>
+              );
+            })}
+          </div>
+
+          <Button className="w-full h-12 font-black rounded-xl mt-2" onClick={handleExitPinSubmit}
+            disabled={exitPin.length < 4 || staffByPin.isPending}>
+            {staffByPin.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            Exit POS
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
