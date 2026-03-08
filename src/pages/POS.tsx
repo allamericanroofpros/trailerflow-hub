@@ -174,7 +174,6 @@ export default function POS() {
           specialInstructions.trim() ? `Instructions: ${specialInstructions.trim()}` : "",
         ].filter(Boolean).join(" | ") || undefined,
         items: cart.map((c) => {
-          const isCustom = c.menu_item_id.startsWith(CUSTOM_ITEM_ID);
           const modifiersForDb = c.selectedModifiers?.length
             ? c.selectedModifiers.map(m => ({
                 name: m.groupName,
@@ -186,11 +185,10 @@ export default function POS() {
               }))
             : undefined;
           return {
-            menu_item_id: isCustom ? CUSTOM_ITEM_ID : c.menu_item_id.split(" (")[0],
+            menu_item_id: c.menu_item_id.split(" (")[0],
             quantity: c.quantity,
             unit_price: c.price,
             modifiers: modifiersForDb,
-            notes: isCustom ? `Custom: ${c.name}` : undefined,
           };
         }),
       });
