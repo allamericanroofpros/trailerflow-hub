@@ -201,7 +201,7 @@ export default function POS() {
 
   const subtotal = cart.reduce((sum, c) => sum + c.price * c.quantity, 0);
   const tax = calcTax(taxSettings, subtotal);
-  const total = subtotal + tax;
+  const total = calcTotalWithTax(taxSettings, subtotal);
   const itemCount = cart.reduce((s, c) => s + c.quantity, 0);
 
   const handleCheckout = async (data: {
