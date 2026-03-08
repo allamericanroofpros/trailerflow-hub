@@ -1,6 +1,8 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { RevenueByTypeChart, TrailerPerformanceChart } from "@/components/dashboard/Charts";
+import { SetupWizard } from "@/components/onboarding/SetupWizard";
+import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
 import { useNavigate } from "react-router-dom";
 import { useEventsByStage } from "@/hooks/useEvents";
 import { useBookings } from "@/hooks/useBookings";
@@ -23,7 +25,7 @@ import {
   Loader2,
   ShoppingCart,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 
 export default function Dashboard() {
