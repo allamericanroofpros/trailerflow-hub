@@ -32,6 +32,7 @@ type TrailerForm = {
   staff_required: string;
   staff_hourly_rate: string;
   avg_food_cost_percent: string;
+  target_margin: string;
 };
 
 const defaultForm: TrailerForm = {
@@ -49,6 +50,7 @@ const defaultForm: TrailerForm = {
   staff_required: "1",
   staff_hourly_rate: "15",
   avg_food_cost_percent: "30",
+  target_margin: "70",
 };
 
 function FieldLabel({ label, tip }: { label: string; tip: string }) {
