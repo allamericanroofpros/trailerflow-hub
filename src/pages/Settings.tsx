@@ -30,6 +30,7 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isOwner } = useRoleAccess();
+  const { subscribed, tier, subscriptionEnd, loading: subLoading, startCheckout, openPortal, checkSubscription } = useSubscription();
   const qc = useQueryClient();
 
   const sections = baseSections.filter((s) => !("ownerOnly" in s && s.ownerOnly) || isOwner);
