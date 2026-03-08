@@ -44,7 +44,7 @@ type CartItem = {
   selectedModifiers?: { groupName: string; label: string; priceAdjust: number; inventoryAdjustments?: { inventoryItemId: string; extraQty: number }[] }[];
 };
 
-const TAX_RATE = 0.0875;
+// Tax rate now comes from org settings via useTaxSettings hook
 
 const categoryLabels: Record<string, string> = {
   appetizer: "Appetizers",
