@@ -23,6 +23,7 @@ import POSOrderHistory from "@/components/pos/POSOrderHistory";
 import POSEndOfDay from "@/components/pos/POSEndOfDay";
 import POSStartOfDay from "@/components/pos/POSStartOfDay";
 import POSTimeClock from "@/components/pos/POSTimeClock";
+import { useActiveClocks, useStaffByPin } from "@/hooks/useTimeClock";
 
 type Modifier = {
   name: string;
@@ -60,6 +61,12 @@ export default function POS() {
     return saved ? JSON.parse(saved) : null;
   });
 
+  // PIN gate for register
+  const [posStaffName, setPosStaffName] = useState<string | null>(() => sessionStorage.getItem("pos_staff_name"));
+  const [posPin, setPosPin] = useState("");
+  const staffByPin = useStaffByPin();
+  const { data: activeClocks } = useActiveClocks();
+
   const activeTrailerId = sodData?.trailerId || undefined;
   const { data: menuItems, isLoading: menuLoading } = useMenuItems(activeTrailerId);
   const { data: activeOrders } = useActiveOrders();
@@ -82,6 +89,31 @@ export default function POS() {
     paymentMethod: string; cashTendered?: number; changeDue?: number;
     orderId: string;
   } | null>(null);
+  const handlePosLogin = async () => {
+    if (posPin.length < 4) { toast.error("Enter your PIN"); return; }
+    try {
+      const staff = await staffByPin.mutateAsync(posPin);
+      // Must be clocked in
+      const isClockedIn = activeClocks?.some(c => c.staff_id === staff.id);
+      if (!isClockedIn) {
+        toast.error("You must clock in first before using the register. Go to the Clock tab.");
+        setPosPin("");
+        return;
+      }
+      setPosStaffName(staff.name);
+      sessionStorage.setItem("pos_staff_name", staff.name);
+      setPosPin("");
+    } catch {
+      toast.error("Invalid PIN");
+      setPosPin("");
+    }
+  };
+
+  const handlePosLogout = () => {
+    setPosStaffName(null);
+    sessionStorage.removeItem("pos_staff_name");
+  };
+
   // Detect tablet-ish (<=1024px)
   const [isCompact, setIsCompact] = useState(false);
   useEffect(() => {
@@ -445,15 +477,83 @@ export default function POS() {
           ))}
         </div>
 
-        <p className="text-sm text-muted-foreground hidden md:block font-medium">
-          {new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
-          {" · "}
-          {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-        </p>
+        <div className="flex items-center gap-3">
+          {posStaffName && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-primary">{posStaffName}</span>
+              <button onClick={handlePosLogout} className="text-xs text-muted-foreground hover:text-destructive font-medium">Switch</button>
+            </div>
+          )}
+          <p className="text-sm text-muted-foreground hidden md:block font-medium">
+            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
+          </p>
+        </div>
       </header>
 
       {/* ── MAIN CONTENT ── */}
       {view === "register" ? (
+        !posStaffName ? (
+          /* PIN Gate for Register */
+          <div className="flex-1 flex items-center justify-center bg-background">
+            <div className="w-full max-w-sm space-y-6 p-6">
+              <div className="text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 mx-auto mb-4">
+                  <Clock className="h-8 w-8 text-primary" />
+                </div>
+                <h2 className="text-xl font-black text-card-foreground">Enter Your PIN</h2>
+                <p className="text-sm text-muted-foreground mt-1">You must be clocked in to use the register.</p>
+              </div>
+
+              {/* PIN display */}
+              <div className="flex justify-center gap-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-14 w-12 rounded-xl border-2 flex items-center justify-center text-2xl font-black transition-all ${
+                      i < posPin.length ? "border-primary bg-primary/10 text-primary" : i === posPin.length ? "border-primary/50 bg-background animate-pulse" : "border-border bg-background text-transparent"
+                    }`}
+                  >
+                    {i < posPin.length ? "•" : ""}
+                  </div>
+                ))}
+              </div>
+
+              {/* Numpad */}
+              <div className="grid grid-cols-3 gap-2.5 max-w-[300px] mx-auto">
+                {["1","2","3","4","5","6","7","8","9","clear","0","back"].map((key, i) => {
+                  if (key === "clear") return (
+                    <button key={i} onClick={() => setPosPin("")}
+                      className="h-16 rounded-xl border-2 border-border bg-background flex items-center justify-center hover:bg-secondary active:scale-90 touch-manipulation text-xs font-bold text-muted-foreground uppercase">
+                      Clear
+                    </button>
+                  );
+                  if (key === "back") return (
+                    <button key={i} onClick={() => setPosPin(prev => prev.slice(0, -1))}
+                      className="h-16 rounded-xl border-2 border-border bg-background flex items-center justify-center hover:bg-secondary active:scale-90 touch-manipulation">
+                      <X className="h-5 w-5 text-muted-foreground" />
+                    </button>
+                  );
+                  return (
+                    <button key={i} onClick={() => setPosPin(prev => prev.length < 6 ? prev + key : prev)}
+                      className="h-16 rounded-xl border-2 border-border bg-background text-xl font-black text-card-foreground hover:bg-secondary active:scale-90 active:bg-primary/10 touch-manipulation transition-all">
+                      {key}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <Button className="w-full h-14 text-base font-black rounded-xl" onClick={handlePosLogin}
+                disabled={posPin.length < 4 || staffByPin.isPending}>
+                {staffByPin.isPending ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                Enter Register
+              </Button>
+
+              <p className="text-xs text-center text-muted-foreground">
+                Not clocked in? Use the <button onClick={() => setView("timeclock")} className="text-primary font-bold underline">Clock tab</button> first.
+              </p>
+            </div>
+          </div>
+        ) : (
         <div className="flex flex-1 overflow-hidden">
           {/* Menu Area */}
           <div className="flex-1 flex flex-col overflow-hidden">
@@ -623,6 +723,7 @@ export default function POS() {
             </>
           )}
         </div>
+        )
       ) : view === "orders" ? (
         /* ── ORDERS VIEW ── */
         <div className="flex-1 overflow-y-auto p-4">

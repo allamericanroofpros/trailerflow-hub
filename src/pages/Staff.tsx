@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import {
   Users as UsersIcon, AlertTriangle, Clock, Shield, Eye, Plus, Pencil,
-  Trash2, X, Save, Calendar, Loader2, ChevronLeft, ChevronRight, UserPlus,
+  Trash2, X, Save, Calendar, Loader2, ChevronLeft, ChevronRight, UserPlus, CalendarClock, Sparkles,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useStaffMembers, useCreateStaffMember, useUpdateStaffMember, useDeleteStaffMember } from "@/hooks/useStaffMembers";
@@ -13,6 +13,10 @@ import { toast } from "sonner";
 import { format, parseISO, startOfWeek, addDays, isSameDay, addWeeks, subWeeks } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
+
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, "0")}:00`);
+
 export default function Staff() {
   const { user } = useAuth();
   const { isOwner, canManage } = useRoleAccess();
@@ -99,7 +103,7 @@ export default function Staff() {
   });
 
   // UI state
-  const [tab, setTab] = useState<"roles" | "roster" | "schedule">(isOwner ? "roles" : "roster");
+  const [tab, setTab] = useState<"roles" | "roster" | "schedule" | "availability">(isOwner ? "roles" : "roster");
   const [addingNew, setAddingNew] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", hourly_rate: "", status: "active" });
@@ -238,6 +242,7 @@ export default function Staff() {
               {([
                 ...(isOwner ? [{ key: "roles" as const, label: "Roles", icon: Shield }] : []),
                 { key: "roster" as const, label: "Roster", icon: UsersIcon },
+                { key: "availability" as const, label: "Availability", icon: CalendarClock },
                 { key: "schedule" as const, label: "Schedule", icon: Calendar },
               ]).map((t) => (
                 <button
@@ -488,6 +493,137 @@ export default function Staff() {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Availability Tab */}
+        {tab === "availability" && (
+          <div className="space-y-4">
+            <div className="rounded-xl border border-border bg-card p-6 shadow-card">
+              <div className="flex items-center gap-2 mb-1">
+                <CalendarClock className="h-4 w-4 text-primary" />
+                <h3 className="text-sm font-semibold text-card-foreground">Staff Availability</h3>
+              </div>
+              <p className="text-xs text-muted-foreground mb-4">
+                Each team member can set their weekly availability. Click a day to toggle available/unavailable, then set start/end times.
+              </p>
+
+              {isLoading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                </div>
+              ) : !staff?.length ? (
+                <p className="text-sm text-muted-foreground text-center py-8">No staff members yet.</p>
+              ) : (
+                <div className="space-y-6">
+                  {staff.filter(s => s.status === "active").map(member => {
+                    const avail: Record<string, { start: string; end: string }> = (member.availability && typeof member.availability === "object" && !Array.isArray(member.availability))
+                      ? member.availability as Record<string, { start: string; end: string }>
+                      : {};
+
+                    const toggleDay = async (day: string) => {
+                      const newAvail = { ...avail };
+                      if (newAvail[day]) {
+                        delete newAvail[day];
+                      } else {
+                        newAvail[day] = { start: "09:00", end: "21:00" };
+                      }
+                      try {
+                        await supabase.from("staff_members").update({ availability: newAvail as any }).eq("id", member.id);
+                        qc.invalidateQueries({ queryKey: ["staff_members"] });
+                      } catch (e: any) {
+                        toast.error(e.message);
+                      }
+                    };
+
+                    const updateTime = async (day: string, field: "start" | "end", value: string) => {
+                      const newAvail = { ...avail };
+                      if (!newAvail[day]) newAvail[day] = { start: "09:00", end: "21:00" };
+                      newAvail[day][field] = value;
+                      try {
+                        await supabase.from("staff_members").update({ availability: newAvail as any }).eq("id", member.id);
+                        qc.invalidateQueries({ queryKey: ["staff_members"] });
+                      } catch (e: any) {
+                        toast.error(e.message);
+                      }
+                    };
+
+                    return (
+                      <div key={member.id} className="rounded-lg border border-border bg-background p-4">
+                        <div className="flex items-center justify-between mb-3">
+                          <div>
+                            <p className="text-sm font-semibold text-card-foreground">{member.name}</p>
+                            <p className="text-xs text-muted-foreground">{member.hourly_rate ? `$${member.hourly_rate}/hr` : "No rate set"}</p>
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {Object.keys(avail).length} days available
+                          </span>
+                        </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-2">
+                          {DAYS.map(day => {
+                            const dayAvail = avail[day];
+                            return (
+                              <div key={day} className={`rounded-lg border-2 p-2.5 text-center transition-all ${
+                                dayAvail ? "border-success/40 bg-success/5" : "border-border bg-muted/20 opacity-60"
+                              }`}>
+                                <button
+                                  onClick={() => toggleDay(day)}
+                                  className="w-full text-xs font-bold text-card-foreground mb-1.5 touch-manipulation hover:text-primary transition-colors"
+                                >
+                                  {day.slice(0, 3)}
+                                </button>
+                                {dayAvail ? (
+                                  <div className="space-y-1">
+                                    <select
+                                      value={dayAvail.start}
+                                      onChange={e => updateTime(day, "start", e.target.value)}
+                                      className="w-full text-[10px] rounded border border-border bg-background px-1 py-0.5"
+                                    >
+                                      {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                    <select
+                                      value={dayAvail.end}
+                                      onChange={e => updateTime(day, "end", e.target.value)}
+                                      className="w-full text-[10px] rounded border border-border bg-background px-1 py-0.5"
+                                    >
+                                      {TIME_SLOTS.map(t => <option key={t} value={t}>{t}</option>)}
+                                    </select>
+                                  </div>
+                                ) : (
+                                  <p className="text-[10px] text-muted-foreground">Off</p>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* AI Schedule Suggestion */}
+            {canManage("staff") && (
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-6 shadow-card">
+                <div className="flex items-center gap-2 mb-2">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <h3 className="text-sm font-semibold text-card-foreground">AI Schedule Assistant</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">
+                  Based on staff availability and upcoming events, AI can suggest tentative schedules. Assign staff from the Schedule tab, or let AI generate a draft.
+                </p>
+                <Button
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => {
+                    toast.info("AI scheduling coming soon! For now, use the Schedule tab to manually assign staff based on their availability.");
+                  }}
+                >
+                  <Sparkles className="h-3.5 w-3.5" /> Suggest Schedule
+                </Button>
               </div>
             )}
           </div>
