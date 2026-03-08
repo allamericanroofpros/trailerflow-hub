@@ -87,7 +87,7 @@ export default function Financials() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {[
             { label: "Total Income", value: `$${stats.totalIncome.toLocaleString()}`, icon: ArrowUpRight, color: "text-success" },
             { label: "Total Expenses", value: `$${stats.totalExpenses.toLocaleString()}`, icon: ArrowDownRight, color: "text-destructive" },
