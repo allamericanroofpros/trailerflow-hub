@@ -87,7 +87,7 @@ export default function AdminOverview() {
       <div className="space-y-4 sm:space-y-6 animate-fade-in">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Platform Overview</h1>
-          <p className="text-xs sm:text-sm text-muted-foreground mt-1">High-level metrics across all TrailerOS organizations.</p>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">High-level metrics across all VendorFlow organizations.</p>
         </div>
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">

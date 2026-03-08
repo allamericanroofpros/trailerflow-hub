@@ -39,7 +39,7 @@ export function SetupWizard({ completedSteps, onDismiss }: SetupWizardProps) {
     <div className="rounded-xl border border-primary/20 bg-card p-5 shadow-card">
       <div className="flex items-center justify-between mb-4">
         <div>
-          <h3 className="text-sm font-semibold text-card-foreground">Get Started with TrailerOS</h3>
+          <h3 className="text-sm font-semibold text-card-foreground">Get Started with VendorFlow</h3>
           <p className="text-xs text-muted-foreground mt-0.5">
             {completedCount} of {STEPS.length} steps complete
           </p>

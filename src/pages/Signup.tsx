@@ -134,7 +134,7 @@ export default function Signup() {
           <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
             <Truck className="h-5 w-5" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">TrailerOS</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">VendorFlow</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {step === 1 && "Create your account"}
             {step === 2 && "Tell us about your business"}
