@@ -109,10 +109,19 @@ export default function POSConfirmation({
               <span>Subtotal</span>
               <span className="font-semibold">${subtotal.toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>{taxLabel || "Tax"}</span>
-              <span className="font-semibold">${tax.toFixed(2)}</span>
-            </div>
+            {taxInclusive ? (
+              tax > 0 && (
+                <div className="flex justify-between text-xs text-muted-foreground/70 italic">
+                  <span>Includes {taxLabel || "Tax"}</span>
+                  <span>${tax.toFixed(2)}</span>
+                </div>
+              )
+            ) : (
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>{taxLabel || "Tax"}</span>
+                <span className="font-semibold">${tax.toFixed(2)}</span>
+              </div>
+            )}
             {tip > 0 && (
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>Tip</span>

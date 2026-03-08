@@ -90,10 +90,19 @@ export default function ReceiptPage() {
               <span>Subtotal</span>
               <span className="font-semibold">${Number(order.subtotal).toFixed(2)}</span>
             </div>
-            <div className="flex justify-between text-sm text-muted-foreground">
-              <span>{order.tax_label || "Tax"}</span>
-              <span className="font-semibold">${Number(order.tax).toFixed(2)}</span>
-            </div>
+            {order.tax_inclusive ? (
+              Number(order.tax) > 0 && (
+                <div className="flex justify-between text-xs text-muted-foreground/70 italic">
+                  <span>Includes {order.tax_label || "Tax"}</span>
+                  <span>${Number(order.tax).toFixed(2)}</span>
+                </div>
+              )
+            ) : (
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>{order.tax_label || "Tax"}</span>
+                <span className="font-semibold">${Number(order.tax).toFixed(2)}</span>
+              </div>
+            )}
             {Number(order.tip) > 0 && (
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>Tip</span>
