@@ -10,7 +10,7 @@ export function useOnboardingStatus() {
   const { currentOrg } = useOrg();
   const { data: trailers } = useTrailers();
   const { data: menuItems } = useMenuItems();
-  const { data: inventory } = useInventory();
+  const { data: inventory } = useInventoryItems();
   const { data: staff } = useStaffMembers();
   const { data: bookings } = useBookings();
 
