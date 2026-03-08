@@ -208,6 +208,16 @@ export default function Inventory() {
                     <Input type="number" min="1" placeholder="e.g. 7" value={newItem.shelf_life_days} onChange={(e) => setNewItem({ ...newItem, shelf_life_days: e.target.value })} className="h-11" />
                   </div>
                 </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <Label>Unit Size (purchase qty)</Label>
+                    <Input type="number" step="0.01" min="0" placeholder="e.g. 50" value={newItem.unit_size} onChange={(e) => setNewItem({ ...newItem, unit_size: e.target.value })} className="h-11" />
+                  </div>
+                  <div>
+                    <Label>Serving Size</Label>
+                    <Input type="number" step="0.01" min="0" placeholder="e.g. 1.5" value={newItem.serving_size} onChange={(e) => setNewItem({ ...newItem, serving_size: e.target.value })} className="h-11" />
+                  </div>
+                </div>
                 <div><Label>Supplier</Label><Input value={newItem.supplier} onChange={(e) => setNewItem({ ...newItem, supplier: e.target.value })} className="h-11" /></div>
                 <Button className="w-full h-11" onClick={handleAddItem} disabled={createItem.isPending}>
                   {createItem.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null} Add Item
