@@ -65,7 +65,11 @@ export function useUpdateInventoryItem() {
       if (!data || data.length === 0) throw new Error("Update failed — item not found or permission denied");
       return data[0];
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["inventory-items"] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["inventory-items"] });
+      // Menu costs are recalculated by DB trigger — refresh menu cache too
+      qc.invalidateQueries({ queryKey: ["menu-items"] });
+    },
   });
 }
 
