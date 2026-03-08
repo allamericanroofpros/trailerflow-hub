@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { claudeNonStreaming } from "./useClaudeAI";
 import { supabase } from "@/integrations/supabase/client";
+import { useEntitlements } from "./useEntitlements";
 
 interface ForecastData {
   weeklyForecast: number;
@@ -12,8 +13,11 @@ interface ForecastData {
 }
 
 export function useAIForecast() {
+  const ent = useEntitlements();
+
   return useQuery({
     queryKey: ["ai-forecast"],
+    enabled: ent.aiForecasting,
     queryFn: async () => {
       // Gather business context
       const [eventsRes, transactionsRes, trailersRes] = await Promise.all([
@@ -31,7 +35,6 @@ Today's date: ${new Date().toISOString().split("T")[0]}`;
       const response = await claudeNonStreaming("forecast", [{ role: "user", content: context }]);
 
       try {
-        // Try to parse JSON from the response
         const jsonMatch = response.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           return JSON.parse(jsonMatch[0]) as ForecastData;
@@ -40,7 +43,6 @@ Today's date: ${new Date().toISOString().split("T")[0]}`;
         console.error("Failed to parse forecast:", e);
       }
 
-      // Fallback
       return {
         weeklyForecast: 0,
         monthlyForecast: 0,
@@ -50,7 +52,7 @@ Today's date: ${new Date().toISOString().split("T")[0]}`;
         suggestions: [],
       };
     },
-    staleTime: 1000 * 60 * 30, // 30 min cache
+    staleTime: 1000 * 60 * 30,
     retry: 1,
   });
 }

@@ -1,6 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { RevenueByTypeChart, TrailerPerformanceChart } from "@/components/dashboard/Charts";
+import { AdvancedAnalyticsPlaceholder } from "@/components/dashboard/AdvancedAnalyticsGate";
 import { SetupWizard } from "@/components/onboarding/SetupWizard";
 import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
 import { useNavigate } from "react-router-dom";

@@ -118,7 +118,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   const orgRole = currentMembership?.role ?? null;
 
   return (
-    <OrgContext.Provider value={{ currentOrg, memberships, orgRole, loading, switchOrg }}>
+    <OrgContext.Provider value={{ currentOrg, memberships, orgRole, loading, switchOrg, refreshOrg }}>
       {children}
     </OrgContext.Provider>
   );
