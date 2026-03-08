@@ -15,6 +15,7 @@ import { useOrgId } from "@/hooks/useOrgId";
 
 export default function Financials() {
   const { data: transactions, isLoading } = useTransactions();
+  const { data: orders } = useOrders();
   const { data: trailers } = useTrailers();
   const { data: events } = useEvents();
   const createTx = useCreateTransaction();
