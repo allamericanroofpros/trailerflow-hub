@@ -16,27 +16,29 @@ import {
   ShoppingCart,
   Package,
   UtensilsCrossed,
+  Shield,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
 
 const navItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "POS", url: "/pos", icon: ShoppingCart },
-  { title: "Menu", url: "/menu", icon: UtensilsCrossed },
-  { title: "Inventory", url: "/inventory", icon: Package },
-  { title: "Events Hub", url: "/events", icon: CalendarRange },
-  { title: "Discover", url: "/discover", icon: Compass },
-  { title: "Calendar", url: "/calendar", icon: Calendar },
-  { title: "Fleet", url: "/fleet", icon: BarChart3 },
-  { title: "Trailers", url: "/trailers", icon: Truck },
-  { title: "Staff", url: "/staff", icon: Users },
-  { title: "Bookings", url: "/bookings", icon: ClipboardList },
-  { title: "Financials", url: "/financials", icon: DollarSign },
-  { title: "Maintenance", url: "/maintenance", icon: Wrench },
-  { title: "Settings", url: "/settings", icon: Settings },
+  { title: "Dashboard", url: "/", icon: LayoutDashboard, viewKey: "dashboard" },
+  { title: "POS", url: "/pos", icon: ShoppingCart, viewKey: "pos" },
+  { title: "Menu", url: "/menu", icon: UtensilsCrossed, viewKey: "menu" },
+  { title: "Inventory", url: "/inventory", icon: Package, viewKey: "inventory" },
+  { title: "Events Hub", url: "/events", icon: CalendarRange, viewKey: "events" },
+  { title: "Discover", url: "/discover", icon: Compass, viewKey: "discover" },
+  { title: "Calendar", url: "/calendar", icon: Calendar, viewKey: "calendar" },
+  { title: "Fleet", url: "/fleet", icon: BarChart3, viewKey: "fleet" },
+  { title: "Trailers", url: "/trailers", icon: Truck, viewKey: "trailers" },
+  { title: "Staff", url: "/staff", icon: Users, viewKey: "staff" },
+  { title: "Bookings", url: "/bookings", icon: ClipboardList, viewKey: "bookings" },
+  { title: "Financials", url: "/financials", icon: DollarSign, viewKey: "financials" },
+  { title: "Maintenance", url: "/maintenance", icon: Wrench, viewKey: "maintenance" },
+  { title: "Settings", url: "/settings", icon: Settings, viewKey: "settings" },
 ];
 
 export function AppSidebar() {
