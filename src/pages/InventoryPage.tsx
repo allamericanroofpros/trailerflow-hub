@@ -28,6 +28,7 @@ type SortField = "name" | "current_stock" | "cost_per_unit" | "par_level";
 type SortDir = "asc" | "desc";
 
 export default function Inventory() {
+  const orgId = useOrgId();
   const { data: items, isLoading } = useInventoryItems();
   const { data: lowStock } = useLowStockItems();
   const { data: logs } = useInventoryLogs();
