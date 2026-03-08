@@ -262,6 +262,8 @@ export default function POS() {
         cashTendered: data.cashTendered,
         changeDue,
         orderId: (newOrder as any).id,
+        surchargeAmount: surcharge,
+        surchargeLabel: data.surchargeLabel,
       });
       setCart([]);
       setCustomerName("");
