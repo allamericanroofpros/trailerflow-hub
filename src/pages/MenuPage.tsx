@@ -88,14 +88,36 @@ export default function MenuPage() {
   const [aiPriceLoading, setAiPriceLoading] = useState(false);
   const [aiSuggestedPrice, setAiSuggestedPrice] = useState<number | null>(null);
 
-  // Estimated cost from ingredients
-  const ingredientCost = useMemo(() => {
+  // Estimated cost from base ingredients
+  const baseIngredientCost = useMemo(() => {
     return form.ingredients.reduce((sum, ing) => {
       const invItem = inventoryItems?.find(ii => ii.id === ing.inventoryItemId);
       const costPerUnit = Number(invItem?.cost_per_unit) || 0;
       return sum + costPerUnit * ing.quantityUsed;
     }, 0);
   }, [form.ingredients, inventoryItems]);
+
+  // Cost from modifier inventory adjustments (average across all options)
+  const modifierCostRange = useMemo(() => {
+    if (!form.modifiers.length || !inventoryItems) return { min: 0, max: 0, avg: 0 };
+    let minCost = 0, maxCost = 0;
+    form.modifiers.forEach(mod => {
+      const optionCosts = mod.options.map(opt => {
+        return (opt.inventoryAdjustments || []).reduce((sum, adj) => {
+          const invItem = inventoryItems.find(ii => ii.id === adj.inventoryItemId);
+          return sum + (Number(invItem?.cost_per_unit) || 0) * adj.extraQty;
+        }, 0);
+      });
+      if (optionCosts.length > 0) {
+        minCost += Math.min(...optionCosts);
+        maxCost += Math.max(...optionCosts);
+      }
+    });
+    return { min: minCost, max: maxCost, avg: (minCost + maxCost) / 2 };
+  }, [form.modifiers, inventoryItems]);
+
+  // Total ingredient cost (base + average modifier cost)
+  const ingredientCost = baseIngredientCost + modifierCostRange.avg;
 
   // Get target margin from selected trailer
   const selectedTrailer = trailers?.find(t => t.id === form.trailer_id);
@@ -588,11 +610,23 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
 
               {/* Margin display */}
               {form.price > 0 && ingredientCost > 0 && (
-                <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                  <span>Margin: <strong className={`${((1 - ingredientCost / form.price) * 100) >= targetMargin ? "text-success" : "text-warning"}`}>
-                    {((1 - ingredientCost / form.price) * 100).toFixed(1)}%
-                  </strong></span>
-                  <span>Profit: <strong className="text-foreground">${(form.price - ingredientCost).toFixed(2)}</strong></span>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span>Margin: <strong className={`${((1 - ingredientCost / form.price) * 100) >= targetMargin ? "text-success" : "text-warning"}`}>
+                      {((1 - ingredientCost / form.price) * 100).toFixed(1)}%
+                    </strong></span>
+                    <span>Profit: <strong className="text-foreground">${(form.price - ingredientCost).toFixed(2)}</strong></span>
+                  </div>
+                  {modifierCostRange.max > 0 && (
+                    <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                      <span>Base cost: <strong className="text-foreground">${baseIngredientCost.toFixed(2)}</strong></span>
+                      <span>+ Modifier cost: <strong className="text-foreground">
+                        {modifierCostRange.min === modifierCostRange.max 
+                          ? `$${modifierCostRange.min.toFixed(2)}`
+                          : `$${modifierCostRange.min.toFixed(2)}–$${modifierCostRange.max.toFixed(2)}`}
+                      </strong></span>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -601,7 +635,7 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
             <div className="rounded-lg border border-border p-4 space-y-3">
               <button onClick={() => setShowModifiers(!showModifiers)} className="flex items-center gap-2 w-full text-left">
                 <DollarSign className="h-4 w-4 text-info" />
-                <span className="text-sm font-bold text-foreground flex-1">Modifiers — Options That Adjust Price</span>
+                <span className="text-sm font-bold text-foreground flex-1">Modifiers — Options That Adjust Price & Inventory</span>
                 {showModifiers ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
               </button>
               {showModifiers && (
@@ -661,6 +695,7 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                           <div className="ml-5 space-y-1">
                             {(opt.inventoryAdjustments || []).map((adj, adjIdx) => {
                               const invItem = inventoryItems?.find(ii => ii.id === adj.inventoryItemId);
+                              const adjCost = (Number(invItem?.cost_per_unit) || 0) * adj.extraQty;
                               return (
                                 <div key={adjIdx} className="flex items-center gap-1.5">
                                   <Package className="h-2.5 w-2.5 text-muted-foreground" />
@@ -689,6 +724,9 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                                     className="h-6 text-[10px] w-16"
                                   />
                                   <span className="text-[9px] text-muted-foreground">{invItem?.unit || ""}</span>
+                                  {adjCost > 0 && (
+                                    <span className="text-[9px] font-medium text-warning">${adjCost.toFixed(2)}</span>
+                                  )}
                                   <button
                                     onClick={() => {
                                       const newAdjs = (opt.inventoryAdjustments || []).filter((_: any, i: number) => i !== adjIdx);
@@ -701,6 +739,18 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                                 </div>
                               );
                             })}
+                            {/* Show total cost for this option */}
+                            {(() => {
+                              const optCost = (opt.inventoryAdjustments || []).reduce((sum, adj) => {
+                                const invItem = inventoryItems?.find(ii => ii.id === adj.inventoryItemId);
+                                return sum + (Number(invItem?.cost_per_unit) || 0) * adj.extraQty;
+                              }, 0);
+                              return optCost > 0 ? (
+                                <span className="text-[10px] font-semibold text-warning">
+                                  Option cost: ${optCost.toFixed(2)}
+                                </span>
+                              ) : null;
+                            })()}
                             <button
                               onClick={() => {
                                 const newAdjs = [...(opt.inventoryAdjustments || []), { inventoryItemId: "", extraQty: 1 }];
