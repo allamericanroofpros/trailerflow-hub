@@ -19,6 +19,7 @@ import POSInventoryView from "@/components/pos/POSInventoryView";
 import POSReportView from "@/components/pos/POSReportView";
 import POSCheckoutFlow from "@/components/pos/POSCheckoutFlow";
 import POSConfirmation from "@/components/pos/POSConfirmation";
+import POSOrderHistory from "@/components/pos/POSOrderHistory";
 
 type CartItem = {
   menu_item_id: string;
