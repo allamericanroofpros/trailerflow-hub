@@ -23,7 +23,8 @@ import POSOrderHistory from "@/components/pos/POSOrderHistory";
 import POSEndOfDay from "@/components/pos/POSEndOfDay";
 import POSStartOfDay from "@/components/pos/POSStartOfDay";
 import POSTimeClock from "@/components/pos/POSTimeClock";
-import { useActiveClocks, useStaffByPin } from "@/hooks/useTimeClock";
+import { useStaffByPin } from "@/hooks/useTimeClock";
+import { supabase } from "@/integrations/supabase/client";
 
 type Modifier = {
   name: string;
@@ -61,11 +62,11 @@ export default function POS() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  // PIN gate for register
-  const [posStaffName, setPosStaffName] = useState<string | null>(() => sessionStorage.getItem("pos_staff_name"));
-  const [posPin, setPosPin] = useState("");
+  // POS lock mode (admin PIN to exit)
+  const posLockEnabled = localStorage.getItem("pos_lock_mode") === "true";
+  const [showExitGate, setShowExitGate] = useState(false);
+  const [exitPin, setExitPin] = useState("");
   const staffByPin = useStaffByPin();
-  const { data: activeClocks } = useActiveClocks();
 
   const activeTrailerId = sodData?.trailerId || undefined;
   const { data: menuItems, isLoading: menuLoading } = useMenuItems(activeTrailerId);
@@ -89,29 +90,42 @@ export default function POS() {
     paymentMethod: string; cashTendered?: number; changeDue?: number;
     orderId: string;
   } | null>(null);
-  const handlePosLogin = async () => {
-    if (posPin.length < 4) { toast.error("Enter your PIN"); return; }
-    try {
-      const staff = await staffByPin.mutateAsync(posPin);
-      // Must be clocked in
-      const isClockedIn = activeClocks?.some(c => c.staff_id === staff.id);
-      if (!isClockedIn) {
-        toast.error("You must clock in first before using the register. Go to the Clock tab.");
-        setPosPin("");
-        return;
-      }
-      setPosStaffName(staff.name);
-      sessionStorage.setItem("pos_staff_name", staff.name);
-      setPosPin("");
-    } catch {
-      toast.error("Invalid PIN");
-      setPosPin("");
+
+  const handleExitPOS = () => {
+    if (!posLockEnabled) {
+      navigate("/");
+      return;
     }
+    setShowExitGate(true);
+    setExitPin("");
   };
 
-  const handlePosLogout = () => {
-    setPosStaffName(null);
-    sessionStorage.removeItem("pos_staff_name");
+  const handleExitPinSubmit = async () => {
+    if (exitPin.length < 4) { toast.error("Enter admin PIN"); return; }
+    try {
+      const staff = await staffByPin.mutateAsync(exitPin);
+      // Check if this staff member is an owner or manager by checking user_roles
+      // For simplicity, we check if the staff has a linked user_id and that user has owner/manager role
+      if (!staff.user_id) {
+        toast.error("Only admin PINs can exit POS. Ask your manager.");
+        setExitPin("");
+        return;
+      }
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", staff.user_id)
+        .single();
+      if (!roleData || (roleData.role !== "owner" && roleData.role !== "manager")) {
+        toast.error("Only owner or manager PINs can exit POS.");
+        setExitPin("");
+        return;
+      }
+      navigate("/");
+    } catch {
+      toast.error("Invalid PIN");
+      setExitPin("");
+    }
   };
 
   // Detect tablet-ish (<=1024px)
@@ -431,7 +445,7 @@ export default function POS() {
       <header className="flex h-16 items-center justify-between border-b-2 border-border bg-card px-4 shrink-0">
         <div className="flex items-center gap-3">
           <button
-            onClick={() => navigate("/")}
+            onClick={handleExitPOS}
             className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-muted-foreground hover:bg-secondary hover:text-foreground active:scale-95 transition-all touch-manipulation"
           >
             <ArrowLeft className="h-5 w-5" />
@@ -478,82 +492,17 @@ export default function POS() {
         </div>
 
         <div className="flex items-center gap-3">
-          {posStaffName && (
-            <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-primary">{posStaffName}</span>
-              <button onClick={handlePosLogout} className="text-xs text-muted-foreground hover:text-destructive font-medium">Switch</button>
-            </div>
-          )}
           <p className="text-sm text-muted-foreground hidden md:block font-medium">
             {new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
           </p>
+          {posLockEnabled && (
+            <span className="text-[10px] font-bold text-warning bg-warning/10 px-2 py-0.5 rounded-full">LOCKED</span>
+          )}
         </div>
       </header>
 
       {/* ── MAIN CONTENT ── */}
       {view === "register" ? (
-        !posStaffName ? (
-          /* PIN Gate for Register */
-          <div className="flex-1 flex items-center justify-center bg-background">
-            <div className="w-full max-w-sm space-y-6 p-6">
-              <div className="text-center">
-                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 mx-auto mb-4">
-                  <Clock className="h-8 w-8 text-primary" />
-                </div>
-                <h2 className="text-xl font-black text-card-foreground">Enter Your PIN</h2>
-                <p className="text-sm text-muted-foreground mt-1">You must be clocked in to use the register.</p>
-              </div>
-
-              {/* PIN display */}
-              <div className="flex justify-center gap-3">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className={`h-14 w-12 rounded-xl border-2 flex items-center justify-center text-2xl font-black transition-all ${
-                      i < posPin.length ? "border-primary bg-primary/10 text-primary" : i === posPin.length ? "border-primary/50 bg-background animate-pulse" : "border-border bg-background text-transparent"
-                    }`}
-                  >
-                    {i < posPin.length ? "•" : ""}
-                  </div>
-                ))}
-              </div>
-
-              {/* Numpad */}
-              <div className="grid grid-cols-3 gap-2.5 max-w-[300px] mx-auto">
-                {["1","2","3","4","5","6","7","8","9","clear","0","back"].map((key, i) => {
-                  if (key === "clear") return (
-                    <button key={i} onClick={() => setPosPin("")}
-                      className="h-16 rounded-xl border-2 border-border bg-background flex items-center justify-center hover:bg-secondary active:scale-90 touch-manipulation text-xs font-bold text-muted-foreground uppercase">
-                      Clear
-                    </button>
-                  );
-                  if (key === "back") return (
-                    <button key={i} onClick={() => setPosPin(prev => prev.slice(0, -1))}
-                      className="h-16 rounded-xl border-2 border-border bg-background flex items-center justify-center hover:bg-secondary active:scale-90 touch-manipulation">
-                      <X className="h-5 w-5 text-muted-foreground" />
-                    </button>
-                  );
-                  return (
-                    <button key={i} onClick={() => setPosPin(prev => prev.length < 6 ? prev + key : prev)}
-                      className="h-16 rounded-xl border-2 border-border bg-background text-xl font-black text-card-foreground hover:bg-secondary active:scale-90 active:bg-primary/10 touch-manipulation transition-all">
-                      {key}
-                    </button>
-                  );
-                })}
-              </div>
-
-              <Button className="w-full h-14 text-base font-black rounded-xl" onClick={handlePosLogin}
-                disabled={posPin.length < 4 || staffByPin.isPending}>
-                {staffByPin.isPending ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
-                Enter Register
-              </Button>
-
-              <p className="text-xs text-center text-muted-foreground">
-                Not clocked in? Use the <button onClick={() => setView("timeclock")} className="text-primary font-bold underline">Clock tab</button> first.
-              </p>
-            </div>
-          </div>
-        ) : (
         <div className="flex flex-1 overflow-hidden">
           {/* Menu Area */}
           <div className="flex-1 flex flex-col overflow-hidden">
@@ -723,7 +672,6 @@ export default function POS() {
             </>
           )}
         </div>
-        )
       ) : view === "orders" ? (
         /* ── ORDERS VIEW ── */
         <div className="flex-1 overflow-y-auto p-4">
@@ -920,6 +868,58 @@ export default function POS() {
       >
         <Moon className="h-4 w-4" /> End of Day
       </button>
+
+      {/* Admin PIN Exit Gate */}
+      <Dialog open={showExitGate} onOpenChange={setShowExitGate}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-center">Admin PIN Required</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground text-center">Enter an owner or manager PIN to exit the POS terminal.</p>
+
+          <div className="flex justify-center gap-3 my-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div
+                key={i}
+                className={`h-12 w-10 rounded-xl border-2 flex items-center justify-center text-xl font-black transition-all ${
+                  i < exitPin.length ? "border-primary bg-primary/10 text-primary" : i === exitPin.length ? "border-primary/50 animate-pulse" : "border-border text-transparent"
+                }`}
+              >
+                {i < exitPin.length ? "•" : ""}
+              </div>
+            ))}
+          </div>
+
+          <div className="grid grid-cols-3 gap-2 max-w-[260px] mx-auto">
+            {["1","2","3","4","5","6","7","8","9","clear","0","back"].map((key, i) => {
+              if (key === "clear") return (
+                <button key={i} onClick={() => setExitPin("")}
+                  className="h-14 rounded-xl border-2 border-border bg-background flex items-center justify-center hover:bg-secondary active:scale-90 touch-manipulation text-xs font-bold text-muted-foreground uppercase">
+                  Clear
+                </button>
+              );
+              if (key === "back") return (
+                <button key={i} onClick={() => setExitPin(prev => prev.slice(0, -1))}
+                  className="h-14 rounded-xl border-2 border-border bg-background flex items-center justify-center hover:bg-secondary active:scale-90 touch-manipulation">
+                  <X className="h-4 w-4 text-muted-foreground" />
+                </button>
+              );
+              return (
+                <button key={i} onClick={() => setExitPin(prev => prev.length < 6 ? prev + key : prev)}
+                  className="h-14 rounded-xl border-2 border-border bg-background text-lg font-black text-card-foreground hover:bg-secondary active:scale-90 active:bg-primary/10 touch-manipulation transition-all">
+                  {key}
+                </button>
+              );
+            })}
+          </div>
+
+          <Button className="w-full h-12 font-black rounded-xl mt-2" onClick={handleExitPinSubmit}
+            disabled={exitPin.length < 4 || staffByPin.isPending}>
+            {staffByPin.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+            Exit POS
+          </Button>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
