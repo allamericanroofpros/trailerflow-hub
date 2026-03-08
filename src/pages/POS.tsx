@@ -723,6 +723,7 @@ export default function POS() {
             </>
           )}
         </div>
+        )
       ) : view === "orders" ? (
         /* ── ORDERS VIEW ── */
         <div className="flex-1 overflow-y-auto p-4">
