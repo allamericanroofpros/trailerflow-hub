@@ -61,6 +61,7 @@ const App = () => (
             <Route path="/financials" element={<ProtectedRoute><Financials /></ProtectedRoute>} />
             <Route path="/maintenance" element={<ProtectedRoute><Maintenance /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+            <Route path="/orders-queue" element={<ProtectedRoute><OrdersQueue /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
