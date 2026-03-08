@@ -50,7 +50,17 @@ export default function POS() {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [view, setView] = useState<"register" | "orders" | "sales" | "inventory" | "report">("register");
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
-
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [showCustomItem, setShowCustomItem] = useState(false);
+  const [customItemName, setCustomItemName] = useState("");
+  const [customItemPrice, setCustomItemPrice] = useState("");
+  const [confirmation, setConfirmation] = useState<{
+    orderNumber: number;
+    items: { name: string; quantity: number; price: number }[];
+    subtotal: number; tax: number; tip: number; total: number;
+    paymentMethod: string; cashTendered?: number; changeDue?: number;
+    orderId: string;
+  } | null>(null);
   // Detect tablet-ish (<=1024px)
   const [isCompact, setIsCompact] = useState(false);
   useEffect(() => {
