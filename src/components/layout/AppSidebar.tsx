@@ -106,6 +106,11 @@ export function AppSidebar() {
         )}
       </div>
 
+      {/* Org Switcher */}
+      <div className="border-b border-sidebar-border px-1 py-2">
+        <OrgSwitcher collapsed={collapsed} />
+      </div>
+
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
         {sidebarEntries.map((entry) => {
