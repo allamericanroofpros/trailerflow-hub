@@ -742,6 +742,7 @@ export type Database = {
           staff_hourly_rate: number | null
           staff_required: number | null
           status: string
+          target_margin: number | null
           type: string | null
           updated_at: string
         }
@@ -764,6 +765,7 @@ export type Database = {
           staff_hourly_rate?: number | null
           staff_required?: number | null
           status?: string
+          target_margin?: number | null
           type?: string | null
           updated_at?: string
         }
@@ -786,6 +788,7 @@ export type Database = {
           staff_hourly_rate?: number | null
           staff_required?: number | null
           status?: string
+          target_margin?: number | null
           type?: string | null
           updated_at?: string
         }

@@ -1,0 +1,1 @@
+ALTER TABLE public.trailers ADD COLUMN target_margin numeric DEFAULT 70;

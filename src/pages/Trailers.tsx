@@ -32,6 +32,7 @@ type TrailerForm = {
   staff_required: string;
   staff_hourly_rate: string;
   avg_food_cost_percent: string;
+  target_margin: string;
 };
 
 const defaultForm: TrailerForm = {
@@ -49,6 +50,7 @@ const defaultForm: TrailerForm = {
   staff_required: "1",
   staff_hourly_rate: "15",
   avg_food_cost_percent: "30",
+  target_margin: "70",
 };
 
 function FieldLabel({ label, tip }: { label: string; tip: string }) {
@@ -108,6 +110,7 @@ export default function Trailers() {
       staff_required: form.staff_required ? parseInt(form.staff_required) : 1,
       staff_hourly_rate: form.staff_hourly_rate ? parseFloat(form.staff_hourly_rate) : 15,
       avg_food_cost_percent: form.avg_food_cost_percent ? parseFloat(form.avg_food_cost_percent) : 30,
+      target_margin: form.target_margin ? parseFloat(form.target_margin) : 70,
       owner_id: user!.id,
     };
 
@@ -145,6 +148,7 @@ export default function Trailers() {
       staff_required: t.staff_required?.toString() || "1",
       staff_hourly_rate: t.staff_hourly_rate?.toString() || "15",
       avg_food_cost_percent: t.avg_food_cost_percent?.toString() || "30",
+      target_margin: t.target_margin?.toString() || "70",
     });
     setAddingNew(true);
     setShowAdvanced(true);
@@ -394,6 +398,22 @@ export default function Trailers() {
                       value={form.fuel_cost_per_event}
                       onChange={(e) => setForm({ ...form, fuel_cost_per_event: e.target.value })}
                       placeholder="40.00"
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <FieldLabel
+                      label="Target Margin %"
+                      tip="Target profit margin for menu items on this trailer. Used for AI pricing suggestions."
+                    />
+                    <Input
+                      type="number"
+                      step="1"
+                      min="0"
+                      max="95"
+                      value={form.target_margin}
+                      onChange={(e) => setForm({ ...form, target_margin: e.target.value })}
+                      placeholder="70"
                       className="mt-1"
                     />
                   </div>
