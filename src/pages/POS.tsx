@@ -61,11 +61,11 @@ export default function POS() {
     return saved ? JSON.parse(saved) : null;
   });
 
-  // PIN gate for register
-  const [posStaffName, setPosStaffName] = useState<string | null>(() => sessionStorage.getItem("pos_staff_name"));
-  const [posPin, setPosPin] = useState("");
+  // POS lock mode (admin PIN to exit)
+  const posLockEnabled = localStorage.getItem("pos_lock_mode") === "true";
+  const [showExitGate, setShowExitGate] = useState(false);
+  const [exitPin, setExitPin] = useState("");
   const staffByPin = useStaffByPin();
-  const { data: activeClocks } = useActiveClocks();
 
   const activeTrailerId = sodData?.trailerId || undefined;
   const { data: menuItems, isLoading: menuLoading } = useMenuItems(activeTrailerId);
@@ -89,29 +89,42 @@ export default function POS() {
     paymentMethod: string; cashTendered?: number; changeDue?: number;
     orderId: string;
   } | null>(null);
-  const handlePosLogin = async () => {
-    if (posPin.length < 4) { toast.error("Enter your PIN"); return; }
-    try {
-      const staff = await staffByPin.mutateAsync(posPin);
-      // Must be clocked in
-      const isClockedIn = activeClocks?.some(c => c.staff_id === staff.id);
-      if (!isClockedIn) {
-        toast.error("You must clock in first before using the register. Go to the Clock tab.");
-        setPosPin("");
-        return;
-      }
-      setPosStaffName(staff.name);
-      sessionStorage.setItem("pos_staff_name", staff.name);
-      setPosPin("");
-    } catch {
-      toast.error("Invalid PIN");
-      setPosPin("");
+
+  const handleExitPOS = () => {
+    if (!posLockEnabled) {
+      navigate("/");
+      return;
     }
+    setShowExitGate(true);
+    setExitPin("");
   };
 
-  const handlePosLogout = () => {
-    setPosStaffName(null);
-    sessionStorage.removeItem("pos_staff_name");
+  const handleExitPinSubmit = async () => {
+    if (exitPin.length < 4) { toast.error("Enter admin PIN"); return; }
+    try {
+      const staff = await staffByPin.mutateAsync(exitPin);
+      // Check if this staff member is an owner or manager by checking user_roles
+      // For simplicity, we check if the staff has a linked user_id and that user has owner/manager role
+      if (!staff.user_id) {
+        toast.error("Only admin PINs can exit POS. Ask your manager.");
+        setExitPin("");
+        return;
+      }
+      const { data: roleData } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", staff.user_id)
+        .single();
+      if (!roleData || (roleData.role !== "owner" && roleData.role !== "manager")) {
+        toast.error("Only owner or manager PINs can exit POS.");
+        setExitPin("");
+        return;
+      }
+      navigate("/");
+    } catch {
+      toast.error("Invalid PIN");
+      setExitPin("");
+    }
   };
 
   // Detect tablet-ish (<=1024px)
