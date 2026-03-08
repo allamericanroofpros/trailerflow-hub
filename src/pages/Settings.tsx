@@ -1,20 +1,22 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Settings as SettingsIcon, User, Bell, Truck, CreditCard, Shield, Palette, ArrowRight } from "lucide-react";
+import { Settings as SettingsIcon, User, Bell, Truck, CreditCard, Shield, Palette, ArrowRight, Users, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-const sections = [
+const baseSections = [
   { id: "profile", title: "Profile", description: "Manage your account details and preferences.", icon: User },
   { id: "notifications", title: "Notifications", description: "Configure alerts for bookings, events, and maintenance.", icon: Bell },
   { id: "trailers", title: "Trailers", description: "Add, remove, or configure your fleet.", icon: Truck, href: "/trailers" },
   { id: "billing", title: "Billing", description: "Manage subscription, payment methods, and invoices.", icon: CreditCard },
   { id: "security", title: "Security", description: "Password, two-factor authentication, and access control.", icon: Shield },
+  { id: "team", title: "Team & Roles", description: "Manage user roles and permissions.", icon: Users, ownerOnly: true },
   { id: "appearance", title: "Appearance", description: "Customize your dashboard theme and layout.", icon: Palette },
 ] as const;
 
