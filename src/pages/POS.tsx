@@ -101,14 +101,21 @@ export default function POS() {
   const total = subtotal + tax;
   const itemCount = cart.reduce((s, c) => s + c.quantity, 0);
 
-  const handleCheckout = async (paymentMethod: "cash" | "card" | "digital") => {
+  const handleCheckout = async (data: {
+    paymentMethod: "cash" | "card" | "digital";
+    tip: number;
+    cashTendered?: number;
+  }) => {
     if (cart.length === 0) return;
+    const tipAmount = data.tip;
+    const grandTotal = total + tipAmount;
     try {
-      await createOrder.mutateAsync({
+      const newOrder = await createOrder.mutateAsync({
         subtotal,
         tax,
-        total,
-        payment_method: paymentMethod,
+        total: grandTotal,
+        tip: tipAmount,
+        payment_method: data.paymentMethod,
         payment_received: true,
         items: cart.map((c) => ({
           menu_item_id: c.menu_item_id,
@@ -116,12 +123,40 @@ export default function POS() {
           unit_price: c.price,
         })),
       });
+      const changeDue = data.cashTendered ? data.cashTendered - grandTotal : undefined;
+      setConfirmation({
+        orderNumber: (newOrder as any).order_number,
+        items: cart.map((c) => ({ name: c.name, quantity: c.quantity, price: c.price })),
+        subtotal, tax, tip: tipAmount, total: grandTotal,
+        paymentMethod: data.paymentMethod,
+        cashTendered: data.cashTendered,
+        changeDue,
+        orderId: (newOrder as any).id,
+      });
       setCart([]);
       setMobileCartOpen(false);
-      toast.success("Order placed!");
+      setShowCheckout(false);
     } catch (e: any) {
       toast.error(e.message);
     }
+  };
+
+  const handleAddCustomItem = () => {
+    if (!customItemName.trim() || !customItemPrice) return;
+    const price = Number(customItemPrice);
+    if (price <= 0) return;
+    // Use a placeholder ID for custom items
+    const customId = `custom-${Date.now()}`;
+    setCart((prev) => [...prev, {
+      menu_item_id: customId,
+      name: customItemName.trim(),
+      price,
+      quantity: 1,
+    }]);
+    setShowCustomItem(false);
+    setCustomItemName("");
+    setCustomItemPrice("");
+    toast.success(`Added ${customItemName.trim()}`);
   };
 
   const categories = menuItems
