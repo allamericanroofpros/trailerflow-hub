@@ -23,6 +23,7 @@ import POSOrderHistory from "@/components/pos/POSOrderHistory";
 import POSEndOfDay from "@/components/pos/POSEndOfDay";
 import POSStartOfDay from "@/components/pos/POSStartOfDay";
 import POSTimeClock from "@/components/pos/POSTimeClock";
+import { useActiveClocks, useStaffByPin } from "@/hooks/useTimeClock";
 
 type Modifier = {
   name: string;
