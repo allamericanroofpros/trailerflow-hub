@@ -492,6 +492,68 @@ export default function POS() {
 
       {/* ── MAIN CONTENT ── */}
       {view === "register" ? (
+        !posStaffName ? (
+          /* PIN Gate for Register */
+          <div className="flex-1 flex items-center justify-center bg-background">
+            <div className="w-full max-w-sm space-y-6 p-6">
+              <div className="text-center">
+                <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10 mx-auto mb-4">
+                  <Clock className="h-8 w-8 text-primary" />
+                </div>
+                <h2 className="text-xl font-black text-card-foreground">Enter Your PIN</h2>
+                <p className="text-sm text-muted-foreground mt-1">You must be clocked in to use the register.</p>
+              </div>
+
+              {/* PIN display */}
+              <div className="flex justify-center gap-3">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-14 w-12 rounded-xl border-2 flex items-center justify-center text-2xl font-black transition-all ${
+                      i < posPin.length ? "border-primary bg-primary/10 text-primary" : i === posPin.length ? "border-primary/50 bg-background animate-pulse" : "border-border bg-background text-transparent"
+                    }`}
+                  >
+                    {i < posPin.length ? "•" : ""}
+                  </div>
+                ))}
+              </div>
+
+              {/* Numpad */}
+              <div className="grid grid-cols-3 gap-2.5 max-w-[300px] mx-auto">
+                {["1","2","3","4","5","6","7","8","9","clear","0","back"].map((key, i) => {
+                  if (key === "clear") return (
+                    <button key={i} onClick={() => setPosPin("")}
+                      className="h-16 rounded-xl border-2 border-border bg-background flex items-center justify-center hover:bg-secondary active:scale-90 touch-manipulation text-xs font-bold text-muted-foreground uppercase">
+                      Clear
+                    </button>
+                  );
+                  if (key === "back") return (
+                    <button key={i} onClick={() => setPosPin(prev => prev.slice(0, -1))}
+                      className="h-16 rounded-xl border-2 border-border bg-background flex items-center justify-center hover:bg-secondary active:scale-90 touch-manipulation">
+                      <X className="h-5 w-5 text-muted-foreground" />
+                    </button>
+                  );
+                  return (
+                    <button key={i} onClick={() => setPosPin(prev => prev.length < 6 ? prev + key : prev)}
+                      className="h-16 rounded-xl border-2 border-border bg-background text-xl font-black text-card-foreground hover:bg-secondary active:scale-90 active:bg-primary/10 touch-manipulation transition-all">
+                      {key}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <Button className="w-full h-14 text-base font-black rounded-xl" onClick={handlePosLogin}
+                disabled={posPin.length < 4 || staffByPin.isPending}>
+                {staffByPin.isPending ? <Loader2 className="h-5 w-5 animate-spin mr-2" /> : null}
+                Enter Register
+              </Button>
+
+              <p className="text-xs text-center text-muted-foreground">
+                Not clocked in? Use the <button onClick={() => { setView("timeclock"); setPosStaffName("_skip"); }} className="text-primary font-bold underline">Clock tab</button> first.
+              </p>
+            </div>
+          </div>
+        ) : (
         <div className="flex flex-1 overflow-hidden">
           {/* Menu Area */}
           <div className="flex-1 flex flex-col overflow-hidden">
