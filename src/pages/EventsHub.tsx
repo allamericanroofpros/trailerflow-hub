@@ -58,6 +58,8 @@ function formatDate(date?: string | null, endDate?: string | null): string {
 
 export default function EventsHub() {
   const { data: grouped, isLoading } = useEventsByStage();
+  const { data: allEvents } = useEvents();
+  const { data: existingBookings } = useBookings();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const { data: selectedEvent } = useEvent(selectedId ?? undefined);
   const { data: trailers } = useTrailers();
@@ -71,6 +73,100 @@ export default function EventsHub() {
   const [editing, setEditing] = useState(false);
   const [aiSearching, setAiSearching] = useState(false);
   const [aiCitations, setAiCitations] = useState<string[]>([]);
+  const [aiForecastLoading, setAiForecastLoading] = useState(false);
+  const [mainTab, setMainTab] = useState<"pipeline" | "discover">("pipeline");
+
+  // Discover state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [submittedQuery, setSubmittedQuery] = useState<string | undefined>();
+  const [locationFilter, setLocationFilter] = useState("");
+  const [radiusMiles, setRadiusMiles] = useState<number>(50);
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const { data: aiEvents, isFetching: discoverFetching } = useAIDiscovery(submittedQuery);
+  const opportunities = aiEvents || [];
+
+  const busyRanges = useMemo(() => {
+    const ranges: { start: string; end: string; name: string }[] = [];
+    (allEvents || []).forEach((e) => {
+      if (e.event_date) ranges.push({ start: e.event_date, end: e.event_end_date || e.event_date, name: e.name });
+    });
+    (existingBookings || []).forEach((b) => {
+      ranges.push({ start: b.event_date, end: b.event_date, name: b.event_name });
+    });
+    return ranges;
+  }, [allEvents, existingBookings]);
+
+  const getOverlaps = (dateStr: string) => {
+    if (!dateStr) return [];
+    try {
+      const eventDate = new Date(dateStr);
+      if (isNaN(eventDate.getTime())) return [];
+      return busyRanges.filter((range) => {
+        const start = addDays(new Date(range.start), -1);
+        const end = addDays(new Date(range.end), 1);
+        return eventDate >= start && eventDate <= end;
+      });
+    } catch { return []; }
+  };
+
+  const handleDiscoverSearch = () => {
+    const parts: string[] = [];
+    if (searchQuery) parts.push(searchQuery);
+    if (locationFilter) parts.push(`within ${radiusMiles} miles of ${locationFilter}`);
+    if (dateRange.from) {
+      const fromStr = format(dateRange.from, "yyyy-MM-dd");
+      parts.push(dateRange.to ? `between ${fromStr} and ${format(dateRange.to, "yyyy-MM-dd")}` : `around ${fromStr}`);
+    }
+    const query = parts.join(" ");
+    if (!query) { toast.error("Enter a search term, location, or date range"); return; }
+    setSubmittedQuery(query);
+  };
+
+  const addToPipeline = (opp: typeof opportunities[0]) => {
+    createEvent.mutate(
+      { name: opp.name, event_type: opp.type, location: opp.location, stage: "lead", source: "ai-discovery", confidence: opp.aiRank },
+      { onSuccess: () => { toast.success(`"${opp.name}" added to pipeline`); setMainTab("pipeline"); }, onError: (e) => toast.error(e.message) }
+    );
+  };
+
+  // AI Forecast for a single event
+  const handleAIForecast = async () => {
+    if (!selectedEvent) return;
+    setAiForecastLoading(true);
+    try {
+      const trailerData = trailers?.find(t => t.id === (selectedEvent as any).trailer_id);
+      const context = `Calculate revenue forecast for this event:
+Event: ${selectedEvent.name}
+Type: ${selectedEvent.event_type || "Unknown"}
+Location: ${selectedEvent.location || "Unknown"}
+Date: ${selectedEvent.event_date || "TBD"}
+Attendance: ${selectedEvent.attendance_estimate || "Unknown"}
+Start: ${selectedEvent.start_time || "Unknown"}, End: ${selectedEvent.end_time || "Unknown"}
+Vendor Fee: $${selectedEvent.vendor_fee || 0}
+${trailerData ? `Trailer: ${trailerData.name}, Avg Ticket: $${trailerData.avg_ticket}, Customers/hr: ${trailerData.avg_customers_per_hour}, Food Cost: ${trailerData.avg_food_cost_percent}%, Staff: ${trailerData.staff_required} @ $${trailerData.staff_hourly_rate}/hr, Fuel: $${trailerData.fuel_cost_per_event}` : "No trailer assigned — use industry averages"}
+
+Return ONLY a JSON object with: revenue_forecast_low (number), revenue_forecast_high (number), confidence (0-100), notes (string with profit math). No markdown.`;
+      const response = await claudeNonStreaming("forecast", [{ role: "user", content: context }]);
+      const jsonMatch = response.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const forecast = JSON.parse(jsonMatch[0]);
+        await updateEvent.mutateAsync({
+          id: selectedEvent.id,
+          revenue_forecast_low: forecast.revenue_forecast_low,
+          revenue_forecast_high: forecast.revenue_forecast_high,
+          confidence: forecast.confidence,
+          notes: selectedEvent.notes ? `${selectedEvent.notes}\n\nAI Forecast: ${forecast.notes}` : `AI Forecast: ${forecast.notes}`,
+        });
+        toast.success("Revenue forecast generated!");
+      } else {
+        toast.error("Couldn't parse forecast");
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Forecast failed");
+    } finally {
+      setAiForecastLoading(false);
+    }
+  };
 
   // Edit form state
   const [editForm, setEditForm] = useState<Record<string, any>>({});
