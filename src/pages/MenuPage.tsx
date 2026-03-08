@@ -75,12 +75,16 @@ const emptyForm: FormState = {
 // Compute live cost from ingredients + modifiers using current inventory prices
 function computeLiveCost(item: any, allInventory?: any[]): number {
   // Base recipe cost — prefer fresh inventory data over stale joined data
+  // quantity_used is in SERVING units, cost_per_unit is per STOCK unit
+  // So: cost = quantity_used * (cost_per_unit / serving_unit_conversion)
   let baseCost = 0;
   const ingredients = item.menu_item_ingredients || [];
   for (const ing of ingredients) {
     const freshInv = allInventory?.find((ii: any) => ii.id === ing.inventory_item_id);
+    const inv = freshInv || ing.inventory_items;
     const costPerUnit = Number(freshInv?.cost_per_unit ?? ing.inventory_items?.cost_per_unit) || 0;
-    baseCost += costPerUnit * Number(ing.quantity_used);
+    const conversion = Number(inv?.serving_unit_conversion) || 1;
+    baseCost += (costPerUnit / conversion) * Number(ing.quantity_used);
   }
 
   // Modifier average cost
