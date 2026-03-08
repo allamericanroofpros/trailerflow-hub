@@ -44,7 +44,7 @@ export default function POS() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [view, setView] = useState<"register" | "orders">("register");
+  const [view, setView] = useState<"register" | "orders" | "sales" | "inventory" | "report">("register");
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
 
   // Detect tablet-ish (<=1024px)
