@@ -107,6 +107,12 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     queryClient?.invalidateQueries();
   };
 
+  /** Re-fetch org data (e.g. after billing change) without switching */
+  const refreshOrg = () => {
+    fetchMemberships();
+    queryClient?.invalidateQueries();
+  };
+
   const currentMembership = memberships.find((m) => m.org_id === currentOrgId);
   const currentOrg = currentMembership?.organization ?? null;
   const orgRole = currentMembership?.role ?? null;
