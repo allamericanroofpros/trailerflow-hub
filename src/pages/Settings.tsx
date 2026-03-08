@@ -182,6 +182,40 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {/* POS Terminal Section (Owner only) */}
+        {activeSection === "pos" && isOwner && (
+          <div className="rounded-xl border border-border bg-card p-6 shadow-card">
+            <div className="flex items-center gap-2 mb-5">
+              <Monitor className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-card-foreground">POS Terminal Settings</h3>
+            </div>
+            <div className="space-y-4 max-w-lg">
+              <label className="flex items-center justify-between py-3 border-b border-border cursor-pointer">
+                <div>
+                  <p className="text-sm font-medium text-card-foreground">POS Lock Mode</p>
+                  <p className="text-xs text-muted-foreground">
+                    When enabled, exiting the POS terminal requires an owner or manager PIN. Staff cannot leave the register on their own. Ideal for multi-employee operations.
+                  </p>
+                </div>
+                <input
+                  type="checkbox"
+                  checked={posLockMode}
+                  onChange={(e) => {
+                    const val = e.target.checked;
+                    setPosLockMode(val);
+                    localStorage.setItem("pos_lock_mode", val ? "true" : "false");
+                    toast.success(val ? "POS Lock Mode enabled — admin PIN required to exit" : "POS Lock Mode disabled — anyone can exit POS");
+                  }}
+                  className="rounded border-border text-primary h-5 w-5"
+                />
+              </label>
+              <p className="text-[11px] text-muted-foreground">
+                <strong>Tip:</strong> Owner-operators who run the trailer solo can leave this off. Turn it on when you have employees working the register so they stay focused on orders.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Notifications Section */}
         {activeSection === "notifications" && (
           <div className="rounded-xl border border-border bg-card p-6 shadow-card">
