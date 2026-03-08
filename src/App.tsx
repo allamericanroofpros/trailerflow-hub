@@ -29,6 +29,7 @@ import ReceiptPage from "./pages/Receipt";
 import PublicBooking from "./pages/PublicBooking";
 import FleetOverview from "./pages/FleetOverview";
 import OrdersQueue from "./pages/OrdersQueue";
+import TimeClockPage from "./pages/TimeClockPage";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminOrganizations from "./pages/admin/AdminOrganizations";
 import AdminUsers from "./pages/admin/AdminUsers";
