@@ -4,7 +4,7 @@ import { toast } from "sonner";
 
 type Message = { role: "user" | "assistant"; content: string };
 
-const CLAUDE_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/claude-ai`;
+const AI_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/claude-ai`;
 
 export function useClaudeChat() {
   const [messages, setMessages] = useState<Message[]>([]);
@@ -21,7 +21,7 @@ export function useClaudeChat() {
       const session = await supabase.auth.getSession();
       const token = session.data.session?.access_token;
 
-      const resp = await fetch(CLAUDE_URL, {
+      const resp = await fetch(AI_URL, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -62,9 +62,10 @@ export function useClaudeChat() {
 
           try {
             const parsed = JSON.parse(jsonStr);
-            // Anthropic SSE format
-            if (parsed.type === "content_block_delta" && parsed.delta?.text) {
-              assistantSoFar += parsed.delta.text;
+            // OpenAI-compatible SSE format
+            const content = parsed.choices?.[0]?.delta?.content;
+            if (content) {
+              assistantSoFar += content;
               setMessages((prev) => {
                 const last = prev[prev.length - 1];
                 if (last?.role === "assistant") {
@@ -79,9 +80,8 @@ export function useClaudeChat() {
         }
       }
     } catch (e: any) {
-      console.error("Claude chat error:", e);
+      console.error("AI chat error:", e);
       toast.error(e.message || "Failed to get AI response");
-      // Remove the user message if we got no response
       if (!assistantSoFar) {
         setMessages((prev) => prev.slice(0, -1));
       }
@@ -99,7 +99,7 @@ export async function claudeNonStreaming(feature: string, messages: { role: stri
   const session = await supabase.auth.getSession();
   const token = session.data.session?.access_token;
 
-  const resp = await fetch(CLAUDE_URL, {
+  const resp = await fetch(AI_URL, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -114,7 +114,7 @@ export async function claudeNonStreaming(feature: string, messages: { role: stri
   }
 
   const data = await resp.json();
-  // Anthropic response format
-  const text = data.content?.[0]?.text || "";
+  // OpenAI-compatible response format
+  const text = data.choices?.[0]?.message?.content || "";
   return text;
 }
