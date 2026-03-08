@@ -75,6 +75,7 @@ export default function POS() {
   const [showEOD, setShowEOD] = useState(false);
   const [customItemName, setCustomItemName] = useState("");
   const [customItemPrice, setCustomItemPrice] = useState("");
+  const [specialInstructions, setSpecialInstructions] = useState("");
   const [confirmation, setConfirmation] = useState<{
     orderNumber: number;
     items: { name: string; quantity: number; price: number }[];
@@ -167,7 +168,10 @@ export default function POS() {
         tip: tipAmount,
         payment_method: data.paymentMethod,
         payment_received: true,
-        notes: customerName.trim() ? `Customer: ${customerName.trim()}` : undefined,
+        notes: [
+          customerName.trim() ? `Customer: ${customerName.trim()}` : "",
+          specialInstructions.trim() ? `Instructions: ${specialInstructions.trim()}` : "",
+        ].filter(Boolean).join(" | ") || undefined,
         items: cart.map((c) => {
           const isCustom = c.menu_item_id.startsWith(CUSTOM_ITEM_ID);
           return {
@@ -190,6 +194,7 @@ export default function POS() {
       });
       setCart([]);
       setCustomerName("");
+      setSpecialInstructions("");
       setMobileCartOpen(false);
       setShowCheckout(false);
     } catch (e: any) {
@@ -340,6 +345,17 @@ export default function POS() {
             onChange={(e) => setCustomerName(e.target.value)}
             placeholder="Enter name for order"
             className="mt-1 h-12 rounded-xl border-2 text-base font-semibold"
+          />
+        </div>
+
+        {/* Special Instructions */}
+        <div>
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Special Instructions</label>
+          <Input
+            value={specialInstructions}
+            onChange={(e) => setSpecialInstructions(e.target.value)}
+            placeholder="Allergies, preferences, etc."
+            className="mt-1 h-12 rounded-xl border-2 text-base"
           />
         </div>
 
@@ -507,16 +523,6 @@ export default function POS() {
                       </p>
                     </motion.button>
                   ))}
-                  {/* Open Price / Custom Item */}
-                  <motion.button
-                    whileTap={{ scale: 0.93 }}
-                    onClick={() => setShowCustomItem(true)}
-                    className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-secondary/30 p-5 text-center hover:border-primary/40 hover:shadow-md transition-all min-h-[120px] touch-manipulation"
-                  >
-                    <Tag className="h-7 w-7 text-muted-foreground mb-2" />
-                    <p className="text-sm font-bold text-muted-foreground">Custom Item</p>
-                    <p className="text-xs text-muted-foreground/70 mt-0.5">Open price</p>
-                  </motion.button>
                 </div>
               )}
             </div>
