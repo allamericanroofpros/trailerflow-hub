@@ -208,10 +208,10 @@ export default function Inventory() {
         <p className="text-[10px] text-muted-foreground">If recipes use a different unit than how you count stock. E.g. stock in gallons, recipes in oz.</p>
         <div className="grid grid-cols-2 gap-3">
           <div><Label className="text-[10px]">Serving Unit</Label>
-            <Select value={item.serving_unit || ""} onValueChange={(v) => setItem({ ...item, serving_unit: v || "" })}>
+            <Select value={item.serving_unit || "__same__"} onValueChange={(v) => setItem({ ...item, serving_unit: v === "__same__" ? "" : v })}>
               <SelectTrigger className="h-9"><SelectValue placeholder="Same as stock" /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Same as stock unit</SelectItem>
+                <SelectItem value="__same__">Same as stock unit</SelectItem>
                 {units.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
               </SelectContent>
             </Select>

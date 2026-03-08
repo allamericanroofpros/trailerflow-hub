@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
-import { useActiveOrders, useUpdateOrderStatus, useOrders } from "@/hooks/useOrders";
+import { useActiveOrders, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
