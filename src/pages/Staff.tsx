@@ -241,6 +241,59 @@ export default function Staff() {
           </div>
         )}
 
+        {/* Roles Tab (Owner only) */}
+        {tab === "roles" && isOwner && (
+          <div className="rounded-xl border border-border bg-card p-6 shadow-card">
+            <div className="flex items-center gap-2 mb-2">
+              <Shield className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-card-foreground">User Roles & Permissions</h3>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              <strong>Owner</strong> = full access. <strong>Manager</strong> = manage operations (no role changes or deletions). <strong>Staff</strong> = POS, calendar, and basic views only.
+            </p>
+            {teamLoading ? (
+              <div className="flex items-center gap-2 py-8 justify-center text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" /> Loading team...
+              </div>
+            ) : (
+              <div className="space-y-3 max-w-2xl">
+                {teamMembers?.map((member) => (
+                  <div key={member.id} className="flex items-center justify-between rounded-lg border border-border bg-background p-4">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        {member.profile?.full_name || "Unnamed User"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {member.profile?.phone || member.profile?.business_name || "No details"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {member.user_id === user?.id ? (
+                        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                          {member.role} (you)
+                        </span>
+                      ) : (
+                        <select
+                          value={member.role}
+                          onChange={(e) => updateRole.mutate({ id: member.id, role: e.target.value as "owner" | "manager" | "staff" })}
+                          className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground"
+                        >
+                          <option value="owner">Owner</option>
+                          <option value="manager">Manager</option>
+                          <option value="staff">Staff</option>
+                        </select>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {(!teamMembers || teamMembers.length === 0) && (
+                  <p className="text-sm text-muted-foreground py-4 text-center">No users found. New users get the Staff role when they sign up.</p>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Roster Tab */}
         {tab === "roster" && (
           <div className="rounded-xl border border-border bg-card shadow-card overflow-hidden">
