@@ -8,13 +8,17 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "
 import {
   ShoppingCart, Plus, Minus, Trash2, CreditCard, Banknote,
   Smartphone, ChefHat, Clock, CheckCircle, Loader2, ArrowLeft,
-  Truck, X, ChevronUp, BarChart3, Package, FileText,
+  Truck, X, ChevronUp, BarChart3, Package, FileText, Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import POSSalesView from "@/components/pos/POSSalesView";
 import POSInventoryView from "@/components/pos/POSInventoryView";
 import POSReportView from "@/components/pos/POSReportView";
+import POSCheckoutFlow from "@/components/pos/POSCheckoutFlow";
+import POSConfirmation from "@/components/pos/POSConfirmation";
 
 type CartItem = {
   menu_item_id: string;
@@ -46,7 +50,17 @@ export default function POS() {
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [view, setView] = useState<"register" | "orders" | "sales" | "inventory" | "report">("register");
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
-
+  const [showCheckout, setShowCheckout] = useState(false);
+  const [showCustomItem, setShowCustomItem] = useState(false);
+  const [customItemName, setCustomItemName] = useState("");
+  const [customItemPrice, setCustomItemPrice] = useState("");
+  const [confirmation, setConfirmation] = useState<{
+    orderNumber: number;
+    items: { name: string; quantity: number; price: number }[];
+    subtotal: number; tax: number; tip: number; total: number;
+    paymentMethod: string; cashTendered?: number; changeDue?: number;
+    orderId: string;
+  } | null>(null);
   // Detect tablet-ish (<=1024px)
   const [isCompact, setIsCompact] = useState(false);
   useEffect(() => {
@@ -87,14 +101,21 @@ export default function POS() {
   const total = subtotal + tax;
   const itemCount = cart.reduce((s, c) => s + c.quantity, 0);
 
-  const handleCheckout = async (paymentMethod: "cash" | "card" | "digital") => {
+  const handleCheckout = async (data: {
+    paymentMethod: "cash" | "card" | "digital";
+    tip: number;
+    cashTendered?: number;
+  }) => {
     if (cart.length === 0) return;
+    const tipAmount = data.tip;
+    const grandTotal = total + tipAmount;
     try {
-      await createOrder.mutateAsync({
+      const newOrder = await createOrder.mutateAsync({
         subtotal,
         tax,
-        total,
-        payment_method: paymentMethod,
+        total: grandTotal,
+        tip: tipAmount,
+        payment_method: data.paymentMethod,
         payment_received: true,
         items: cart.map((c) => ({
           menu_item_id: c.menu_item_id,
@@ -102,12 +123,40 @@ export default function POS() {
           unit_price: c.price,
         })),
       });
+      const changeDue = data.cashTendered ? data.cashTendered - grandTotal : undefined;
+      setConfirmation({
+        orderNumber: (newOrder as any).order_number,
+        items: cart.map((c) => ({ name: c.name, quantity: c.quantity, price: c.price })),
+        subtotal, tax, tip: tipAmount, total: grandTotal,
+        paymentMethod: data.paymentMethod,
+        cashTendered: data.cashTendered,
+        changeDue,
+        orderId: (newOrder as any).id,
+      });
       setCart([]);
       setMobileCartOpen(false);
-      toast.success("Order placed!");
+      setShowCheckout(false);
     } catch (e: any) {
       toast.error(e.message);
     }
+  };
+
+  const handleAddCustomItem = () => {
+    if (!customItemName.trim() || !customItemPrice) return;
+    const price = Number(customItemPrice);
+    if (price <= 0) return;
+    // Use a placeholder ID for custom items
+    const customId = `custom-${Date.now()}`;
+    setCart((prev) => [...prev, {
+      menu_item_id: customId,
+      name: customItemName.trim(),
+      price,
+      quantity: 1,
+    }]);
+    setShowCustomItem(false);
+    setCustomItemName("");
+    setCustomItemPrice("");
+    toast.success(`Added ${customItemName.trim()}`);
   };
 
   const categories = menuItems
@@ -227,25 +276,14 @@ export default function POS() {
 
         {cart.length > 0 && (
           <>
-            <div className="grid grid-cols-3 gap-2.5">
-              {[
-                { method: "cash" as const, icon: Banknote, label: "Cash" },
-                { method: "card" as const, icon: CreditCard, label: "Card" },
-                { method: "digital" as const, icon: Smartphone, label: "Digital" },
-              ].map(({ method, icon: Icon, label }) => (
-                <Button
-                  key={method}
-                  size="lg"
-                  variant="outline"
-                  className="flex-col gap-1.5 h-auto py-4 text-base font-bold border-2 active:scale-95 active:bg-primary/10 transition-all touch-manipulation"
-                  onClick={() => handleCheckout(method)}
-                  disabled={createOrder.isPending}
-                >
-                  <Icon className="h-6 w-6" />
-                  <span className="text-sm">{label}</span>
-                </Button>
-              ))}
-            </div>
+            <Button
+              size="lg"
+              className="w-full h-14 text-base font-black rounded-xl active:scale-95 touch-manipulation"
+              onClick={() => setShowCheckout(true)}
+              disabled={createOrder.isPending}
+            >
+              Charge ${total.toFixed(2)}
+            </Button>
             <button
               onClick={() => { setCart([]); if (isCompact) setMobileCartOpen(false); }}
               className="flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold text-destructive hover:bg-destructive/10 active:bg-destructive/20 transition-colors touch-manipulation"
@@ -379,6 +417,16 @@ export default function POS() {
                       </p>
                     </motion.button>
                   ))}
+                  {/* Open Price / Custom Item */}
+                  <motion.button
+                    whileTap={{ scale: 0.93 }}
+                    onClick={() => setShowCustomItem(true)}
+                    className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-border bg-secondary/30 p-5 text-center hover:border-primary/40 hover:shadow-md transition-all min-h-[120px] touch-manipulation"
+                  >
+                    <Tag className="h-7 w-7 text-muted-foreground mb-2" />
+                    <p className="text-sm font-bold text-muted-foreground">Custom Item</p>
+                    <p className="text-xs text-muted-foreground/70 mt-0.5">Open price</p>
+                  </motion.button>
                 </div>
               )}
             </div>
@@ -571,6 +619,66 @@ export default function POS() {
       ) : (
         <POSReportView />
       )}
+
+      {/* Checkout Flow */}
+      {showCheckout && cart.length > 0 && (
+        <POSCheckoutFlow
+          cart={cart}
+          subtotal={subtotal}
+          tax={tax}
+          total={total}
+          onComplete={handleCheckout}
+          onCancel={() => setShowCheckout(false)}
+          isPending={createOrder.isPending}
+        />
+      )}
+
+      {/* Order Confirmation */}
+      {confirmation && (
+        <POSConfirmation
+          {...confirmation}
+          onDone={() => setConfirmation(null)}
+        />
+      )}
+
+      {/* Custom Item Dialog */}
+      <Dialog open={showCustomItem} onOpenChange={setShowCustomItem}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Add Custom Item</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            <div>
+              <label className="text-sm font-bold text-muted-foreground">Item Name</label>
+              <Input
+                value={customItemName}
+                onChange={(e) => setCustomItemName(e.target.value)}
+                placeholder="e.g. Extra sauce"
+                className="mt-1 h-12 rounded-xl border-2 text-base"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-bold text-muted-foreground">Price ($)</label>
+              <Input
+                type="number"
+                step="0.01"
+                min="0"
+                value={customItemPrice}
+                onChange={(e) => setCustomItemPrice(e.target.value)}
+                placeholder="0.00"
+                className="mt-1 h-12 rounded-xl border-2 text-base"
+              />
+            </div>
+            <Button
+              className="w-full h-12 font-black rounded-xl"
+              onClick={handleAddCustomItem}
+              disabled={!customItemName.trim() || !customItemPrice || Number(customItemPrice) <= 0}
+            >
+              Add to Order
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
