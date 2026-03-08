@@ -8,7 +8,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "
 import {
   ShoppingCart, Plus, Minus, Trash2, CreditCard, Banknote,
   Smartphone, ChefHat, Clock, CheckCircle, Loader2, ArrowLeft,
-  Truck, X, ChevronUp, BarChart3, Package, FileText, Tag, Receipt,
+  Truck, X, ChevronUp, BarChart3, Package, FileText, Tag, Receipt, Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,12 +20,20 @@ import POSReportView from "@/components/pos/POSReportView";
 import POSCheckoutFlow from "@/components/pos/POSCheckoutFlow";
 import POSConfirmation from "@/components/pos/POSConfirmation";
 import POSOrderHistory from "@/components/pos/POSOrderHistory";
+import POSEndOfDay from "@/components/pos/POSEndOfDay";
+
+type Modifier = {
+  name: string;
+  options: { label: string; priceAdjust: number }[];
+  required: boolean;
+};
 
 type CartItem = {
   menu_item_id: string;
   name: string;
   price: number;
   quantity: number;
+  selectedModifiers?: { groupName: string; label: string; priceAdjust: number }[];
 };
 
 const TAX_RATE = 0.0875;
