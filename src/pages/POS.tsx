@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useMenuItems } from "@/hooks/useMenuItems";
 import { useCreateOrder } from "@/hooks/useOrders";
@@ -8,12 +8,11 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "
 import {
   ShoppingCart, Plus, Minus, Trash2, CreditCard, Banknote,
   Smartphone, ChefHat, Clock, CheckCircle, Loader2, ArrowLeft,
-  Truck, X, ChevronUp, BarChart3, Package, FileText, Tag, Receipt, Moon,
+  Truck, X, BarChart3, Package, FileText, Receipt, Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import POSSalesView from "@/components/pos/POSSalesView";
 import POSInventoryView from "@/components/pos/POSInventoryView";
 import POSReportView from "@/components/pos/POSReportView";
