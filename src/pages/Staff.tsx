@@ -464,6 +464,11 @@ export default function Staff() {
                 </div>
               )}
             </div>
+
+            {/* Team Invite Panel */}
+            <div className="rounded-xl border border-border bg-card p-6 shadow-card">
+              <TeamInvitePanel />
+            </div>
           </div>
         )}
 
