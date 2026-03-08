@@ -27,10 +27,31 @@ export function useTaxSettings(): TaxSettings {
 
 /**
  * Calculate tax amount for a given subtotal.
- * Returns 0 if tax is disabled.
+ * Returns 0 if tax is disabled or percent is 0.
+ *
+ * Inclusive: tax is extracted from the subtotal (prices already include tax).
+ *   tax = subtotal × (rate / (100 + rate))
+ *
+ * Exclusive: tax is added on top.
+ *   tax = subtotal × (rate / 100)
  */
 export function calcTax(settings: TaxSettings, subtotal: number): number {
   if (!settings.enabled || settings.percent <= 0) return 0;
-  // For now, only exclusive tax is calculated. Inclusive stored for future use.
-  return Math.round(subtotal * (settings.percent / 100) * 100) / 100;
+
+  const rate = settings.percent;
+  const raw = settings.inclusive
+    ? subtotal * (rate / (100 + rate))
+    : subtotal * (rate / 100);
+
+  return Math.round(raw * 100) / 100;
+}
+
+/**
+ * Calculate the total after tax.
+ * Inclusive: total = subtotal (tax already inside).
+ * Exclusive: total = subtotal + tax.
+ */
+export function calcTotalWithTax(settings: TaxSettings, subtotal: number): number {
+  if (!settings.enabled || settings.percent <= 0) return subtotal;
+  return settings.inclusive ? subtotal : subtotal + calcTax(settings, subtotal);
 }

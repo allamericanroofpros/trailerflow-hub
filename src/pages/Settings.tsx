@@ -347,8 +347,8 @@ export default function SettingsPage() {
                     </div>
                     <label className="flex items-center justify-between pl-4">
                       <div>
-                        <p className="text-sm font-medium text-card-foreground">Prices include tax</p>
-                        <p className="text-xs text-muted-foreground">Store for future use — tax-inclusive pricing is not yet fully active</p>
+                        <p className="text-sm font-medium text-card-foreground">Tax Included in Prices</p>
+                        <p className="text-xs text-muted-foreground">Menu prices already include tax. POS extracts tax for reporting — customers see clean totals.</p>
                       </div>
                       <Switch checked={taxInclusive} onCheckedChange={setTaxInclusive} />
                     </label>

@@ -385,10 +385,19 @@ export default function POS() {
             <span>Subtotal</span>
             <span className="font-semibold">${subtotal.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>{taxSettings.label}{taxSettings.enabled && taxSettings.percent > 0 ? ` (${taxSettings.percent}%)` : ""}</span>
-            <span className="font-semibold">${tax.toFixed(2)}</span>
-          </div>
+          {taxSettings.inclusive ? (
+            tax > 0 && (
+              <div className="flex justify-between text-xs text-muted-foreground/70 italic">
+                <span>Includes {taxSettings.label}</span>
+                <span>${tax.toFixed(2)}</span>
+              </div>
+            )
+          ) : (
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>{taxSettings.label}{taxSettings.enabled && taxSettings.percent > 0 ? ` (${taxSettings.percent}%)` : ""}</span>
+              <span className="font-semibold">${tax.toFixed(2)}</span>
+            </div>
+          )}
           <div className="flex justify-between font-black text-xl text-card-foreground pt-2 border-t-2 border-border">
             <span>Total</span>
             <span>${total.toFixed(2)}</span>
