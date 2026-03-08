@@ -32,6 +32,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { canView } = useRoleAccess();
+  const { completedSteps, isComplete } = useOnboardingStatus();
+  const [wizardDismissed, setWizardDismissed] = useState(false);
   const { data: grouped, isLoading: eventsLoading } = useEventsByStage();
   const { data: bookings } = useBookings();
   const { data: transactions } = useTransactions();
