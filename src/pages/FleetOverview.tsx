@@ -11,6 +11,11 @@ import { Truck, DollarSign, Calendar, Wrench, TrendingUp, Users, BarChart3, Load
 
 export default function FleetOverview() {
   const ent = useEntitlements();
+  const { data: trailers, isLoading } = useTrailers();
+  const { data: events } = useEvents();
+  const { data: bookings } = useBookings();
+  const { data: orders } = useOrders();
+  const { data: maintenance } = useMaintenanceRecords();
 
   if (!ent.fleetOverview) {
     return (
@@ -19,12 +24,6 @@ export default function FleetOverview() {
       </AppLayout>
     );
   }
-
-  const { data: trailers, isLoading } = useTrailers();
-  const { data: events } = useEvents();
-  const { data: bookings } = useBookings();
-  const { data: orders } = useOrders();
-  const { data: maintenance } = useMaintenanceRecords();
 
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
