@@ -4,10 +4,12 @@ import { useInventoryItems, useLowStockItems, useCreateInventoryItem, useUpdateI
 import { useEvents } from "@/hooks/useEvents";
 import { useTrailers } from "@/hooks/useTrailers";
 import { useMenuItems } from "@/hooks/useMenuItems";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   Package, AlertTriangle, Plus, ArrowDown, ArrowUp,
   Loader2, Search, ShoppingCart, CalendarDays, Clock,
+  Pencil, Trash2, ArrowUpDown, SortAsc, SortDesc,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,9 +19,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
 
 const units = ["oz", "lb", "g", "kg", "ml", "l", "gal", "each", "dozen", "case"];
+
+type SortField = "name" | "current_stock" | "cost_per_unit" | "par_level";
+type SortDir = "asc" | "desc";
 
 export default function Inventory() {
   const { data: items, isLoading } = useInventoryItems();
@@ -33,17 +37,46 @@ export default function Inventory() {
   const createLog = useCreateInventoryLog();
 
   const [search, setSearch] = useState("");
+  const [sortField, setSortField] = useState<SortField>("name");
+  const [sortDir, setSortDir] = useState<SortDir>("asc");
   const [showAdd, setShowAdd] = useState(false);
-  const [newItem, setNewItem] = useState({
+  const [editItem, setEditItem] = useState<any | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+
+  const emptyNew = {
     name: "", unit: "each", current_stock: 0, par_level: 0, reorder_point: 0,
     cost_per_unit: 0, supplier: "", shelf_life_days: "", unit_size: "", serving_size: "",
-  });
+  };
+  const [newItem, setNewItem] = useState(emptyNew);
+
   const [adjustDialog, setAdjustDialog] = useState<{ id: string; name: string; unit: string } | null>(null);
   const [adjustAmount, setAdjustAmount] = useState("");
   const [adjustReason, setAdjustReason] = useState("restock");
   const [adjustNotes, setAdjustNotes] = useState("");
 
-  const filtered = items?.filter((i) => i.name.toLowerCase().includes(search.toLowerCase()));
+  // Sort & filter
+  const filtered = useMemo(() => {
+    let list = items?.filter((i) => i.name.toLowerCase().includes(search.toLowerCase())) || [];
+    list.sort((a, b) => {
+      let aVal: any, bVal: any;
+      if (sortField === "name") { aVal = a.name.toLowerCase(); bVal = b.name.toLowerCase(); }
+      else { aVal = Number((a as any)[sortField]) || 0; bVal = Number((b as any)[sortField]) || 0; }
+      if (aVal < bVal) return sortDir === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortDir === "asc" ? 1 : -1;
+      return 0;
+    });
+    return list;
+  }, [items, search, sortField, sortDir]);
+
+  const toggleSort = (field: SortField) => {
+    if (sortField === field) setSortDir(d => d === "asc" ? "desc" : "asc");
+    else { setSortField(field); setSortDir("asc"); }
+  };
+
+  const SortIcon = ({ field }: { field: SortField }) => {
+    if (sortField !== field) return <ArrowUpDown className="h-3 w-3 text-muted-foreground/40" />;
+    return sortDir === "asc" ? <SortAsc className="h-3 w-3 text-primary" /> : <SortDesc className="h-3 w-3 text-primary" />;
+  };
 
   // Upcoming events for ordering recommendations
   const upcomingEvents = useMemo(() => {
@@ -55,77 +88,34 @@ export default function Inventory() {
       .sort((a, b) => new Date(a.event_date!).getTime() - new Date(b.event_date!).getTime());
   }, [allEvents]);
 
-  // Calculate ordering needs based on upcoming events
   const orderingNeeds = useMemo(() => {
     if (!upcomingEvents.length || !items) return [];
-
     const needs: Record<string, { name: string; unit: string; needed: number; current: number; toOrder: number; costEach: number; shelfLife: number | null; events: string[] }> = {};
-
     upcomingEvents.forEach((event) => {
       const trailer = trailers?.find((t) => t.id === event.trailer_id);
       if (!trailer) return;
-
-      const startTime = event.start_time ? parseInt(event.start_time.split(":")[0]) : 10;
-      const endTime = event.end_time ? parseInt(event.end_time.split(":")[0]) : 16;
-      const eventHours = Math.max(endTime - startTime, 1);
-      const estCustomers = (trailer.avg_customers_per_hour || 25) * eventHours;
-
-      // For each menu item on this trailer, calculate ingredient needs
-      const trailerMenuItems = menuItems?.filter((mi) => mi.trailer_id === trailer.id && mi.is_active) || [];
-      const avgItemsPerCustomer = 1.2; // assume each customer orders ~1.2 items
-      const ordersPerItem = (estCustomers * avgItemsPerCustomer) / Math.max(trailerMenuItems.length, 1);
-
-      // We don't have ingredient-level data in JS, but we can estimate based on par levels
       items.forEach((item) => {
         if (item.trailer_id && item.trailer_id !== trailer.id) return;
         if (!item.par_level || Number(item.par_level) === 0) return;
-
         const parNeeded = Number(item.par_level);
         if (!needs[item.id]) {
-          needs[item.id] = {
-            name: item.name,
-            unit: item.unit,
-            needed: 0,
-            current: Number(item.current_stock),
-            toOrder: 0,
-            costEach: Number(item.cost_per_unit) || 0,
-            shelfLife: (item as any).shelf_life_days || null,
-            events: [],
-          };
+          needs[item.id] = { name: item.name, unit: item.unit, needed: 0, current: Number(item.current_stock), toOrder: 0, costEach: Number(item.cost_per_unit) || 0, shelfLife: (item as any).shelf_life_days || null, events: [] };
         }
         needs[item.id].needed += parNeeded;
         needs[item.id].events.push(event.name);
       });
     });
-
-    // Calculate what needs ordering
     return Object.values(needs)
-      .map((n) => ({
-        ...n,
-        toOrder: Math.max(0, n.needed - n.current),
-        totalCost: Math.max(0, n.needed - n.current) * n.costEach,
-      }))
+      .map((n) => ({ ...n, toOrder: Math.max(0, n.needed - n.current), totalCost: Math.max(0, n.needed - n.current) * n.costEach }))
       .filter((n) => n.toOrder > 0)
       .sort((a, b) => b.totalCost - a.totalCost);
   }, [upcomingEvents, items, trailers, menuItems]);
 
-  // Spoilage risk items
   const spoilageRisk = useMemo(() => {
     if (!items) return [];
     return items
-      .filter((item) => {
-        const shelfLife = (item as any).shelf_life_days;
-        if (!shelfLife) return false;
-        const stock = Number(item.current_stock);
-        const par = Number(item.par_level) || 0;
-        // Flag if we have significantly more than par and shelf life is short
-        return stock > par * 1.5 && shelfLife <= 7;
-      })
-      .map((item) => ({
-        ...item,
-        shelfLife: (item as any).shelf_life_days,
-        excess: Number(item.current_stock) - Number(item.par_level),
-      }));
+      .filter((item) => { const sl = (item as any).shelf_life_days; if (!sl) return false; return Number(item.current_stock) > Number(item.par_level) * 1.5 && sl <= 7; })
+      .map((item) => ({ ...item, shelfLife: (item as any).shelf_life_days, excess: Number(item.current_stock) - Number(item.par_level) }));
   }, [items]);
 
   const handleAddItem = async () => {
@@ -138,8 +128,37 @@ export default function Inventory() {
       if (serving_size) insertData.serving_size = Number(serving_size);
       await createItem.mutateAsync(insertData);
       setShowAdd(false);
-      setNewItem({ name: "", unit: "each", current_stock: 0, par_level: 0, reorder_point: 0, cost_per_unit: 0, supplier: "", shelf_life_days: "", unit_size: "", serving_size: "" });
+      setNewItem(emptyNew);
       toast.success("Item added");
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  const handleEditSave = async () => {
+    if (!editItem) return;
+    try {
+      await updateItem.mutateAsync({
+        id: editItem.id,
+        name: editItem.name,
+        unit: editItem.unit,
+        par_level: Number(editItem.par_level) || 0,
+        reorder_point: Number(editItem.reorder_point) || 0,
+        cost_per_unit: Number(editItem.cost_per_unit) || 0,
+        supplier: editItem.supplier || null,
+        shelf_life_days: editItem.shelf_life_days ? Number(editItem.shelf_life_days) : null,
+        unit_size: editItem.unit_size ? Number(editItem.unit_size) : null,
+        serving_size: editItem.serving_size ? Number(editItem.serving_size) : null,
+      });
+      setEditItem(null);
+      toast.success("Item updated");
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      // Soft delete by marking inactive
+      await updateItem.mutateAsync({ id, is_active: false });
+      setDeleteConfirm(null);
+      toast.success("Item removed");
     } catch (e: any) { toast.error(e.message); }
   };
 
@@ -148,20 +167,11 @@ export default function Inventory() {
     const amount = Number(adjustAmount);
     const isNegative = ["usage", "waste", "spoilage"].includes(adjustReason);
     const change = isNegative ? -Math.abs(amount) : Math.abs(amount);
-
     try {
-      await createLog.mutateAsync({
-        inventory_item_id: adjustDialog.id,
-        change_amount: change,
-        reason: adjustReason,
-        notes: adjustNotes || undefined,
-      });
+      await createLog.mutateAsync({ inventory_item_id: adjustDialog.id, change_amount: change, reason: adjustReason, notes: adjustNotes || undefined });
       const currentItem = items?.find((i) => i.id === adjustDialog.id);
       if (currentItem) {
-        await updateItem.mutateAsync({
-          id: adjustDialog.id,
-          current_stock: Number(currentItem.current_stock) + change,
-        });
+        await updateItem.mutateAsync({ id: adjustDialog.id, current_stock: Number(currentItem.current_stock) + change });
       }
       setAdjustDialog(null);
       setAdjustAmount("");
@@ -171,6 +181,36 @@ export default function Inventory() {
   };
 
   const totalOrderCost = orderingNeeds.reduce((s, n) => s + n.totalCost, 0);
+
+  const ItemFormFields = ({ item, setItem, isEdit = false }: { item: any; setItem: (v: any) => void; isEdit?: boolean }) => (
+    <div className="space-y-3 mt-2">
+      <div><Label>Name</Label><Input value={item.name} onChange={(e) => setItem({ ...item, name: e.target.value })} className="h-11" /></div>
+      <div className="grid grid-cols-2 gap-3">
+        <div><Label>Unit</Label>
+          <Select value={item.unit} onValueChange={(v) => setItem({ ...item, unit: v })}>
+            <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+            <SelectContent>{units.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
+          </Select>
+        </div>
+        {!isEdit && (
+          <div><Label>Current Stock</Label><Input type="number" value={item.current_stock} onChange={(e) => setItem({ ...item, current_stock: Number(e.target.value) })} className="h-11" /></div>
+        )}
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div><Label>Par Level</Label><Input type="number" value={item.par_level} onChange={(e) => setItem({ ...item, par_level: Number(e.target.value) })} className="h-11" /></div>
+        <div><Label>Reorder Point</Label><Input type="number" value={item.reorder_point} onChange={(e) => setItem({ ...item, reorder_point: Number(e.target.value) })} className="h-11" /></div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div><Label>Cost/Unit ($)</Label><Input type="number" step="0.01" value={item.cost_per_unit} onChange={(e) => setItem({ ...item, cost_per_unit: Number(e.target.value) })} className="h-11" /></div>
+        <div><Label>Shelf Life (days)</Label><Input type="number" min="1" placeholder="e.g. 7" value={item.shelf_life_days || ""} onChange={(e) => setItem({ ...item, shelf_life_days: e.target.value })} className="h-11" /></div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <div><Label>Unit Size</Label><Input type="number" step="0.01" min="0" placeholder="e.g. 50" value={item.unit_size || ""} onChange={(e) => setItem({ ...item, unit_size: e.target.value })} className="h-11" /></div>
+        <div><Label>Serving Size</Label><Input type="number" step="0.01" min="0" placeholder="e.g. 1.5" value={item.serving_size || ""} onChange={(e) => setItem({ ...item, serving_size: e.target.value })} className="h-11" /></div>
+      </div>
+      <div><Label>Supplier</Label><Input value={item.supplier || ""} onChange={(e) => setItem({ ...item, supplier: e.target.value })} className="h-11" /></div>
+    </div>
+  );
 
   return (
     <AppLayout>
@@ -186,57 +226,22 @@ export default function Inventory() {
             </DialogTrigger>
             <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
               <DialogHeader><DialogTitle>Add Inventory Item</DialogTitle></DialogHeader>
-              <div className="space-y-3 mt-2">
-                <div><Label>Name</Label><Input value={newItem.name} onChange={(e) => setNewItem({ ...newItem, name: e.target.value })} className="h-11" /></div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Unit</Label>
-                    <Select value={newItem.unit} onValueChange={(v) => setNewItem({ ...newItem, unit: v })}>
-                      <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
-                      <SelectContent>{units.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
-                    </Select>
-                  </div>
-                  <div><Label>Current Stock</Label><Input type="number" value={newItem.current_stock} onChange={(e) => setNewItem({ ...newItem, current_stock: Number(e.target.value) })} className="h-11" /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Par Level</Label><Input type="number" value={newItem.par_level} onChange={(e) => setNewItem({ ...newItem, par_level: Number(e.target.value) })} className="h-11" /></div>
-                  <div><Label>Reorder Point</Label><Input type="number" value={newItem.reorder_point} onChange={(e) => setNewItem({ ...newItem, reorder_point: Number(e.target.value) })} className="h-11" /></div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div><Label>Cost/Unit ($)</Label><Input type="number" step="0.01" value={newItem.cost_per_unit} onChange={(e) => setNewItem({ ...newItem, cost_per_unit: Number(e.target.value) })} className="h-11" /></div>
-                  <div>
-                    <Label>Shelf Life (days)</Label>
-                    <Input type="number" min="1" placeholder="e.g. 7" value={newItem.shelf_life_days} onChange={(e) => setNewItem({ ...newItem, shelf_life_days: e.target.value })} className="h-11" />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <Label>Unit Size (purchase qty)</Label>
-                    <Input type="number" step="0.01" min="0" placeholder="e.g. 50" value={newItem.unit_size} onChange={(e) => setNewItem({ ...newItem, unit_size: e.target.value })} className="h-11" />
-                  </div>
-                  <div>
-                    <Label>Serving Size</Label>
-                    <Input type="number" step="0.01" min="0" placeholder="e.g. 1.5" value={newItem.serving_size} onChange={(e) => setNewItem({ ...newItem, serving_size: e.target.value })} className="h-11" />
-                  </div>
-                </div>
-                <div><Label>Supplier</Label><Input value={newItem.supplier} onChange={(e) => setNewItem({ ...newItem, supplier: e.target.value })} className="h-11" /></div>
-                <Button className="w-full h-11" onClick={handleAddItem} disabled={createItem.isPending}>
-                  {createItem.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null} Add Item
-                </Button>
-              </div>
+              <ItemFormFields item={newItem} setItem={setNewItem} />
+              <Button className="w-full h-11 mt-3" onClick={handleAddItem} disabled={createItem.isPending}>
+                {createItem.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null} Add Item
+              </Button>
             </DialogContent>
           </Dialog>
         </div>
 
-        {/* Low Stock + Spoilage Alerts */}
+        {/* Alerts */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {lowStock && lowStock.length > 0 && (
             <div className="rounded-xl border border-destructive/30 bg-destructive/5 p-3 sm:p-4 flex items-start gap-3">
               <AlertTriangle className="h-5 w-5 text-destructive shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-destructive">Low Stock</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {lowStock.map((i) => i.name).join(", ")}
-                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">{lowStock.map((i) => i.name).join(", ")}</p>
               </div>
             </div>
           )}
@@ -245,9 +250,7 @@ export default function Inventory() {
               <Clock className="h-5 w-5 text-warning shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-semibold text-warning">Spoilage Risk</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {spoilageRisk.map((i) => `${i.name} (${i.shelfLife}d shelf life, ${i.excess.toFixed(0)} excess)`).join("; ")}
-                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">{spoilageRisk.map((i) => `${i.name} (${i.shelfLife}d, ${i.excess.toFixed(0)} excess)`).join("; ")}</p>
               </div>
             </div>
           )}
@@ -259,9 +262,7 @@ export default function Inventory() {
             <TabsTrigger value="ordering" className="text-xs sm:text-sm gap-1">
               <ShoppingCart className="h-3.5 w-3.5 hidden sm:inline" /> Ordering
               {orderingNeeds.length > 0 && (
-                <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary ml-1">
-                  {orderingNeeds.length}
-                </span>
+                <span className="rounded-full bg-primary/10 px-1.5 py-0.5 text-[10px] font-bold text-primary ml-1">{orderingNeeds.length}</span>
               )}
             </TabsTrigger>
             <TabsTrigger value="logs" className="text-xs sm:text-sm">Log</TabsTrigger>
@@ -287,7 +288,6 @@ export default function Inventory() {
                 <div className="space-y-2 sm:hidden">
                   {filtered.map((item) => {
                     const isLow = item.reorder_point && Number(item.current_stock) <= Number(item.reorder_point);
-                    const shelfLife = (item as any).shelf_life_days;
                     return (
                       <div key={item.id} className="rounded-xl border border-border bg-card p-4 space-y-2">
                         <div className="flex items-center justify-between">
@@ -295,37 +295,27 @@ export default function Inventory() {
                             {isLow && <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />}
                             <p className="font-semibold text-card-foreground text-sm">{item.name}</p>
                           </div>
-                          <Button variant="outline" size="sm" className="text-xs h-8 touch-manipulation"
-                            onClick={() => setAdjustDialog({ id: item.id, name: item.name, unit: item.unit })}>
-                            Adjust
-                          </Button>
+                          <div className="flex items-center gap-1">
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditItem({ ...item })}>
+                              <Pencil className="h-3 w-3" />
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" onClick={() => setDeleteConfirm(item.id)}>
+                              <Trash2 className="h-3 w-3" />
+                            </Button>
+                          </div>
                         </div>
                         <div className="grid grid-cols-3 gap-2 text-xs">
                           <div>
                             <span className="text-muted-foreground">Stock</span>
                             <p className={`font-bold ${isLow ? "text-destructive" : "text-card-foreground"}`}>{Number(item.current_stock).toFixed(1)} {item.unit}</p>
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Par</span>
-                            <p className="font-semibold text-card-foreground">{Number(item.par_level).toFixed(1)}</p>
-                          </div>
-                          <div>
-                            <span className="text-muted-foreground">{shelfLife ? "Shelf Life" : "Cost"}</span>
-                            <p className="font-semibold text-card-foreground">{shelfLife ? `${shelfLife}d` : `$${Number(item.cost_per_unit).toFixed(2)}`}</p>
-                          </div>
+                          <div><span className="text-muted-foreground">Par</span><p className="font-semibold text-card-foreground">{Number(item.par_level).toFixed(1)}</p></div>
+                          <div><span className="text-muted-foreground">Cost</span><p className="font-semibold text-card-foreground">${Number(item.cost_per_unit).toFixed(2)}</p></div>
                         </div>
-                        {((item as any).unit_size || (item as any).serving_size) && (
-                          <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div>
-                              <span className="text-muted-foreground">Unit Size</span>
-                              <p className="font-semibold text-card-foreground">{(item as any).unit_size ? `${Number((item as any).unit_size)} ${item.unit}` : "—"}</p>
-                            </div>
-                            <div>
-                              <span className="text-muted-foreground">Serving</span>
-                              <p className="font-semibold text-card-foreground">{(item as any).serving_size ? `${Number((item as any).serving_size)} ${item.unit}` : "—"}</p>
-                            </div>
-                          </div>
-                        )}
+                        <Button variant="outline" size="sm" className="text-xs h-8 w-full touch-manipulation"
+                          onClick={() => setAdjustDialog({ id: item.id, name: item.name, unit: item.unit })}>
+                          Adjust Stock
+                        </Button>
                       </div>
                     );
                   })}
@@ -336,13 +326,19 @@ export default function Inventory() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b border-border bg-secondary/50">
-                        <th className="text-left px-4 py-3 font-medium text-muted-foreground">Item</th>
-                        <th className="text-right px-4 py-3 font-medium text-muted-foreground">Stock</th>
-                        <th className="text-right px-4 py-3 font-medium text-muted-foreground">Par</th>
+                        <th className="text-left px-4 py-3 font-medium text-muted-foreground cursor-pointer select-none" onClick={() => toggleSort("name")}>
+                          <span className="flex items-center gap-1">Item <SortIcon field="name" /></span>
+                        </th>
+                        <th className="text-right px-4 py-3 font-medium text-muted-foreground cursor-pointer select-none" onClick={() => toggleSort("current_stock")}>
+                          <span className="flex items-center gap-1 justify-end">Stock <SortIcon field="current_stock" /></span>
+                        </th>
+                        <th className="text-right px-4 py-3 font-medium text-muted-foreground cursor-pointer select-none" onClick={() => toggleSort("par_level")}>
+                          <span className="flex items-center gap-1 justify-end">Par <SortIcon field="par_level" /></span>
+                        </th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Shelf Life</th>
-                        <th className="text-right px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Unit Size</th>
-                        <th className="text-right px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Serving</th>
-                        <th className="text-right px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Cost/Unit</th>
+                        <th className="text-right px-4 py-3 font-medium text-muted-foreground cursor-pointer select-none hidden md:table-cell" onClick={() => toggleSort("cost_per_unit")}>
+                          <span className="flex items-center gap-1 justify-end">Cost/Unit <SortIcon field="cost_per_unit" /></span>
+                        </th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">Supplier</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
                       </tr>
@@ -367,25 +363,23 @@ export default function Inventory() {
                             </td>
                             <td className="text-right px-4 py-3 text-muted-foreground">{Number(item.par_level).toFixed(1)}</td>
                             <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">
-                              {shelfLife ? (
-                                <span className={shelfLife <= 3 ? "text-destructive font-semibold" : shelfLife <= 7 ? "text-warning" : ""}>
-                                  {shelfLife}d
-                                </span>
-                              ) : "—"}
-                            </td>
-                            <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">
-                              {(item as any).unit_size ? `${Number((item as any).unit_size)} ${item.unit}` : "—"}
-                            </td>
-                            <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">
-                              {(item as any).serving_size ? `${Number((item as any).serving_size)} ${item.unit}` : "—"}
+                              {shelfLife ? <span className={shelfLife <= 3 ? "text-destructive font-semibold" : shelfLife <= 7 ? "text-warning" : ""}>{shelfLife}d</span> : "—"}
                             </td>
                             <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">${Number(item.cost_per_unit).toFixed(2)}</td>
                             <td className="text-right px-4 py-3 text-muted-foreground hidden lg:table-cell">{item.supplier || "—"}</td>
                             <td className="text-right px-4 py-3">
-                              <Button variant="outline" size="sm" className="text-xs h-7"
-                                onClick={() => setAdjustDialog({ id: item.id, name: item.name, unit: item.unit })}>
-                                Adjust
-                              </Button>
+                              <div className="flex items-center justify-end gap-1">
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditItem({ ...item })}>
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => setDeleteConfirm(item.id)}>
+                                  <Trash2 className="h-3 w-3" />
+                                </Button>
+                                <Button variant="outline" size="sm" className="text-xs h-7 ml-1"
+                                  onClick={() => setAdjustDialog({ id: item.id, name: item.name, unit: item.unit })}>
+                                  Adjust
+                                </Button>
+                              </div>
                             </td>
                           </tr>
                         );
@@ -399,7 +393,6 @@ export default function Inventory() {
 
           {/* ══ ORDERING TAB ══ */}
           <TabsContent value="ordering" className="mt-4 space-y-4">
-            {/* Upcoming events summary */}
             {upcomingEvents.length > 0 ? (
               <div className="rounded-xl border border-border bg-card p-4 space-y-3">
                 <div className="flex items-center gap-2">
@@ -416,9 +409,6 @@ export default function Inventory() {
                           {e.event_date ? new Date(e.event_date + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" }) : "TBD"}
                           {trailer ? ` · ${trailer.name}` : ""}
                         </p>
-                        {e.attendance_estimate && (
-                          <p className="text-xs text-muted-foreground">~{e.attendance_estimate.toLocaleString()} attendees</p>
-                        )}
                       </div>
                     );
                   })}
@@ -432,7 +422,6 @@ export default function Inventory() {
               </div>
             )}
 
-            {/* Order list */}
             {orderingNeeds.length > 0 && (
               <div className="rounded-xl border border-border bg-card shadow-card overflow-hidden">
                 <div className="flex items-center justify-between px-4 py-3 border-b border-border bg-secondary/50">
@@ -442,30 +431,6 @@ export default function Inventory() {
                   </div>
                   <span className="text-sm font-bold text-primary">Est. ${totalOrderCost.toFixed(2)}</span>
                 </div>
-
-                {/* Mobile card layout */}
-                <div className="space-y-0 sm:hidden">
-                  {orderingNeeds.map((need, i) => (
-                    <div key={i} className="p-4 border-b border-border last:border-0">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-semibold text-card-foreground">{need.name}</p>
-                        <p className="text-sm font-bold text-primary">{need.toOrder.toFixed(1)} {need.unit}</p>
-                      </div>
-                      <div className="flex items-center justify-between mt-1">
-                        <p className="text-xs text-muted-foreground">
-                          Have {need.current.toFixed(1)} · Need {need.needed.toFixed(1)}
-                        </p>
-                        <p className="text-xs font-semibold text-card-foreground">${need.totalCost.toFixed(2)}</p>
-                      </div>
-                      {need.shelfLife && (
-                        <p className="text-[10px] text-warning mt-1">⚠ {need.shelfLife}d shelf life — order close to event</p>
-                      )}
-                      <p className="text-[10px] text-muted-foreground mt-0.5">For: {need.events.join(", ")}</p>
-                    </div>
-                  ))}
-                </div>
-
-                {/* Desktop table */}
                 <table className="w-full text-sm hidden sm:table">
                   <thead>
                     <tr className="border-b border-border bg-secondary/30">
@@ -473,9 +438,7 @@ export default function Inventory() {
                       <th className="text-right px-4 py-2 text-xs font-medium text-muted-foreground">Current</th>
                       <th className="text-right px-4 py-2 text-xs font-medium text-muted-foreground">Needed</th>
                       <th className="text-right px-4 py-2 text-xs font-medium text-muted-foreground">Order Qty</th>
-                      <th className="text-right px-4 py-2 text-xs font-medium text-muted-foreground hidden md:table-cell">Shelf Life</th>
                       <th className="text-right px-4 py-2 text-xs font-medium text-muted-foreground">Est. Cost</th>
-                      <th className="text-left px-4 py-2 text-xs font-medium text-muted-foreground hidden lg:table-cell">Events</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -485,26 +448,29 @@ export default function Inventory() {
                         <td className="text-right px-4 py-2.5 text-muted-foreground">{need.current.toFixed(1)}</td>
                         <td className="text-right px-4 py-2.5 text-muted-foreground">{need.needed.toFixed(1)}</td>
                         <td className="text-right px-4 py-2.5 font-bold text-primary">{need.toOrder.toFixed(1)}</td>
-                        <td className="text-right px-4 py-2.5 hidden md:table-cell">
-                          {need.shelfLife ? (
-                            <span className={need.shelfLife <= 3 ? "text-destructive font-semibold" : need.shelfLife <= 7 ? "text-warning" : "text-muted-foreground"}>
-                              {need.shelfLife}d
-                            </span>
-                          ) : "—"}
-                        </td>
                         <td className="text-right px-4 py-2.5 font-semibold text-card-foreground">${need.totalCost.toFixed(2)}</td>
-                        <td className="px-4 py-2.5 text-xs text-muted-foreground hidden lg:table-cell max-w-[200px] truncate">{need.events.join(", ")}</td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot>
                     <tr className="border-t-2 border-border bg-secondary/50">
-                      <td colSpan={5} className="px-4 py-2.5 font-bold text-card-foreground text-right">Total Order Cost</td>
+                      <td colSpan={4} className="px-4 py-2.5 font-bold text-card-foreground text-right">Total</td>
                       <td className="text-right px-4 py-2.5 font-black text-primary text-base">${totalOrderCost.toFixed(2)}</td>
-                      <td className="hidden lg:table-cell" />
                     </tr>
                   </tfoot>
                 </table>
+                {/* Mobile */}
+                <div className="space-y-0 sm:hidden">
+                  {orderingNeeds.map((need, i) => (
+                    <div key={i} className="p-4 border-b border-border last:border-0">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold text-card-foreground">{need.name}</p>
+                        <p className="text-sm font-bold text-primary">{need.toOrder.toFixed(1)} {need.unit}</p>
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-0.5">Have {need.current.toFixed(1)} · Need {need.needed.toFixed(1)} · ${need.totalCost.toFixed(2)}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             )}
 
@@ -513,7 +479,7 @@ export default function Inventory() {
                 <Package className="h-5 w-5 text-success shrink-0 mt-0.5" />
                 <div>
                   <p className="text-sm font-semibold text-success">Stock looks good!</p>
-                  <p className="text-xs text-muted-foreground mt-0.5">Current inventory meets par levels for upcoming events. Set par levels on items to get ordering recommendations.</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Current inventory meets par levels for upcoming events.</p>
                 </div>
               </div>
             )}
@@ -522,18 +488,12 @@ export default function Inventory() {
           {/* ══ LOGS TAB ══ */}
           <TabsContent value="logs" className="mt-4">
             {!logs?.length ? (
-              <div className="flex flex-col items-center py-16 text-muted-foreground">
-                <p className="text-sm">No activity yet</p>
-              </div>
+              <div className="flex flex-col items-center py-16 text-muted-foreground"><p className="text-sm">No activity yet</p></div>
             ) : (
               <div className="space-y-2">
                 {logs.map((log) => (
                   <div key={log.id} className="flex items-center gap-3 rounded-lg border border-border bg-card p-3">
-                    {Number(log.change_amount) > 0 ? (
-                      <ArrowUp className="h-4 w-4 text-success shrink-0" />
-                    ) : (
-                      <ArrowDown className="h-4 w-4 text-destructive shrink-0" />
-                    )}
+                    {Number(log.change_amount) > 0 ? <ArrowUp className="h-4 w-4 text-success shrink-0" /> : <ArrowDown className="h-4 w-4 text-destructive shrink-0" />}
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-card-foreground">
                         {(log as any).inventory_items?.name || "Item"}{" "}
@@ -543,9 +503,7 @@ export default function Inventory() {
                       </p>
                       <p className="text-xs text-muted-foreground capitalize">{log.reason}{log.notes ? ` — ${log.notes}` : ""}</p>
                     </div>
-                    <p className="text-xs text-muted-foreground shrink-0">
-                      {new Date(log.created_at).toLocaleDateString()}
-                    </p>
+                    <p className="text-xs text-muted-foreground shrink-0">{new Date(log.created_at).toLocaleDateString()}</p>
                   </div>
                 ))}
               </div>
@@ -571,18 +529,35 @@ export default function Inventory() {
                   </SelectContent>
                 </Select>
               </div>
-              <div>
-                <Label>Amount ({adjustDialog?.unit})</Label>
-                <Input type="number" step="0.1" value={adjustAmount} onChange={(e) => setAdjustAmount(e.target.value)} className="h-11" />
-              </div>
-              <div>
-                <Label>Notes (optional)</Label>
-                <Input value={adjustNotes} onChange={(e) => setAdjustNotes(e.target.value)} placeholder="e.g. Delivered from Sysco" className="h-11" />
-              </div>
+              <div><Label>Amount ({adjustDialog?.unit})</Label><Input type="number" step="0.1" value={adjustAmount} onChange={(e) => setAdjustAmount(e.target.value)} className="h-11" /></div>
+              <div><Label>Notes (optional)</Label><Input value={adjustNotes} onChange={(e) => setAdjustNotes(e.target.value)} placeholder="e.g. Delivered from Sysco" className="h-11" /></div>
               <Button className="w-full h-11" onClick={handleAdjust} disabled={createLog.isPending}>
                 {createLog.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null}
                 {["usage", "waste", "spoilage"].includes(adjustReason) ? "Remove Stock" : "Add Stock"}
               </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Item Dialog */}
+        <Dialog open={!!editItem} onOpenChange={(v) => !v && setEditItem(null)}>
+          <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+            <DialogHeader><DialogTitle>Edit — {editItem?.name}</DialogTitle></DialogHeader>
+            {editItem && <ItemFormFields item={editItem} setItem={setEditItem} isEdit />}
+            <Button className="w-full h-11 mt-3" onClick={handleEditSave} disabled={updateItem.isPending}>
+              {updateItem.isPending ? <Loader2 className="h-4 w-4 animate-spin mr-1.5" /> : null} Save Changes
+            </Button>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation */}
+        <Dialog open={!!deleteConfirm} onOpenChange={(v) => !v && setDeleteConfirm(null)}>
+          <DialogContent className="max-w-sm">
+            <DialogHeader><DialogTitle>Remove Item?</DialogTitle></DialogHeader>
+            <p className="text-sm text-muted-foreground">This will deactivate the item. It won't appear in stock lists but existing records are preserved.</p>
+            <div className="flex gap-2 mt-4">
+              <Button variant="outline" className="flex-1" onClick={() => setDeleteConfirm(null)}>Cancel</Button>
+              <Button variant="destructive" className="flex-1" onClick={() => deleteConfirm && handleDelete(deleteConfirm)}>Remove</Button>
             </div>
           </DialogContent>
         </Dialog>
