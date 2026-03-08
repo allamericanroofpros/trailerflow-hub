@@ -26,7 +26,7 @@ Deno.serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("User not authenticated");
 
-    const { price_id } = await req.json();
+    const { price_id, organization_id, plan_tier } = await req.json();
     if (!price_id) throw new Error("price_id is required");
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
@@ -47,6 +47,11 @@ Deno.serve(async (req) => {
       mode: "subscription",
       success_url: `${origin}/settings?subscription=success`,
       cancel_url: `${origin}/settings?subscription=cancelled`,
+      metadata: {
+        organization_id: organization_id || "",
+        plan_tier: plan_tier || "",
+        user_id: user.id,
+      },
     });
 
     return new Response(JSON.stringify({ url: session.url }), {

@@ -794,7 +794,9 @@ export type Database = {
       }
       organizations: {
         Row: {
+          cancel_at_period_end: boolean
           created_at: string
+          current_period_end: string | null
           id: string
           logo_url: string | null
           name: string
@@ -802,10 +804,16 @@ export type Database = {
           plan: string
           slug: string
           status: string
+          stripe_customer_id: string | null
+          stripe_price_id: string | null
+          stripe_subscription_id: string | null
+          subscription_status: string
           updated_at: string
         }
         Insert: {
+          cancel_at_period_end?: boolean
           created_at?: string
+          current_period_end?: string | null
           id?: string
           logo_url?: string | null
           name: string
@@ -813,10 +821,16 @@ export type Database = {
           plan?: string
           slug: string
           status?: string
+          stripe_customer_id?: string | null
+          stripe_price_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string
           updated_at?: string
         }
         Update: {
+          cancel_at_period_end?: boolean
           created_at?: string
+          current_period_end?: string | null
           id?: string
           logo_url?: string | null
           name?: string
@@ -824,6 +838,10 @@ export type Database = {
           plan?: string
           slug?: string
           status?: string
+          stripe_customer_id?: string | null
+          stripe_price_id?: string | null
+          stripe_subscription_id?: string | null
+          subscription_status?: string
           updated_at?: string
         }
         Relationships: []

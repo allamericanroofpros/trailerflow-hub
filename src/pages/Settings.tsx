@@ -30,7 +30,7 @@ export default function SettingsPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isOwner } = useRoleAccess();
-  const { subscribed, tier, subscriptionEnd, loading: subLoading, startCheckout, openPortal, checkSubscription } = useSubscription();
+  const { subscribed, tier, subscriptionEnd, cancelAtPeriodEnd, loading: subLoading, startCheckout, openPortal, checkSubscription } = useSubscription();
   const qc = useQueryClient();
 
   const sections = baseSections.filter((s) => !("ownerOnly" in s && s.ownerOnly) || isOwner);
@@ -270,10 +270,13 @@ export default function SettingsPage() {
             ) : (
               <>
                 {subscribed && subscriptionEnd && (
-                  <div className="rounded-lg bg-primary/5 border border-primary/20 p-3 mb-5">
+                  <div className={`rounded-lg border p-3 mb-5 ${cancelAtPeriodEnd ? "bg-destructive/5 border-destructive/20" : "bg-primary/5 border-primary/20"}`}>
                     <p className="text-xs text-muted-foreground">
                       Current plan: <span className="font-semibold text-primary capitalize">{tier || "Active"}</span>
-                      {" · "}Renews {new Date(subscriptionEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                      {cancelAtPeriodEnd
+                        ? <>{" · "}<span className="text-destructive font-semibold">Cancels {new Date(subscriptionEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span></>
+                        : <>{" · "}Renews {new Date(subscriptionEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</>
+                      }
                     </p>
                   </div>
                 )}
