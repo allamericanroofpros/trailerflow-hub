@@ -492,12 +492,13 @@ export default function POS() {
           ))}
         </div>
 
-        <p className="text-sm text-muted-foreground hidden md:block font-medium">
-          {new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
-        </p>
-        {posLockEnabled && (
-          <span className="text-[10px] font-bold text-warning bg-warning/10 px-2 py-0.5 rounded-full hidden sm:inline">LOCKED</span>
-        )}
+        <div className="flex items-center gap-3">
+          <p className="text-sm text-muted-foreground hidden md:block font-medium">
+            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
+          </p>
+          {posLockEnabled && (
+            <span className="text-[10px] font-bold text-warning bg-warning/10 px-2 py-0.5 rounded-full">LOCKED</span>
+          )}
         </div>
       </header>
 
