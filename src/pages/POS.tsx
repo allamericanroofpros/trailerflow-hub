@@ -49,7 +49,7 @@ export default function POS() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [view, setView] = useState<"register" | "orders" | "sales" | "inventory" | "report">("register");
+  const [view, setView] = useState<"register" | "orders" | "history" | "sales" | "inventory" | "report">("register");
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCustomItem, setShowCustomItem] = useState(false);
