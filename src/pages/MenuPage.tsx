@@ -2,10 +2,11 @@ import { useState, useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAllMenuItems, useCreateMenuItem, useUpdateMenuItem, useDeleteMenuItem } from "@/hooks/useMenuItems";
 import { useInventoryItems } from "@/hooks/useInventory";
+import { useTrailers } from "@/hooks/useTrailers";
 import { toast } from "sonner";
 import {
   UtensilsCrossed, Plus, Pencil, Trash2, Loader2, DollarSign, Sparkles,
-  Package, X, ChevronDown, ChevronUp, Beaker,
+  Package, X, ChevronDown, ChevronUp, Beaker, ArrowUp, ArrowDown, Target,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -41,7 +42,7 @@ const categoryColors: Record<string, string> = {
 };
 
 type Modifier = {
-  name: string; // e.g. "Size"
+  name: string;
   options: { label: string; priceAdjust: number; inventoryAdjustments?: { inventoryItemId: string; extraQty: number }[] }[];
   required: boolean;
 };
@@ -58,20 +59,21 @@ type FormState = {
   description: string;
   category: string;
   price: number;
-  cost: number;
   is_active: boolean;
+  trailer_id: string;
   ingredients: Ingredient[];
   modifiers: Modifier[];
 };
 
 const emptyForm: FormState = {
-  name: "", description: "", category: "entree", price: 0, cost: 0, is_active: true,
+  name: "", description: "", category: "entree", price: 0, is_active: true, trailer_id: "",
   ingredients: [], modifiers: [],
 };
 
 export default function MenuPage() {
   const { data: menuItems, isLoading } = useAllMenuItems();
   const { data: inventoryItems } = useInventoryItems();
+  const { data: trailers } = useTrailers();
   const createItem = useCreateMenuItem();
   const updateItem = useUpdateMenuItem();
   const deleteItem = useDeleteMenuItem();
@@ -83,6 +85,26 @@ export default function MenuPage() {
   const [aiInsights, setAiInsights] = useState<string | null>(null);
   const [showIngredients, setShowIngredients] = useState(true);
   const [showModifiers, setShowModifiers] = useState(true);
+  const [aiPriceLoading, setAiPriceLoading] = useState(false);
+  const [aiSuggestedPrice, setAiSuggestedPrice] = useState<number | null>(null);
+
+  // Estimated cost from ingredients
+  const ingredientCost = useMemo(() => {
+    return form.ingredients.reduce((sum, ing) => {
+      const invItem = inventoryItems?.find(ii => ii.id === ing.inventoryItemId);
+      const costPerUnit = Number(invItem?.cost_per_unit) || 0;
+      return sum + costPerUnit * ing.quantityUsed;
+    }, 0);
+  }, [form.ingredients, inventoryItems]);
+
+  // Get target margin from selected trailer
+  const selectedTrailer = trailers?.find(t => t.id === form.trailer_id);
+  const targetMargin = Number((selectedTrailer as any)?.target_margin) || 70;
+
+  // Suggested price from target margin
+  const marginSuggestedPrice = ingredientCost > 0 && targetMargin > 0
+    ? ingredientCost / (1 - targetMargin / 100)
+    : null;
 
   const handleSave = async () => {
     if (!form.name.trim()) return toast.error("Name is required");
@@ -93,9 +115,10 @@ export default function MenuPage() {
         description: form.description || null,
         category: form.category,
         price: form.price,
-        cost: form.cost,
+        cost: ingredientCost, // auto-calculated
         is_active: form.is_active,
         modifiers: form.modifiers.length > 0 ? form.modifiers : null,
+        trailer_id: form.trailer_id || null,
       };
 
       let itemId = editId;
@@ -109,9 +132,7 @@ export default function MenuPage() {
 
       // Save ingredients (recipe)
       if (itemId) {
-        // Delete existing ingredients
         await supabase.from("menu_item_ingredients").delete().eq("menu_item_id", itemId);
-        // Insert new ones
         if (form.ingredients.length > 0) {
           const ingredientRows = form.ingredients.map(ing => ({
             menu_item_id: itemId!,
@@ -127,30 +148,30 @@ export default function MenuPage() {
       setShowForm(false);
       setEditId(null);
       setForm(emptyForm);
+      setAiSuggestedPrice(null);
     } catch (e: any) { toast.error(e.message); }
   };
 
   const handleEdit = (item: any) => {
     setEditId(item.id);
-    // Map existing ingredients
     const ingredients: Ingredient[] = (item.menu_item_ingredients || []).map((ing: any) => ({
       inventoryItemId: ing.inventory_item_id,
       inventoryItemName: ing.inventory_items?.name || "Unknown",
       unit: ing.inventory_items?.unit || "each",
       quantityUsed: Number(ing.quantity_used),
     }));
-    // Map existing modifiers
     const modifiers: Modifier[] = Array.isArray(item.modifiers) ? item.modifiers : [];
     setForm({
       name: item.name,
       description: item.description || "",
       category: item.category,
       price: Number(item.price),
-      cost: Number(item.cost),
       is_active: item.is_active,
+      trailer_id: item.trailer_id || "",
       ingredients,
       modifiers,
     });
+    setAiSuggestedPrice(null);
     setShowForm(true);
   };
 
@@ -158,6 +179,25 @@ export default function MenuPage() {
     try {
       await deleteItem.mutateAsync(id);
       toast.success("Item deleted");
+    } catch (e: any) { toast.error(e.message); }
+  };
+
+  // Reorder
+  const handleReorder = async (itemId: string, direction: "up" | "down") => {
+    if (!menuItems) return;
+    const idx = menuItems.findIndex(i => i.id === itemId);
+    if (idx < 0) return;
+    const swapIdx = direction === "up" ? idx - 1 : idx + 1;
+    if (swapIdx < 0 || swapIdx >= menuItems.length) return;
+
+    const currentOrder = menuItems[idx].sort_order ?? idx;
+    const swapOrder = menuItems[swapIdx].sort_order ?? swapIdx;
+
+    try {
+      await Promise.all([
+        updateItem.mutateAsync({ id: menuItems[idx].id, sort_order: swapOrder }),
+        updateItem.mutateAsync({ id: menuItems[swapIdx].id, sort_order: currentOrder }),
+      ]);
     } catch (e: any) { toast.error(e.message); }
   };
 
@@ -214,6 +254,7 @@ export default function MenuPage() {
     }));
   };
 
+  // AI Menu Optimization
   const handleAIOptimize = async () => {
     if (!menuItems?.length) return toast.error("Add menu items first");
     setAiLoading(true);
@@ -230,25 +271,41 @@ Analyze my menu and provide: 1. Best/worst margins 2. Pricing suggestions 3. Men
     finally { setAiLoading(false); }
   };
 
+  // AI Suggested Price for a single item
+  const handleAISuggestPrice = async () => {
+    if (ingredientCost <= 0) return toast.error("Add ingredients first so AI can calculate cost");
+    setAiPriceLoading(true);
+    try {
+      const context = `I'm pricing a food truck menu item. Details:
+- Item: ${form.name || "unnamed"} (${form.category})
+- Ingredient cost: $${ingredientCost.toFixed(2)}
+- Target margin: ${targetMargin}%
+- Category: ${form.category}
+${form.description ? `- Description: ${form.description}` : ""}
+${menuItems?.length ? `- Other menu items for context: ${menuItems.slice(0, 10).map(i => `${i.name}: $${Number(i.price).toFixed(2)}`).join(", ")}` : ""}
+
+Suggest an optimal price for this item. Consider: ingredient cost, target margin, food truck pricing psychology, rounding to attractive price points. Return ONLY a number like 8.50 — no explanation.`;
+      const result = await claudeNonStreaming("chat", [{ role: "user", content: context }]);
+      const price = parseFloat(result.replace(/[^0-9.]/g, ""));
+      if (!isNaN(price) && price > 0) {
+        setAiSuggestedPrice(price);
+      } else {
+        toast.error("AI couldn't determine a price");
+      }
+    } catch (e: any) { toast.error(e.message || "AI pricing failed"); }
+    finally { setAiPriceLoading(false); }
+  };
+
   const totalItems = menuItems?.length || 0;
   const avgPrice = menuItems?.length ? (menuItems.reduce((s, i) => s + Number(i.price), 0) / menuItems.length).toFixed(2) : "0.00";
   const avgMargin = menuItems?.length
     ? (menuItems.reduce((s, i) => { const p = Number(i.price), c = Number(i.cost); return s + (p > 0 ? (p - c) / p * 100 : 0); }, 0) / menuItems.length).toFixed(1)
     : "0.0";
 
-  // Estimated cost from ingredients
-  const ingredientCost = useMemo(() => {
-    return form.ingredients.reduce((sum, ing) => {
-      const invItem = inventoryItems?.find(ii => ii.id === ing.inventoryItemId);
-      const costPerUnit = Number(invItem?.cost_per_unit) || 0;
-      return sum + costPerUnit * ing.quantityUsed;
-    }, 0);
-  }, [form.ingredients, inventoryItems]);
-
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Menu</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage items, recipes, modifiers, and get AI optimization.</p>
@@ -258,7 +315,7 @@ Analyze my menu and provide: 1. Best/worst margins 2. Pricing suggestions 3. Men
               {aiLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
               AI Optimize
             </Button>
-            <Button className="gap-1.5" onClick={() => { setEditId(null); setForm(emptyForm); setShowForm(true); }}>
+            <Button className="gap-1.5" onClick={() => { setEditId(null); setForm(emptyForm); setAiSuggestedPrice(null); setShowForm(true); }}>
               <Plus className="h-4 w-4" /> Add Item
             </Button>
           </div>
@@ -303,7 +360,7 @@ Analyze my menu and provide: 1. Best/worst margins 2. Pricing suggestions 3. Men
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {menuItems.map((item) => {
+            {menuItems.map((item, idx) => {
               const margin = Number(item.price) > 0 ? ((Number(item.price) - Number(item.cost)) / Number(item.price) * 100).toFixed(1) : "0.0";
               const ingredientCount = (item as any).menu_item_ingredients?.length || 0;
               const modifierCount = Array.isArray(item.modifiers) ? (item.modifiers as any[]).length : 0;
@@ -314,9 +371,11 @@ Analyze my menu and provide: 1. Best/worst margins 2. Pricing suggestions 3. Men
                       <p className="text-sm font-semibold text-card-foreground">{item.name}</p>
                       {item.description && <p className="text-xs text-muted-foreground mt-0.5 line-clamp-1">{item.description}</p>}
                     </div>
-                    <Badge className={`text-[10px] ${categoryColors[item.category] || "bg-muted text-muted-foreground"}`}>
-                      {item.category}
-                    </Badge>
+                    <div className="flex items-center gap-1">
+                      <Badge className={`text-[10px] ${categoryColors[item.category] || "bg-muted text-muted-foreground"}`}>
+                        {item.category}
+                      </Badge>
+                    </div>
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
@@ -340,8 +399,23 @@ Analyze my menu and provide: 1. Best/worst margins 2. Pricing suggestions 3. Men
                       <span className="text-[10px] text-warning">No recipe linked</span>
                     )}
                   </div>
-                  <div className="flex items-center gap-2 pt-1 border-t border-border">
-                    <Button variant="ghost" size="sm" className="text-xs h-7 flex-1" onClick={() => handleEdit(item)}>
+                  <div className="flex items-center gap-1 pt-1 border-t border-border">
+                    <button
+                      onClick={() => handleReorder(item.id, "up")}
+                      disabled={idx === 0}
+                      className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground disabled:opacity-30"
+                    >
+                      <ArrowUp className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={() => handleReorder(item.id, "down")}
+                      disabled={idx === menuItems.length - 1}
+                      className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground disabled:opacity-30"
+                    >
+                      <ArrowDown className="h-3 w-3" />
+                    </button>
+                    <div className="flex-1" />
+                    <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => handleEdit(item)}>
                       <Pencil className="h-3 w-3 mr-1" /> Edit
                     </Button>
                     <Button variant="ghost" size="sm" className="text-xs h-7 text-destructive hover:text-destructive" onClick={() => handleDelete(item.id)}>
@@ -356,7 +430,7 @@ Analyze my menu and provide: 1. Best/worst margins 2. Pricing suggestions 3. Men
       </div>
 
       {/* ── Full Item Editor (Sheet) ── */}
-      <Sheet open={showForm} onOpenChange={(v) => { setShowForm(v); if (!v) { setEditId(null); setForm(emptyForm); } }}>
+      <Sheet open={showForm} onOpenChange={(v) => { setShowForm(v); if (!v) { setEditId(null); setForm(emptyForm); setAiSuggestedPrice(null); } }}>
         <SheetContent className="w-full sm:max-w-xl overflow-y-auto">
           <SheetHeader>
             <SheetTitle>{editId ? "Edit" : "Add"} Menu Item</SheetTitle>
@@ -373,14 +447,19 @@ Analyze my menu and provide: 1. Best/worst margins 2. Pricing suggestions 3. Men
                     <SelectContent>{categories.map((c) => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
-                <div className="flex items-center gap-2 mt-6">
-                  <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
-                  <Label>Active</Label>
+                <div><Label>Trailer</Label>
+                  <Select value={form.trailer_id} onValueChange={(v) => setForm({ ...form, trailer_id: v })}>
+                    <SelectTrigger className="mt-1"><SelectValue placeholder="All trailers" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="">All Trailers</SelectItem>
+                      {trailers?.map((t) => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div><Label>Price ($)</Label><Input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className="mt-1" /></div>
-                <div><Label>Cost ($)</Label><Input type="number" step="0.01" value={form.cost} onChange={(e) => setForm({ ...form, cost: Number(e.target.value) })} className="mt-1" /></div>
+              <div className="flex items-center gap-2">
+                <Switch checked={form.is_active} onCheckedChange={(v) => setForm({ ...form, is_active: v })} />
+                <Label>Active</Label>
               </div>
             </div>
 
@@ -394,7 +473,7 @@ Analyze my menu and provide: 1. Best/worst margins 2. Pricing suggestions 3. Men
               {showIngredients && (
                 <>
                   {form.ingredients.length === 0 && (
-                    <p className="text-xs text-muted-foreground">No ingredients linked. Add ingredients so inventory auto-deducts when sold.</p>
+                    <p className="text-xs text-muted-foreground">No ingredients linked. Add ingredients so cost is auto-calculated and inventory auto-deducts when sold.</p>
                   )}
                   {form.ingredients.map((ing, idx) => (
                     <div key={idx} className="flex items-end gap-2">
@@ -426,22 +505,88 @@ Analyze my menu and provide: 1. Best/worst margins 2. Pricing suggestions 3. Men
                       </button>
                     </div>
                   ))}
-                  <div className="flex items-center gap-3">
-                    <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={addIngredient}>
-                      <Plus className="h-3 w-3" /> Add Ingredient
-                    </Button>
-                    {ingredientCost > 0 && (
-                      <span className="text-xs text-muted-foreground">
-                        Ingredient cost: <strong className="text-success">${ingredientCost.toFixed(2)}</strong>
-                        {form.price > 0 && <> · Margin: <strong>{((1 - ingredientCost / form.price) * 100).toFixed(1)}%</strong></>}
-                      </span>
-                    )}
-                  </div>
+                  <Button variant="outline" size="sm" className="gap-1 text-xs" onClick={addIngredient}>
+                    <Plus className="h-3 w-3" /> Add Ingredient
+                  </Button>
                 </>
               )}
             </div>
 
-            {/* ── Modifiers (Size, Toppings, etc.) ── */}
+            {/* ── Cost & Pricing ── */}
+            <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-3">
+              <div className="flex items-center gap-2">
+                <Target className="h-4 w-4 text-primary" />
+                <span className="text-sm font-bold text-foreground">Pricing</span>
+              </div>
+
+              {/* Auto-calculated cost */}
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs text-muted-foreground">Ingredient Cost (auto)</Label>
+                  <div className="mt-1 h-10 flex items-center rounded-md border border-border bg-muted/50 px-3 text-sm font-semibold text-foreground">
+                    ${ingredientCost.toFixed(2)}
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-xs text-muted-foreground">Target Margin</Label>
+                  <div className="mt-1 h-10 flex items-center rounded-md border border-border bg-muted/50 px-3 text-sm text-muted-foreground">
+                    {targetMargin}%{selectedTrailer ? ` (${selectedTrailer.name})` : " (default)"}
+                  </div>
+                </div>
+              </div>
+
+              {/* Margin-based suggestion */}
+              {marginSuggestedPrice && (
+                <div className="flex items-center gap-2 text-xs">
+                  <span className="text-muted-foreground">At {targetMargin}% margin →</span>
+                  <span className="font-bold text-primary">${marginSuggestedPrice.toFixed(2)}</span>
+                  <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={() => setForm(f => ({ ...f, price: Math.ceil(marginSuggestedPrice * 4) / 4 }))}>
+                    Use
+                  </Button>
+                </div>
+              )}
+
+              {/* Price input */}
+              <div>
+                <Label>Sell Price ($) *</Label>
+                <div className="flex items-center gap-2 mt-1">
+                  <Input type="number" step="0.25" value={form.price} onChange={(e) => setForm({ ...form, price: Number(e.target.value) })} className="flex-1" />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1 text-xs shrink-0"
+                    onClick={handleAISuggestPrice}
+                    disabled={aiPriceLoading || ingredientCost <= 0}
+                  >
+                    {aiPriceLoading ? <Loader2 className="h-3 w-3 animate-spin" /> : <Sparkles className="h-3 w-3" />}
+                    AI Price
+                  </Button>
+                </div>
+              </div>
+
+              {/* AI suggested price */}
+              {aiSuggestedPrice && (
+                <div className="flex items-center gap-2 rounded-lg bg-success/10 border border-success/20 px-3 py-2">
+                  <Sparkles className="h-3.5 w-3.5 text-success" />
+                  <span className="text-xs text-foreground">AI suggests: <strong className="text-success">${aiSuggestedPrice.toFixed(2)}</strong></span>
+                  <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2 ml-auto" onClick={() => { setForm(f => ({ ...f, price: aiSuggestedPrice })); setAiSuggestedPrice(null); }}>
+                    Apply
+                  </Button>
+                </div>
+              )}
+
+              {/* Margin display */}
+              {form.price > 0 && ingredientCost > 0 && (
+                <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                  <span>Margin: <strong className={`${((1 - ingredientCost / form.price) * 100) >= targetMargin ? "text-success" : "text-warning"}`}>
+                    {((1 - ingredientCost / form.price) * 100).toFixed(1)}%
+                  </strong></span>
+                  <span>Profit: <strong className="text-foreground">${(form.price - ingredientCost).toFixed(2)}</strong></span>
+                </div>
+              )}
+            </div>
+
+            {/* ── Modifiers ── */}
             <div className="rounded-lg border border-border p-4 space-y-3">
               <button onClick={() => setShowModifiers(!showModifiers)} className="flex items-center gap-2 w-full text-left">
                 <DollarSign className="h-4 w-4 text-info" />
