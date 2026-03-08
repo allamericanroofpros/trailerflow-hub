@@ -1,10 +1,9 @@
 import { useState, useRef, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { Sparkles, Send, Trash2, Bot, User, Lock } from "lucide-react";
+import { Sparkles, Send, Trash2, Bot, User } from "lucide-react";
 import { useClaudeChat } from "@/hooks/useClaudeAI";
 import { useEntitlements } from "@/hooks/useEntitlements";
-import { useNavigate } from "react-router-dom";
 
 export function AIChatDrawer() {
   const { messages, isLoading, send, clearMessages } = useClaudeChat();
