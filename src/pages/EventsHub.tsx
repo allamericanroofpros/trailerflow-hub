@@ -11,6 +11,7 @@ import { useToggleChecklistItem } from "@/hooks/useChecklist";
 import { useTrailers } from "@/hooks/useTrailers";
 import { useBookings } from "@/hooks/useBookings";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSelectedTrailer } from "@/components/layout/TopBar";
 import { useAIDiscovery } from "@/hooks/useAIDiscovery";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
