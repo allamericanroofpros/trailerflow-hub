@@ -59,6 +59,7 @@ const categoryLabels: Record<string, string> = {
 export default function POS() {
   const orgId = useOrgId();
   const surchargeSettings = useSurchargeSettings();
+  const taxSettings = useTaxSettings();
   const navigate = useNavigate();
   const [sodComplete, setSodComplete] = useState(() => {
     return sessionStorage.getItem("pos_sod_complete") === "true";
