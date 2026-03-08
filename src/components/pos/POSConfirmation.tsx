@@ -117,6 +117,12 @@ export default function POSConfirmation({
                 <span className="font-semibold text-success">${tip.toFixed(2)}</span>
               </div>
             )}
+            {(surchargeAmount ?? 0) > 0 && (
+              <div className="flex justify-between text-sm text-muted-foreground">
+                <span>{surchargeLabel || "Non-Cash Adjustment"}</span>
+                <span className="font-semibold">${(surchargeAmount ?? 0).toFixed(2)}</span>
+              </div>
+            )}
             <div className="flex justify-between text-lg font-black text-card-foreground pt-2 border-t-2 border-border">
               <span>Total</span>
               <span>${total.toFixed(2)}</span>
