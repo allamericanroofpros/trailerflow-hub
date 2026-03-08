@@ -477,11 +477,17 @@ export default function POS() {
           ))}
         </div>
 
-        <p className="text-sm text-muted-foreground hidden md:block font-medium">
-          {new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
-          {" · "}
-          {new Date().toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-        </p>
+        <div className="flex items-center gap-3">
+          {posStaffName && (
+            <div className="flex items-center gap-2">
+              <span className="text-sm font-bold text-primary">{posStaffName}</span>
+              <button onClick={handlePosLogout} className="text-xs text-muted-foreground hover:text-destructive font-medium">Switch</button>
+            </div>
+          )}
+          <p className="text-sm text-muted-foreground hidden md:block font-medium">
+            {new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
+          </p>
+        </div>
       </header>
 
       {/* ── MAIN CONTENT ── */}
