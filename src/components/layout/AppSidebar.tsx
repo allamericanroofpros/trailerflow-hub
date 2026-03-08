@@ -16,33 +16,38 @@ import {
   ShoppingCart,
   Package,
   UtensilsCrossed,
+  Shield,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
 
 const navItems = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard },
-  { title: "POS", url: "/pos", icon: ShoppingCart },
-  { title: "Menu", url: "/menu", icon: UtensilsCrossed },
-  { title: "Inventory", url: "/inventory", icon: Package },
-  { title: "Events Hub", url: "/events", icon: CalendarRange },
-  { title: "Discover", url: "/discover", icon: Compass },
-  { title: "Calendar", url: "/calendar", icon: Calendar },
-  { title: "Fleet", url: "/fleet", icon: BarChart3 },
-  { title: "Trailers", url: "/trailers", icon: Truck },
-  { title: "Staff", url: "/staff", icon: Users },
-  { title: "Bookings", url: "/bookings", icon: ClipboardList },
-  { title: "Financials", url: "/financials", icon: DollarSign },
-  { title: "Maintenance", url: "/maintenance", icon: Wrench },
-  { title: "Settings", url: "/settings", icon: Settings },
-];
+  { title: "Dashboard", url: "/", icon: LayoutDashboard, viewKey: "dashboard" },
+  { title: "POS", url: "/pos", icon: ShoppingCart, viewKey: "pos" },
+  { title: "Menu", url: "/menu", icon: UtensilsCrossed, viewKey: "menu" },
+  { title: "Inventory", url: "/inventory", icon: Package, viewKey: "inventory" },
+  { title: "Events Hub", url: "/events", icon: CalendarRange, viewKey: "events" },
+  { title: "Discover", url: "/discover", icon: Compass, viewKey: "discover" },
+  { title: "Calendar", url: "/calendar", icon: Calendar, viewKey: "calendar" },
+  { title: "Fleet", url: "/fleet", icon: BarChart3, viewKey: "fleet" },
+  { title: "Trailers", url: "/trailers", icon: Truck, viewKey: "trailers" },
+  { title: "Staff", url: "/staff", icon: Users, viewKey: "staff" },
+  { title: "Bookings", url: "/bookings", icon: ClipboardList, viewKey: "bookings" },
+  { title: "Financials", url: "/financials", icon: DollarSign, viewKey: "financials" },
+  { title: "Maintenance", url: "/maintenance", icon: Wrench, viewKey: "maintenance" },
+  { title: "Settings", url: "/settings", icon: Settings, viewKey: "settings" },
+] as const;
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
+  const { role, canView } = useRoleAccess();
+
+  const visibleItems = navItems.filter((item) => canView(item.viewKey));
 
   return (
     <aside
@@ -58,15 +63,23 @@ export function AppSidebar() {
           <Truck className="h-4 w-4 text-primary-foreground" />
         </div>
         {!collapsed && (
-          <span className="text-lg font-bold text-sidebar-accent-foreground tracking-tight">
-            TrailerOS
-          </span>
+          <div className="flex flex-col">
+            <span className="text-lg font-bold text-sidebar-accent-foreground tracking-tight leading-tight">
+              TrailerOS
+            </span>
+            {role && (
+              <span className="text-[10px] font-medium text-sidebar-muted uppercase tracking-wider flex items-center gap-1">
+                <Shield className="h-2.5 w-2.5" />
+                {role}
+              </span>
+            )}
+          </div>
         )}
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map((item) => {
+        {visibleItems.map((item) => {
           const isActive =
             item.url === "/"
               ? location.pathname === "/"

@@ -1,30 +1,63 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Settings as SettingsIcon, User, Bell, Truck, CreditCard, Shield, Palette, ArrowRight } from "lucide-react";
+import { Settings as SettingsIcon, User, Bell, Truck, CreditCard, Shield, Palette, ArrowRight, Users, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-const sections = [
+const baseSections = [
   { id: "profile", title: "Profile", description: "Manage your account details and preferences.", icon: User },
   { id: "notifications", title: "Notifications", description: "Configure alerts for bookings, events, and maintenance.", icon: Bell },
   { id: "trailers", title: "Trailers", description: "Add, remove, or configure your fleet.", icon: Truck, href: "/trailers" },
   { id: "billing", title: "Billing", description: "Manage subscription, payment methods, and invoices.", icon: CreditCard },
   { id: "security", title: "Security", description: "Password, two-factor authentication, and access control.", icon: Shield },
+  { id: "team", title: "Team & Roles", description: "Manage user roles and permissions.", icon: Users, ownerOnly: true },
   { id: "appearance", title: "Appearance", description: "Customize your dashboard theme and layout.", icon: Palette },
 ] as const;
 
-type SectionId = typeof sections[number]["id"];
+type SectionId = typeof baseSections[number]["id"];
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<SectionId>("profile");
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isOwner } = useRoleAccess();
   const qc = useQueryClient();
+
+  const sections = baseSections.filter((s) => !("ownerOnly" in s && s.ownerOnly) || isOwner);
+
+  // Team & roles data (owner only)
+  const { data: teamMembers, isLoading: teamLoading } = useQuery({
+    queryKey: ["team_roles"],
+    enabled: isOwner,
+    queryFn: async () => {
+      const { data: roles } = await supabase.from("user_roles").select("*");
+      if (!roles) return [];
+      const userIds = roles.map((r) => r.user_id);
+      const { data: profiles } = await supabase.from("profiles").select("*").in("user_id", userIds);
+      return roles.map((r) => ({
+        ...r,
+        profile: profiles?.find((p) => p.user_id === r.user_id),
+      }));
+    },
+  });
+
+  const updateRole = useMutation({
+    mutationFn: async ({ id, role }: { id: string; role: "owner" | "manager" | "staff" }) => {
+      const { error } = await supabase.from("user_roles").update({ role }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["team_roles"] });
+      toast.success("Role updated");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -242,6 +275,59 @@ export default function SettingsPage() {
                 <span className="text-sm font-medium text-card-foreground">1 device</span>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Team & Roles Section (Owner only) */}
+        {activeSection === "team" && isOwner && (
+          <div className="rounded-xl border border-border bg-card p-6 shadow-card">
+            <div className="flex items-center gap-2 mb-5">
+              <Users className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-card-foreground">Team & Roles</h3>
+            </div>
+            <p className="text-xs text-muted-foreground mb-4">
+              Assign roles to control what each team member can see and do. <strong>Owner</strong> = full access. <strong>Manager</strong> = manage operations. <strong>Staff</strong> = POS, calendar, and basic views only.
+            </p>
+            {teamLoading ? (
+              <div className="flex items-center gap-2 py-8 justify-center text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" /> Loading team...
+              </div>
+            ) : (
+              <div className="space-y-3 max-w-2xl">
+                {teamMembers?.map((member) => (
+                  <div key={member.id} className="flex items-center justify-between rounded-lg border border-border bg-background p-4">
+                    <div>
+                      <p className="text-sm font-medium text-foreground">
+                        {member.profile?.full_name || "Unnamed User"}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {member.profile?.business_name || "No business name"}
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {member.user_id === user?.id ? (
+                        <span className="rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                          {member.role} (you)
+                        </span>
+                      ) : (
+                        <select
+                          value={member.role}
+                          onChange={(e) => updateRole.mutate({ id: member.id, role: e.target.value as "owner" | "manager" | "staff" })}
+                          className="rounded-lg border border-border bg-background px-3 py-1.5 text-xs font-medium text-foreground"
+                        >
+                          <option value="owner">Owner</option>
+                          <option value="manager">Manager</option>
+                          <option value="staff">Staff</option>
+                        </select>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {(!teamMembers || teamMembers.length === 0) && (
+                  <p className="text-sm text-muted-foreground py-4 text-center">No team members found. Invite users by having them sign up.</p>
+                )}
+              </div>
+            )}
           </div>
         )}
 
