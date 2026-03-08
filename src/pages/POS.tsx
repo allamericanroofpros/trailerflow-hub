@@ -869,7 +869,7 @@ export default function POS() {
           <p className="text-sm text-muted-foreground text-center">Enter an owner or manager PIN to exit the POS terminal.</p>
 
           <div className="flex justify-center gap-3 my-4">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
                 className={`h-12 w-10 rounded-xl border-2 flex items-center justify-center text-xl font-black transition-all ${
