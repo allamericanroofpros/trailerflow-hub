@@ -56,6 +56,7 @@ const App = () => (
 
               {/* Super Admin routes */}
               <Route path="/admin" element={<SuperAdminRoute><AdminOverview /></SuperAdminRoute>} />
+              <Route path="/super-admin" element={<SuperAdminRoute><AdminOverview /></SuperAdminRoute>} />
               <Route path="/admin/organizations" element={<SuperAdminRoute><AdminOrganizations /></SuperAdminRoute>} />
               <Route path="/admin/users" element={<SuperAdminRoute><AdminUsers /></SuperAdminRoute>} />
               <Route path="/admin/analytics" element={<SuperAdminRoute><AdminAnalytics /></SuperAdminRoute>} />
