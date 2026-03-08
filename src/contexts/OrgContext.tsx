@@ -36,6 +36,7 @@ const OrgContext = createContext<OrgContextType>({
   orgRole: null,
   loading: true,
   switchOrg: () => {},
+  refreshOrg: () => {},
 });
 
 export const useOrg = () => useContext(OrgContext);
