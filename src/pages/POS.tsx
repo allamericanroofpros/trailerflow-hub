@@ -25,7 +25,7 @@ import POSStartOfDay from "@/components/pos/POSStartOfDay";
 
 type Modifier = {
   name: string;
-  options: { label: string; priceAdjust: number }[];
+  options: { label: string; priceAdjust: number; inventoryAdjustments?: { inventoryItemId: string; extraQty: number }[] }[];
   required: boolean;
 };
 
@@ -34,7 +34,7 @@ type CartItem = {
   name: string;
   price: number;
   quantity: number;
-  selectedModifiers?: { groupName: string; label: string; priceAdjust: number }[];
+  selectedModifiers?: { groupName: string; label: string; priceAdjust: number; inventoryAdjustments?: { inventoryItemId: string; extraQty: number }[] }[];
 };
 
 const TAX_RATE = 0.0875;
@@ -51,11 +51,6 @@ const categoryLabels: Record<string, string> = {
 
 export default function POS() {
   const navigate = useNavigate();
-  const { data: menuItems, isLoading: menuLoading } = useMenuItems();
-  const { data: activeOrders } = useActiveOrders();
-  const createOrder = useCreateOrder();
-  const updateStatus = useUpdateOrderStatus();
-
   const [sodComplete, setSodComplete] = useState(() => {
     return sessionStorage.getItem("pos_sod_complete") === "true";
   });
@@ -63,6 +58,12 @@ export default function POS() {
     const saved = sessionStorage.getItem("pos_sod_data");
     return saved ? JSON.parse(saved) : null;
   });
+
+  const activeTrailerId = sodData?.trailerId || undefined;
+  const { data: menuItems, isLoading: menuLoading } = useMenuItems(activeTrailerId);
+  const { data: activeOrders } = useActiveOrders();
+  const createOrder = useCreateOrder();
+  const updateStatus = useUpdateOrderStatus();
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
@@ -168,16 +169,29 @@ export default function POS() {
         tip: tipAmount,
         payment_method: data.paymentMethod,
         payment_received: true,
+        trailer_id: sodData?.trailerId || undefined,
+        event_id: sodData?.eventId || undefined,
         notes: [
           customerName.trim() ? `Customer: ${customerName.trim()}` : "",
           specialInstructions.trim() ? `Instructions: ${specialInstructions.trim()}` : "",
         ].filter(Boolean).join(" | ") || undefined,
         items: cart.map((c) => {
           const isCustom = c.menu_item_id.startsWith(CUSTOM_ITEM_ID);
+          const modifiersForDb = c.selectedModifiers?.length
+            ? c.selectedModifiers.map(m => ({
+                name: m.groupName,
+                selectedOptions: [{
+                  label: m.label,
+                  priceAdjust: m.priceAdjust,
+                  inventoryAdjustments: m.inventoryAdjustments || [],
+                }],
+              }))
+            : undefined;
           return {
-            menu_item_id: isCustom ? CUSTOM_ITEM_ID : c.menu_item_id,
+            menu_item_id: isCustom ? CUSTOM_ITEM_ID : c.menu_item_id.split(" (")[0],
             quantity: c.quantity,
             unit_price: c.price,
+            modifiers: modifiersForDb,
             notes: isCustom ? `Custom: ${c.name}` : undefined,
           };
         }),
@@ -843,15 +857,18 @@ export default function POS() {
       </Dialog>
 
       {/* End of Day */}
-      {showEOD && <POSEndOfDay onClose={() => {
-        setShowEOD(false);
-        // Clear SOD so next POS entry triggers Start of Day
-        sessionStorage.removeItem("pos_sod_complete");
-        sessionStorage.removeItem("pos_sod_data");
-        setSodComplete(false);
-        setSodData(null);
-        navigate("/");
-      }} />}
+      {showEOD && <POSEndOfDay
+        openingCash={sodData?.openingCash || 0}
+        trailerId={sodData?.trailerId}
+        onClose={() => {
+          setShowEOD(false);
+          sessionStorage.removeItem("pos_sod_complete");
+          sessionStorage.removeItem("pos_sod_data");
+          setSodComplete(false);
+          setSodData(null);
+          navigate("/");
+        }}
+      />}
 
       {/* EOD Floating Button */}
       <button
