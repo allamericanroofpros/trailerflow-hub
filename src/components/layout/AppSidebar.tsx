@@ -39,7 +39,7 @@ const navItems = [
   { title: "Financials", url: "/financials", icon: DollarSign, viewKey: "financials" },
   { title: "Maintenance", url: "/maintenance", icon: Wrench, viewKey: "maintenance" },
   { title: "Settings", url: "/settings", icon: Settings, viewKey: "settings" },
-];
+] as const;
 
 export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
