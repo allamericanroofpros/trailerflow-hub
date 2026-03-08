@@ -896,7 +896,7 @@ export default function POS() {
                 </button>
               );
               return (
-                <button key={i} onClick={() => setExitPin(prev => prev.length < 6 ? prev + key : prev)}
+                <button key={i} onClick={() => setExitPin(prev => prev.length < 4 ? prev + key : prev)}
                   className="h-14 rounded-xl border-2 border-border bg-background text-lg font-black text-card-foreground hover:bg-secondary active:scale-90 active:bg-primary/10 touch-manipulation transition-all">
                   {key}
                 </button>
