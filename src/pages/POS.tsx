@@ -783,6 +783,7 @@ export default function POS() {
           subtotal={subtotal}
           tax={tax}
           total={total}
+          surchargeSettings={surchargeSettings}
           onComplete={handleCheckout}
           onCancel={() => setShowCheckout(false)}
           isPending={createOrder.isPending}
