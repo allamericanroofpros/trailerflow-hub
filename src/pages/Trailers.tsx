@@ -80,6 +80,8 @@ export default function Trailers() {
   const deleteTrailer = useDeleteTrailer();
   const { user } = useAuth();
   const orgId = useOrgId();
+  const ent = useEntitlements();
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   const [addingNew, setAddingNew] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
