@@ -223,6 +223,7 @@ export default function POS() {
       const newOrder = await createOrder.mutateAsync({
         subtotal,
         tax,
+        tax_label: taxSettings.label || "Sales Tax",
         total: grandTotal,
         tip: tipAmount,
         surcharge_amount: surcharge,

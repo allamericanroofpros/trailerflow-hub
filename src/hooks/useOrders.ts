@@ -47,6 +47,7 @@ export function useCreateOrder() {
     mutationFn: async (order: {
       subtotal: number;
       tax: number;
+      tax_label?: string;
       total: number;
       payment_method?: string;
       payment_received?: boolean;
