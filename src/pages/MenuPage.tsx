@@ -421,7 +421,8 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {menuItems.map((item, idx) => {
-              const margin = Number(item.price) > 0 ? ((Number(item.price) - Number(item.cost)) / Number(item.price) * 100).toFixed(1) : "0.0";
+              const liveCost = computeLiveCost(item, inventoryItems);
+              const margin = Number(item.price) > 0 ? ((Number(item.price) - liveCost) / Number(item.price) * 100).toFixed(1) : "0.0";
               const ingredientCount = (item as any).menu_item_ingredients?.length || 0;
               const modifierCount = Array.isArray(item.modifiers) ? (item.modifiers as any[]).length : 0;
               return (
