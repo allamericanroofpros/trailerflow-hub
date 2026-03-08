@@ -1,6 +1,6 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Settings as SettingsIcon, User, Bell, Truck, CreditCard, Shield, Palette, ArrowRight, Users, Loader2, Monitor, Check, ExternalLink } from "lucide-react";
-import { useState } from "react";
+import { Settings as SettingsIcon, User, Bell, Truck, CreditCard, Shield, Palette, ArrowRight, Users, Loader2, Monitor, Check, ExternalLink, Receipt } from "lucide-react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
@@ -10,7 +10,9 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { useOrg } from "@/contexts/OrgContext";
 
 const baseSections = [
   { id: "profile", title: "Profile", description: "Manage your account details and preferences.", icon: User },
