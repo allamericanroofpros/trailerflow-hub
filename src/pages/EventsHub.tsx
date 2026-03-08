@@ -139,6 +139,10 @@ export default function EventsHub() {
   // AI Forecast for a single event
   const handleAIForecast = async () => {
     if (!selectedEvent) return;
+    if (!ent.aiForecasting) {
+      toast.error("AI Forecasting requires a Pro plan or above.");
+      return;
+    }
     setAiForecastLoading(true);
     try {
       const trailerData = trailers?.find(t => t.id === (selectedEvent as any).trailer_id);
