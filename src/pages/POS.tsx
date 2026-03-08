@@ -628,7 +628,9 @@ export default function POS() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {activeOrders.map((order) => (
+              {activeOrders.map((order) => {
+                const customerNote = order.notes?.startsWith("Customer: ") ? order.notes.replace("Customer: ", "") : null;
+                return (
                 <motion.div
                   key={order.id}
                   layout
@@ -640,9 +642,14 @@ export default function POS() {
                   style={{ borderColor: undefined }}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-black text-card-foreground">
-                      #{order.order_number}
-                    </span>
+                    <div>
+                      <span className="text-2xl font-black text-card-foreground">
+                        #{order.order_number}
+                      </span>
+                      {customerNote && (
+                        <p className="text-sm font-semibold text-primary mt-0.5">{customerNote}</p>
+                      )}
+                    </div>
                     <span
                       className={`inline-flex items-center gap-2 rounded-xl border-2 px-4 py-2 text-sm font-black ${
                         statusColor[order.status] || "border-border"
