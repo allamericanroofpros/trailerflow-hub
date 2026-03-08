@@ -60,9 +60,10 @@ export function useUpdateInventoryItem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: { id: string; [key: string]: any }) => {
-      const { data, error } = await supabase.from("inventory_items").update(updates as any).eq("id", id).select().single();
+      const { data, error } = await supabase.from("inventory_items").update(updates as any).eq("id", id).select();
       if (error) throw error;
-      return data;
+      if (!data || data.length === 0) throw new Error("Update failed — item not found or permission denied");
+      return data[0];
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["inventory-items"] }),
   });

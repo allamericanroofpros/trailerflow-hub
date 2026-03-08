@@ -59,9 +59,10 @@ export function useUpdateMenuItem() {
     mutationFn: async ({ id, ...updates }: { id: string; [key: string]: any }) => {
       // Strip any non-column fields that might have leaked in (e.g. nested joins)
       const { menu_item_ingredients, ...cleanUpdates } = updates as any;
-      const { data, error } = await supabase.from("menu_items").update(cleanUpdates).eq("id", id).select().single();
+      const { data, error } = await supabase.from("menu_items").update(cleanUpdates).eq("id", id).select();
       if (error) throw error;
-      return data;
+      if (!data || data.length === 0) throw new Error("Update failed — item not found or permission denied");
+      return data[0];
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ["menu-items"] }),
   });
