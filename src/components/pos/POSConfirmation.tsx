@@ -21,6 +21,7 @@ type ConfirmationProps = {
   subtotal: number;
   tax: number;
   taxLabel?: string;
+  taxInclusive?: boolean;
   tip: number;
   total: number;
   paymentMethod: string;
