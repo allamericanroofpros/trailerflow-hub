@@ -110,14 +110,14 @@ export function useClockOut() {
 export function useStaffByPin() {
   return useMutation({
     mutationFn: async (pin: string) => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase
         .from("staff_members")
-        .select("*")
-        .eq("pin" as any, pin)
+        .select("*") as any)
+        .eq("pin", pin)
         .eq("status", "active")
         .single();
       if (error) throw error;
-      return data;
+      return data as any;
     },
   });
 }
