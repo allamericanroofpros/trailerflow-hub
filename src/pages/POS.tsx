@@ -89,6 +89,31 @@ export default function POS() {
     paymentMethod: string; cashTendered?: number; changeDue?: number;
     orderId: string;
   } | null>(null);
+  const handlePosLogin = async () => {
+    if (posPin.length < 4) { toast.error("Enter your PIN"); return; }
+    try {
+      const staff = await staffByPin.mutateAsync(posPin);
+      // Must be clocked in
+      const isClockedIn = activeClocks?.some(c => c.staff_id === staff.id);
+      if (!isClockedIn) {
+        toast.error("You must clock in first before using the register. Go to the Clock tab.");
+        setPosPin("");
+        return;
+      }
+      setPosStaffName(staff.name);
+      sessionStorage.setItem("pos_staff_name", staff.name);
+      setPosPin("");
+    } catch {
+      toast.error("Invalid PIN");
+      setPosPin("");
+    }
+  };
+
+  const handlePosLogout = () => {
+    setPosStaffName(null);
+    sessionStorage.removeItem("pos_staff_name");
+  };
+
   // Detect tablet-ish (<=1024px)
   const [isCompact, setIsCompact] = useState(false);
   useEffect(() => {
