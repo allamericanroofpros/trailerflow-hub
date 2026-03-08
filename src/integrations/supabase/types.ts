@@ -867,6 +867,77 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_clock_entries: {
+        Row: {
+          clock_in: string
+          clock_out: string | null
+          created_at: string
+          event_id: string | null
+          hourly_rate: number
+          id: string
+          notes: string | null
+          org_id: string | null
+          staff_id: string
+          tips_earned: number | null
+          trailer_id: string | null
+        }
+        Insert: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string
+          event_id?: string | null
+          hourly_rate?: number
+          id?: string
+          notes?: string | null
+          org_id?: string | null
+          staff_id: string
+          tips_earned?: number | null
+          trailer_id?: string | null
+        }
+        Update: {
+          clock_in?: string
+          clock_out?: string | null
+          created_at?: string
+          event_id?: string | null
+          hourly_rate?: number
+          id?: string
+          notes?: string | null
+          org_id?: string | null
+          staff_id?: string
+          tips_earned?: number | null
+          trailer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_clock_entries_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_clock_entries_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_clock_entries_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_clock_entries_trailer_id_fkey"
+            columns: ["trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_members: {
         Row: {
           availability: Json | null
@@ -877,6 +948,7 @@ export type Database = {
           name: string
           org_id: string | null
           phone: string | null
+          pin: string | null
           status: string
           updated_at: string
           user_id: string | null
@@ -890,6 +962,7 @@ export type Database = {
           name: string
           org_id?: string | null
           phone?: string | null
+          pin?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
@@ -903,6 +976,7 @@ export type Database = {
           name?: string
           org_id?: string | null
           phone?: string | null
+          pin?: string | null
           status?: string
           updated_at?: string
           user_id?: string | null
