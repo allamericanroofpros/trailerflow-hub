@@ -8,10 +8,13 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "
 import {
   ShoppingCart, Plus, Minus, Trash2, CreditCard, Banknote,
   Smartphone, ChefHat, Clock, CheckCircle, Loader2, ArrowLeft,
-  Truck, X, ChevronUp,
+  Truck, X, ChevronUp, BarChart3, Package, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import POSSalesView from "@/components/pos/POSSalesView";
+import POSInventoryView from "@/components/pos/POSInventoryView";
+import POSReportView from "@/components/pos/POSReportView";
 
 type CartItem = {
   menu_item_id: string;
