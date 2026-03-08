@@ -759,13 +759,7 @@ export default function POS() {
         <POSTimeClock eventId={sodData?.eventId} trailerId={sodData?.trailerId} />
       ) : view === "history" ? (
         <POSOrderHistory />
-      ) : view === "sales" ? (
-        <POSSalesView />
-      ) : view === "inventory" ? (
-        <POSInventoryView />
-      ) : (
-        <POSReportView />
-      )}
+      ) : null}
 
       {/* Checkout Flow */}
       {showCheckout && cart.length > 0 && (
