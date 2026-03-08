@@ -355,7 +355,7 @@ export default function POS() {
             <p className="text-base font-medium">Tap items to add</p>
           </div>
         ) : (
-          cart.map((item) => <SwipeableCartItem key={item.menu_item_id} item={item} cart={cart} setCart={setCart} updateQuantity={updateQuantity} />)
+          cart.map((item) => <SwipeableCartItem key={item.menu_item_id} item={item} />)
         )}
       </div>
 
