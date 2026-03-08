@@ -814,10 +814,19 @@ Return ONLY a JSON object with: revenue_forecast_low (number), revenue_forecast_
                   ) : null}
                 </div>
               ) : (
-                <div className="rounded-lg bg-background border border-border p-3.5">
+                <div className="rounded-lg bg-background border border-border p-3.5 space-y-3">
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    No forecast yet. Use <strong>"AI Search"</strong> to pull event data or manually enter revenue estimates by clicking Edit.
+                    No forecast yet. Click below to generate one with AI, or manually enter estimates by clicking Edit.
                   </p>
+                  <Button
+                    size="sm"
+                    onClick={handleAIForecast}
+                    disabled={aiForecastLoading}
+                    className="w-full gap-1.5"
+                  >
+                    {aiForecastLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                    {aiForecastLoading ? "Calculating..." : "AI Generate Forecast"}
+                  </Button>
                 </div>
               )}
 
