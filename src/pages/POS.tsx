@@ -174,10 +174,21 @@ export default function POS() {
         ].filter(Boolean).join(" | ") || undefined,
         items: cart.map((c) => {
           const isCustom = c.menu_item_id.startsWith(CUSTOM_ITEM_ID);
+          const modifiersForDb = c.selectedModifiers?.length
+            ? c.selectedModifiers.map(m => ({
+                name: m.groupName,
+                selectedOptions: [{
+                  label: m.label,
+                  priceAdjust: m.priceAdjust,
+                  inventoryAdjustments: m.inventoryAdjustments || [],
+                }],
+              }))
+            : undefined;
           return {
-            menu_item_id: isCustom ? CUSTOM_ITEM_ID : c.menu_item_id,
+            menu_item_id: isCustom ? CUSTOM_ITEM_ID : c.menu_item_id.split(" (")[0],
             quantity: c.quantity,
             unit_price: c.price,
+            modifiers: modifiersForDb,
             notes: isCustom ? `Custom: ${c.name}` : undefined,
           };
         }),
