@@ -1,16 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { useOrgId } from "./useOrgId";
 
-type MaintenanceRecord = Database["public"]["Tables"]["maintenance_records"]["Row"];
 type MaintenanceInsert = Database["public"]["Tables"]["maintenance_records"]["Insert"];
 type MaintenanceUpdate = Database["public"]["Tables"]["maintenance_records"]["Update"];
 
 export function useMaintenanceRecords(trailerId?: string) {
+  const orgId = useOrgId();
   return useQuery({
-    queryKey: ["maintenance_records", trailerId],
+    queryKey: ["maintenance_records", orgId, trailerId],
+    enabled: !!orgId,
     queryFn: async () => {
-      let query = supabase.from("maintenance_records").select("*, trailers(name)").order("due_date", { ascending: true });
+      let query = supabase.from("maintenance_records").select("*, trailers(name)").eq("org_id", orgId!).order("due_date", { ascending: true });
       if (trailerId) query = query.eq("trailer_id", trailerId);
       const { data, error } = await query;
       if (error) throw error;

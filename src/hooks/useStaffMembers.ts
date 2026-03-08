@@ -1,16 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { useOrgId } from "./useOrgId";
 
-type StaffMember = Database["public"]["Tables"]["staff_members"]["Row"];
 type StaffInsert = Database["public"]["Tables"]["staff_members"]["Insert"];
 type StaffUpdate = Database["public"]["Tables"]["staff_members"]["Update"];
 
 export function useStaffMembers() {
+  const orgId = useOrgId();
   return useQuery({
-    queryKey: ["staff_members"],
+    queryKey: ["staff_members", orgId],
+    enabled: !!orgId,
     queryFn: async () => {
-      const { data, error } = await supabase.from("staff_members").select("*").order("name");
+      const { data, error } = await supabase.from("staff_members").select("*").eq("org_id", orgId!).order("name");
       if (error) throw error;
       return data;
     },

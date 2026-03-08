@@ -1,16 +1,18 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { useOrgId } from "./useOrgId";
 
-type Trailer = Database["public"]["Tables"]["trailers"]["Row"];
 type TrailerInsert = Database["public"]["Tables"]["trailers"]["Insert"];
 type TrailerUpdate = Database["public"]["Tables"]["trailers"]["Update"];
 
 export function useTrailers() {
+  const orgId = useOrgId();
   return useQuery({
-    queryKey: ["trailers"],
+    queryKey: ["trailers", orgId],
+    enabled: !!orgId,
     queryFn: async () => {
-      const { data, error } = await supabase.from("trailers").select("*").order("name");
+      const { data, error } = await supabase.from("trailers").select("*").eq("org_id", orgId!).order("name");
       if (error) throw error;
       return data;
     },
