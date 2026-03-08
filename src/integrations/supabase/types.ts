@@ -715,40 +715,67 @@ export type Database = {
       }
       trailers: {
         Row: {
+          avg_customers_per_hour: number | null
+          avg_food_cost_percent: number | null
+          avg_ticket: number | null
           created_at: string
           description: string | null
+          fuel_cost_per_event: number | null
           hourly_cost: number | null
           id: string
           image_url: string | null
           menu_items: Json | null
           name: string
           owner_id: string
+          setup_cost_per_event: number | null
+          setup_teardown_hours: number | null
+          specialties: string | null
+          staff_hourly_rate: number | null
+          staff_required: number | null
           status: string
           type: string | null
           updated_at: string
         }
         Insert: {
+          avg_customers_per_hour?: number | null
+          avg_food_cost_percent?: number | null
+          avg_ticket?: number | null
           created_at?: string
           description?: string | null
+          fuel_cost_per_event?: number | null
           hourly_cost?: number | null
           id?: string
           image_url?: string | null
           menu_items?: Json | null
           name: string
           owner_id: string
+          setup_cost_per_event?: number | null
+          setup_teardown_hours?: number | null
+          specialties?: string | null
+          staff_hourly_rate?: number | null
+          staff_required?: number | null
           status?: string
           type?: string | null
           updated_at?: string
         }
         Update: {
+          avg_customers_per_hour?: number | null
+          avg_food_cost_percent?: number | null
+          avg_ticket?: number | null
           created_at?: string
           description?: string | null
+          fuel_cost_per_event?: number | null
           hourly_cost?: number | null
           id?: string
           image_url?: string | null
           menu_items?: Json | null
           name?: string
           owner_id?: string
+          setup_cost_per_event?: number | null
+          setup_teardown_hours?: number | null
+          specialties?: string | null
+          staff_hourly_rate?: number | null
+          staff_required?: number | null
           status?: string
           type?: string | null
           updated_at?: string
