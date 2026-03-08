@@ -26,6 +26,8 @@ type ConfirmationProps = {
   cashTendered?: number;
   changeDue?: number;
   orderId: string;
+  surchargeAmount?: number;
+  surchargeLabel?: string;
   onDone: () => void;
 };
 
