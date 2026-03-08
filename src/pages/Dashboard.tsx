@@ -2,6 +2,7 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { RevenueByTypeChart, TrailerPerformanceChart } from "@/components/dashboard/Charts";
 import { useAIForecast } from "@/hooks/useAIForecast";
+import { useNavigate } from "react-router-dom";
 import {
   DollarSign,
   TrendingUp,
@@ -16,9 +17,9 @@ import {
 } from "lucide-react";
 
 const actionItems = [
-  { label: "Booking Requests Pending", count: 4, icon: Clock, color: "text-warning" },
-  { label: "Staffing Conflicts", count: 2, icon: AlertTriangle, color: "text-destructive" },
-  { label: "Events Next 7 Days", count: 6, icon: CalendarDays, color: "text-info" },
+  { label: "Booking Requests Pending", count: 4, icon: Clock, color: "text-warning", href: "/bookings" },
+  { label: "Staffing Conflicts", count: 2, icon: AlertTriangle, color: "text-destructive", href: "/staff" },
+  { label: "Events Next 7 Days", count: 6, icon: CalendarDays, color: "text-info", href: "/calendar" },
 ];
 
 const pipelineStages = [
@@ -37,6 +38,7 @@ const defaultSuggestions = [
 
 export default function Dashboard() {
   const { data: forecast } = useAIForecast();
+  const navigate = useNavigate();
   const aiSuggestions = forecast?.suggestions?.length ? forecast.suggestions : defaultSuggestions;
 
   return (
@@ -87,6 +89,7 @@ export default function Dashboard() {
           {actionItems.map((item) => (
             <button
               key={item.label}
+              onClick={() => navigate(item.href)}
               className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-card text-left hover:shadow-card-hover transition-shadow"
             >
               <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-secondary ${item.color}`}>
@@ -104,7 +107,10 @@ export default function Dashboard() {
         {/* Bottom: Charts + AI */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           {/* Pipeline */}
-          <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+          <button
+            onClick={() => navigate("/events")}
+            className="rounded-xl border border-border bg-card p-5 shadow-card text-left hover:shadow-card-hover transition-shadow"
+          >
             <h3 className="text-sm font-semibold text-card-foreground mb-4">Event Pipeline</h3>
             <div className="space-y-3">
               {pipelineStages.map((s) => (
@@ -124,7 +130,7 @@ export default function Dashboard() {
                 />
               ))}
             </div>
-          </div>
+          </button>
 
           {/* Revenue by Event Type */}
           <RevenueByTypeChart />
@@ -135,15 +141,24 @@ export default function Dashboard() {
 
         {/* AI Suggested Opportunities */}
         <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-          <div className="flex items-center gap-2 mb-4">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-semibold text-card-foreground">AI Suggested Opportunities</h3>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-card-foreground">AI Suggested Opportunities</h3>
+            </div>
+            <button
+              onClick={() => navigate("/discover")}
+              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors"
+            >
+              View All <ArrowRight className="h-3 w-3" />
+            </button>
           </div>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
             {aiSuggestions.map((s) => (
-              <div
+              <button
                 key={s.event}
-                className="rounded-lg border border-border bg-background p-4 hover:shadow-card transition-shadow"
+                onClick={() => navigate("/discover")}
+                className="rounded-lg border border-border bg-background p-4 hover:shadow-card transition-shadow text-left"
               >
                 <p className="text-sm font-semibold text-card-foreground">{s.event}</p>
                 <p className="text-xs text-muted-foreground mt-1">{s.date}</p>
@@ -153,7 +168,7 @@ export default function Dashboard() {
                     {s.confidence} match
                   </span>
                 </div>
-              </div>
+              </button>
             ))}
           </div>
         </div>
