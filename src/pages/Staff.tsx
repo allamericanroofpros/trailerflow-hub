@@ -13,7 +13,9 @@ import { toast } from "sonner";
 import { format, parseISO } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
-  const { data: staff, isLoading } = useStaffMembers();
+export default function Staff() {
+  const { user } = useAuth();
+  const { isOwner, canManage } = useRoleAccess();
   const createStaff = useCreateStaffMember();
   const updateStaff = useUpdateStaffMember();
   const deleteStaff = useDeleteStaffMember();
