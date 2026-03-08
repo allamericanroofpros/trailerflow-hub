@@ -33,7 +33,7 @@ type ConfirmationProps = {
 
 export default function POSConfirmation({
   orderNumber, items, subtotal, tax, tip, total,
-  paymentMethod, cashTendered, changeDue, orderId, onDone,
+  paymentMethod, cashTendered, changeDue, orderId, surchargeAmount, surchargeLabel, onDone,
 }: ConfirmationProps) {
   const [receiptMode, setReceiptMode] = useState<null | "qr" | "email" | "sms">(null);
   const [email, setEmail] = useState("");
