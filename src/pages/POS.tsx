@@ -21,6 +21,7 @@ import POSCheckoutFlow from "@/components/pos/POSCheckoutFlow";
 import POSConfirmation from "@/components/pos/POSConfirmation";
 import POSOrderHistory from "@/components/pos/POSOrderHistory";
 import POSEndOfDay from "@/components/pos/POSEndOfDay";
+import POSStartOfDay from "@/components/pos/POSStartOfDay";
 
 type Modifier = {
   name: string;
@@ -55,6 +56,8 @@ export default function POS() {
   const createOrder = useCreateOrder();
   const updateStatus = useUpdateOrderStatus();
 
+  const [sodComplete, setSodComplete] = useState(false);
+  const [sodData, setSodData] = useState<{ trailerId: string | null; eventId: string | null; openingCash: number; notes: string } | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [view, setView] = useState<"register" | "orders" | "history" | "sales" | "inventory" | "report">("register");
@@ -342,6 +345,18 @@ export default function POS() {
       </div>
     </>
   );
+
+  // Start of Day gate
+  if (!sodComplete) {
+    return (
+      <POSStartOfDay
+        onComplete={(data) => {
+          setSodData(data);
+          setSodComplete(true);
+        }}
+      />
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background select-none">
