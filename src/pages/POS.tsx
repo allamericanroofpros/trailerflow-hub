@@ -346,6 +346,18 @@ export default function POS() {
     </>
   );
 
+  // Start of Day gate
+  if (!sodComplete) {
+    return (
+      <POSStartOfDay
+        onComplete={(data) => {
+          setSodData(data);
+          setSodComplete(true);
+        }}
+      />
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-background select-none">
       {/* ── TOP BAR ── */}
