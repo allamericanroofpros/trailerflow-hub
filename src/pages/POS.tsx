@@ -223,6 +223,8 @@ export default function POS() {
         tax,
         total: grandTotal,
         tip: tipAmount,
+        surcharge_amount: surcharge,
+        surcharge_label: data.surchargeLabel || null,
         payment_method: data.paymentMethod,
         payment_received: true,
         org_id: orgId,
