@@ -131,12 +131,14 @@ export default function Inventory() {
   const handleAddItem = async () => {
     if (!newItem.name.trim()) return toast.error("Name is required");
     try {
-      const { shelf_life_days, ...rest } = newItem;
+      const { shelf_life_days, unit_size, serving_size, ...rest } = newItem;
       const insertData: any = { ...rest };
       if (shelf_life_days) insertData.shelf_life_days = Number(shelf_life_days);
+      if (unit_size) insertData.unit_size = Number(unit_size);
+      if (serving_size) insertData.serving_size = Number(serving_size);
       await createItem.mutateAsync(insertData);
       setShowAdd(false);
-      setNewItem({ name: "", unit: "each", current_stock: 0, par_level: 0, reorder_point: 0, cost_per_unit: 0, supplier: "", shelf_life_days: "" });
+      setNewItem({ name: "", unit: "each", current_stock: 0, par_level: 0, reorder_point: 0, cost_per_unit: 0, supplier: "", shelf_life_days: "", unit_size: "", serving_size: "" });
       toast.success("Item added");
     } catch (e: any) { toast.error(e.message); }
   };
