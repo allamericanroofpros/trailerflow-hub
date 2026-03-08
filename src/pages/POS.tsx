@@ -61,6 +61,12 @@ export default function POS() {
     return saved ? JSON.parse(saved) : null;
   });
 
+  // PIN gate for register
+  const [posStaffName, setPosStaffName] = useState<string | null>(() => sessionStorage.getItem("pos_staff_name"));
+  const [posPin, setPosPin] = useState("");
+  const staffByPin = useStaffByPin();
+  const { data: activeClocks } = useActiveClocks();
+
   const activeTrailerId = sodData?.trailerId || undefined;
   const { data: menuItems, isLoading: menuLoading } = useMenuItems(activeTrailerId);
   const { data: activeOrders } = useActiveOrders();
