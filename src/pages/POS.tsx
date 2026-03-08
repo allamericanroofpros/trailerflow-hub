@@ -549,7 +549,7 @@ export default function POS() {
               </Button>
 
               <p className="text-xs text-center text-muted-foreground">
-                Not clocked in? Use the <button onClick={() => { setView("timeclock"); setPosStaffName("_skip"); }} className="text-primary font-bold underline">Clock tab</button> first.
+                Not clocked in? Use the <button onClick={() => setView("timeclock")} className="text-primary font-bold underline">Clock tab</button> first.
               </p>
             </div>
           </div>
