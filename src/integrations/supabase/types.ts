@@ -707,6 +707,7 @@ export type Database = {
           surcharge_amount: number | null
           surcharge_label: string | null
           tax: number
+          tax_label: string | null
           tip: number | null
           total: number
           trailer_id: string | null
@@ -727,6 +728,7 @@ export type Database = {
           surcharge_amount?: number | null
           surcharge_label?: string | null
           tax?: number
+          tax_label?: string | null
           tip?: number | null
           total?: number
           trailer_id?: string | null
@@ -747,6 +749,7 @@ export type Database = {
           surcharge_amount?: number | null
           surcharge_label?: string | null
           tax?: number
+          tax_label?: string | null
           tip?: number | null
           total?: number
           trailer_id?: string | null
@@ -829,6 +832,10 @@ export type Database = {
           surcharge_flat: number | null
           surcharge_label: string
           surcharge_percent: number
+          tax_enabled: boolean
+          tax_inclusive: boolean
+          tax_label: string
+          tax_percent: number
           updated_at: string
         }
         Insert: {
@@ -851,6 +858,10 @@ export type Database = {
           surcharge_flat?: number | null
           surcharge_label?: string
           surcharge_percent?: number
+          tax_enabled?: boolean
+          tax_inclusive?: boolean
+          tax_label?: string
+          tax_percent?: number
           updated_at?: string
         }
         Update: {
@@ -873,6 +884,10 @@ export type Database = {
           surcharge_flat?: number | null
           surcharge_label?: string
           surcharge_percent?: number
+          tax_enabled?: boolean
+          tax_inclusive?: boolean
+          tax_label?: string
+          tax_percent?: number
           updated_at?: string
         }
         Relationships: []

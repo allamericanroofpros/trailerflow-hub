@@ -5,6 +5,7 @@ import { useCreateOrder } from "@/hooks/useOrders";
 import { useActiveOrders, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { useOrgId } from "@/hooks/useOrgId";
 import { useSurchargeSettings } from "@/hooks/useSurchargeSettings";
+import { useTaxSettings, calcTax } from "@/hooks/useTaxSettings";
 import { toast } from "sonner";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import {
@@ -43,7 +44,7 @@ type CartItem = {
   selectedModifiers?: { groupName: string; label: string; priceAdjust: number; inventoryAdjustments?: { inventoryItemId: string; extraQty: number }[] }[];
 };
 
-const TAX_RATE = 0.0875;
+// Tax rate now comes from org settings via useTaxSettings hook
 
 const categoryLabels: Record<string, string> = {
   appetizer: "Appetizers",
@@ -58,6 +59,7 @@ const categoryLabels: Record<string, string> = {
 export default function POS() {
   const orgId = useOrgId();
   const surchargeSettings = useSurchargeSettings();
+  const taxSettings = useTaxSettings();
   const navigate = useNavigate();
   const [sodComplete, setSodComplete] = useState(() => {
     return sessionStorage.getItem("pos_sod_complete") === "true";
@@ -198,7 +200,7 @@ export default function POS() {
   };
 
   const subtotal = cart.reduce((sum, c) => sum + c.price * c.quantity, 0);
-  const tax = subtotal * TAX_RATE;
+  const tax = calcTax(taxSettings, subtotal);
   const total = subtotal + tax;
   const itemCount = cart.reduce((s, c) => s + c.quantity, 0);
 
@@ -383,7 +385,7 @@ export default function POS() {
             <span className="font-semibold">${subtotal.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Tax ({(TAX_RATE * 100).toFixed(2)}%)</span>
+            <span>{taxSettings.label}{taxSettings.enabled && taxSettings.percent > 0 ? ` (${taxSettings.percent}%)` : ""}</span>
             <span className="font-semibold">${tax.toFixed(2)}</span>
           </div>
           <div className="flex justify-between font-black text-xl text-card-foreground pt-2 border-t-2 border-border">

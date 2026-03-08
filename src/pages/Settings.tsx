@@ -93,19 +93,30 @@ export default function SettingsPage() {
   const [surchargePercent, setSurchargePercent] = useState("3.0");
   const [surchargeFlat, setSurchargeFlat] = useState("");
   const [surchargeCap, setSurchargeCap] = useState("");
-  const [surchargeLoaded, setSurchargeLoaded] = useState(false);
+
+  // Tax settings
+  const [taxEnabled, setTaxEnabled] = useState(true);
+  const [taxLabel, setTaxLabel] = useState("Sales Tax");
+  const [taxPercent, setTaxPercent] = useState("0");
+  const [taxInclusive, setTaxInclusive] = useState(false);
+
+  const [paymentSettingsLoaded, setPaymentSettingsLoaded] = useState(false);
 
   useEffect(() => {
-    if (currentOrg && !surchargeLoaded) {
+    if (currentOrg && !paymentSettingsLoaded) {
       const org = currentOrg as any;
       setSurchargeEnabled(org.surcharge_enabled ?? false);
       setSurchargeLabel(org.surcharge_label ?? "Non-Cash Adjustment");
       setSurchargePercent(String(org.surcharge_percent ?? 3.0));
       setSurchargeFlat(org.surcharge_flat != null ? String(org.surcharge_flat) : "");
       setSurchargeCap(org.surcharge_cap != null ? String(org.surcharge_cap) : "");
-      setSurchargeLoaded(true);
+      setTaxEnabled(org.tax_enabled ?? true);
+      setTaxLabel(org.tax_label ?? "Sales Tax");
+      setTaxPercent(String(org.tax_percent ?? 0));
+      setTaxInclusive(org.tax_inclusive ?? false);
+      setPaymentSettingsLoaded(true);
     }
-  }, [currentOrg, surchargeLoaded]);
+  }, [currentOrg, paymentSettingsLoaded]);
 
   const saveSurcharge = useMutation({
     mutationFn: async () => {
@@ -116,6 +127,10 @@ export default function SettingsPage() {
         surcharge_percent: parseFloat(surchargePercent) || 3.0,
         surcharge_flat: surchargeFlat ? parseFloat(surchargeFlat) : null,
         surcharge_cap: surchargeCap ? parseFloat(surchargeCap) : null,
+        tax_enabled: taxEnabled,
+        tax_label: taxLabel,
+        tax_percent: parseFloat(taxPercent) || 0,
+        tax_inclusive: taxInclusive,
       } as any).eq("id", currentOrg.id);
       if (error) throw error;
     },
@@ -303,6 +318,43 @@ export default function SettingsPage() {
                   </div>
                 </div>
               )}
+
+              {/* Tax Settings */}
+              <div className="border-t border-border pt-5 mt-5">
+                <h4 className="text-sm font-semibold text-card-foreground mb-1">Tax Settings</h4>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Configure sales tax for POS checkout. If disabled, no tax will be added to orders.
+                </p>
+
+                <label className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-sm font-medium text-card-foreground">Enable Tax</p>
+                    <p className="text-xs text-muted-foreground">Add tax to orders during checkout</p>
+                  </div>
+                  <Switch checked={taxEnabled} onCheckedChange={setTaxEnabled} />
+                </label>
+
+                {taxEnabled && (
+                  <div className="space-y-4 pl-1 border-l-2 border-primary/20 ml-1">
+                    <div className="pl-4">
+                      <label className="text-xs font-medium text-muted-foreground">Tax Label (shown on receipts)</label>
+                      <Input value={taxLabel} onChange={(e) => setTaxLabel(e.target.value)} className="mt-1" placeholder="Sales Tax" />
+                    </div>
+                    <div className="pl-4">
+                      <label className="text-xs font-medium text-muted-foreground">Tax Rate (%)</label>
+                      <Input type="number" step="0.01" min="0" max="30" value={taxPercent} onChange={(e) => setTaxPercent(e.target.value)} className="mt-1" placeholder="0" />
+                      <p className="text-[11px] text-muted-foreground mt-1">e.g. 8.75 for 8.75% sales tax</p>
+                    </div>
+                    <label className="flex items-center justify-between pl-4">
+                      <div>
+                        <p className="text-sm font-medium text-card-foreground">Prices include tax</p>
+                        <p className="text-xs text-muted-foreground">Store for future use — tax-inclusive pricing is not yet fully active</p>
+                      </div>
+                      <Switch checked={taxInclusive} onCheckedChange={setTaxInclusive} />
+                    </label>
+                  </div>
+                )}
+              </div>
 
               <Button onClick={() => saveSurcharge.mutate()} disabled={saveSurcharge.isPending}>
                 {saveSurcharge.isPending ? "Saving..." : "Save Payment Settings"}
