@@ -308,41 +308,169 @@ Return ONLY a JSON object with: revenue_forecast_low (number), revenue_forecast_
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Events Hub</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage your event pipeline from discovery to completion.</p>
+            <h1 className="text-2xl font-bold tracking-tight">Events</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage your event pipeline and discover new opportunities.</p>
           </div>
-          {showAddForm ? (
-            <div className="flex items-center gap-2">
-              <input
-                autoFocus
-                value={newEventName}
-                onChange={(e) => setNewEventName(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleAddEvent()}
-                placeholder="Event name..."
-                className="rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
-              />
+          <div className="flex items-center gap-2">
+            <div className="flex items-center rounded-lg border border-border bg-card p-1">
               <button
-                onClick={handleAddEvent}
-                disabled={createEvent.isPending}
-                className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                onClick={() => setMainTab("pipeline")}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  mainTab === "pipeline" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
               >
-                {createEvent.isPending ? "Adding..." : "Add"}
+                <Calendar className="h-3 w-3" /> Pipeline
               </button>
-              <button onClick={() => setShowAddForm(false)} className="text-sm text-muted-foreground hover:text-foreground">
-                Cancel
+              <button
+                onClick={() => setMainTab("discover")}
+                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                  mainTab === "discover" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                <Compass className="h-3 w-3" /> Discover
               </button>
             </div>
-          ) : (
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-              Add Event
-            </button>
-          )}
+            {mainTab === "pipeline" && (
+              showAddForm ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    autoFocus
+                    value={newEventName}
+                    onChange={(e) => setNewEventName(e.target.value)}
+                    onKeyDown={(e) => e.key === "Enter" && handleAddEvent()}
+                    placeholder="Event name..."
+                    className="rounded-lg border border-border bg-card px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary/30"
+                  />
+                  <button onClick={handleAddEvent} disabled={createEvent.isPending} className="rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50">
+                    {createEvent.isPending ? "Adding..." : "Add"}
+                  </button>
+                  <button onClick={() => setShowAddForm(false)} className="text-sm text-muted-foreground hover:text-foreground">Cancel</button>
+                </div>
+              ) : (
+                <button onClick={() => setShowAddForm(true)} className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors">
+                  <Plus className="h-4 w-4" /> Add Event
+                </button>
+              )
+            )}
+          </div>
         </div>
 
+        {/* ══════════ DISCOVER TAB ══════════ */}
+        {mainTab === "discover" && (
+          <div className="space-y-6">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 flex-1 max-w-sm">
+                <Search className="h-4 w-4 text-muted-foreground" />
+                <input
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && handleDiscoverSearch()}
+                  placeholder="Search events, types..."
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                />
+              </div>
+              <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 min-w-[200px]">
+                <MapPin className="h-4 w-4 text-muted-foreground shrink-0" />
+                <input
+                  value={locationFilter}
+                  onChange={(e) => setLocationFilter(e.target.value)}
+                  placeholder="City, State"
+                  className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground"
+                />
+              </div>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" className={cn("min-w-[180px] justify-start text-left font-normal text-sm h-[38px]", !dateRange.from && "text-muted-foreground")}>
+                    <Calendar className="h-4 w-4 mr-2" />
+                    {dateRange.from ? (dateRange.to ? <>{format(dateRange.from, "MMM d")} – {format(dateRange.to, "MMM d")}</> : format(dateRange.from, "MMM d, yyyy")) : "Date range"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <CalendarPicker mode="range" selected={dateRange.from ? { from: dateRange.from, to: dateRange.to } : undefined} onSelect={(range) => setDateRange({ from: range?.from, to: range?.to })} numberOfMonths={2} disabled={(date) => date < new Date()} className="p-3 pointer-events-auto" />
+                </PopoverContent>
+              </Popover>
+              <div className="flex items-center rounded-lg border border-border bg-card overflow-hidden">
+                {[10, 25, 50, 100].map((r) => (
+                  <button key={r} onClick={() => setRadiusMiles(r)} className={`px-3 py-2 text-xs font-medium transition-colors border-r border-border last:border-r-0 ${radiusMiles === r ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}>
+                    {r}mi
+                  </button>
+                ))}
+              </div>
+              <button onClick={handleDiscoverSearch} disabled={discoverFetching} className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50">
+                {discoverFetching ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                AI Search
+              </button>
+            </div>
+
+            {discoverFetching && (
+              <div className="flex items-center justify-center py-12 gap-3 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="text-sm">AI is finding events for your trailers...</span>
+              </div>
+            )}
+
+            {!submittedQuery && !discoverFetching && opportunities.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+                <Sparkles className="h-12 w-12 mb-4 text-primary/30" />
+                <p className="text-base font-bold text-card-foreground">Find events perfect for your trailers</p>
+                <p className="text-sm mt-1 text-center max-w-md">Enter your location, pick a date range, and click AI Search to discover profitable events.</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+              {opportunities.map((opp, idx) => {
+                const overlaps = getOverlaps(opp.date);
+                const hasOverlap = overlaps.length > 0;
+                return (
+                  <div key={`${opp.name}-${idx}`} className={cn("rounded-xl border bg-card p-5 shadow-card hover:shadow-card-hover transition-shadow", hasOverlap ? "border-warning/50" : "border-border")}>
+                    {hasOverlap && (
+                      <div className="flex items-start gap-2 rounded-lg bg-warning/10 border border-warning/20 p-3 mb-4">
+                        <AlertTriangle className="h-4 w-4 text-warning shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs font-bold text-warning">Schedule Conflict</p>
+                          <p className="text-xs text-muted-foreground mt-0.5">Overlaps with: {overlaps.map(o => o.name).join(", ")}</p>
+                        </div>
+                      </div>
+                    )}
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="text-sm font-semibold text-card-foreground">{opp.name}</p>
+                        <div className="mt-1.5 flex items-center gap-2 text-xs text-muted-foreground"><Calendar className="h-3 w-3" /> {opp.date}</div>
+                        <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground"><MapPin className="h-3 w-3" /> {opp.location}</div>
+                      </div>
+                      <div className="flex items-center gap-1 rounded-full bg-primary/10 px-2 py-1">
+                        <Sparkles className="h-3 w-3 text-primary" />
+                        <span className="text-xs font-bold text-primary">{opp.aiRank}</span>
+                      </div>
+                    </div>
+                    <div className="mt-4 flex items-center justify-between rounded-lg bg-background border border-border p-3">
+                      <div>
+                        <p className="text-[11px] text-muted-foreground">Profit Estimate</p>
+                        <p className="text-sm font-semibold text-card-foreground">{opp.profitEstimate}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-[11px] text-muted-foreground">Attendance</p>
+                        <p className="text-sm font-semibold text-card-foreground">{opp.attendance}</p>
+                      </div>
+                    </div>
+                    {opp.reasoning && <p className="mt-3 text-xs text-muted-foreground line-clamp-2">{opp.reasoning}</p>}
+                    <div className="mt-4 flex items-center gap-2">
+                      <span className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground">{opp.type}</span>
+                      <div className="flex-1" />
+                      <button onClick={() => addToPipeline(opp)} className={cn("inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors", hasOverlap ? "bg-warning/10 text-warning border border-warning/30 hover:bg-warning/20" : "bg-primary text-primary-foreground hover:bg-primary/90")}>
+                        <Plus className="h-3 w-3" /> {hasOverlap ? "Add Anyway" : "Add to Pipeline"}
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* ══════════ PIPELINE TAB ══════════ */}
+        {mainTab === "pipeline" && (
+          <>
         {/* Pipeline Kanban */}
         {isLoading ? (
           <div className="flex items-center justify-center py-20">
