@@ -319,6 +319,43 @@ export default function SettingsPage() {
                 </div>
               )}
 
+              {/* Tax Settings */}
+              <div className="border-t border-border pt-5 mt-5">
+                <h4 className="text-sm font-semibold text-card-foreground mb-1">Tax Settings</h4>
+                <p className="text-xs text-muted-foreground mb-4">
+                  Configure sales tax for POS checkout. If disabled, no tax will be added to orders.
+                </p>
+
+                <label className="flex items-center justify-between mb-4">
+                  <div>
+                    <p className="text-sm font-medium text-card-foreground">Enable Tax</p>
+                    <p className="text-xs text-muted-foreground">Add tax to orders during checkout</p>
+                  </div>
+                  <Switch checked={taxEnabled} onCheckedChange={setTaxEnabled} />
+                </label>
+
+                {taxEnabled && (
+                  <div className="space-y-4 pl-1 border-l-2 border-primary/20 ml-1">
+                    <div className="pl-4">
+                      <label className="text-xs font-medium text-muted-foreground">Tax Label (shown on receipts)</label>
+                      <Input value={taxLabel} onChange={(e) => setTaxLabel(e.target.value)} className="mt-1" placeholder="Sales Tax" />
+                    </div>
+                    <div className="pl-4">
+                      <label className="text-xs font-medium text-muted-foreground">Tax Rate (%)</label>
+                      <Input type="number" step="0.01" min="0" max="30" value={taxPercent} onChange={(e) => setTaxPercent(e.target.value)} className="mt-1" placeholder="0" />
+                      <p className="text-[11px] text-muted-foreground mt-1">e.g. 8.75 for 8.75% sales tax</p>
+                    </div>
+                    <label className="flex items-center justify-between pl-4">
+                      <div>
+                        <p className="text-sm font-medium text-card-foreground">Prices include tax</p>
+                        <p className="text-xs text-muted-foreground">Store for future use — tax-inclusive pricing is not yet fully active</p>
+                      </div>
+                      <Switch checked={taxInclusive} onCheckedChange={setTaxInclusive} />
+                    </label>
+                  </div>
+                )}
+              </div>
+
               <Button onClick={() => saveSurcharge.mutate()} disabled={saveSurcharge.isPending}>
                 {saveSurcharge.isPending ? "Saving..." : "Save Payment Settings"}
               </Button>
