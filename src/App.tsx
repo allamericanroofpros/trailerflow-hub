@@ -26,6 +26,7 @@ import NotFound from "./pages/NotFound";
 import ReceiptPage from "./pages/Receipt";
 import PublicBooking from "./pages/PublicBooking";
 import FleetOverview from "./pages/FleetOverview";
+import OrdersQueue from "./pages/OrdersQueue";
 
 const queryClient = new QueryClient();
 
