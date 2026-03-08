@@ -491,7 +491,14 @@ export default function Inventory() {
                         <div className="grid grid-cols-3 gap-2 text-xs">
                           <div>
                             <span className="text-muted-foreground">Stock</span>
-                            <p className={`font-bold ${isLow ? "text-destructive" : "text-card-foreground"}`}>{Number(item.current_stock).toFixed(1)} {item.unit}</p>
+                            <p className={`font-bold ${isLow ? "text-destructive" : "text-card-foreground"}`}>
+                              {Number(item.current_stock).toFixed(1)} units
+                            </p>
+                            {(item as any).unit_size && Number((item as any).unit_size) > 0 && (
+                              <p className="text-[10px] text-muted-foreground">
+                                = {(Number(item.current_stock) * Number((item as any).unit_size)).toFixed(1)} {item.unit}
+                              </p>
+                            )}
                           </div>
                           <div><span className="text-muted-foreground">Par</span><p className="font-semibold text-card-foreground">{Number(item.par_level).toFixed(1)}</p></div>
                           <div><span className="text-muted-foreground">Cost</span><p className="font-semibold text-card-foreground">${Number(item.cost_per_unit).toFixed(2)}</p></div>
