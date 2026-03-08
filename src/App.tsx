@@ -24,6 +24,8 @@ import ForgotPassword from "./pages/ForgotPassword";
 import ResetPassword from "./pages/ResetPassword";
 import NotFound from "./pages/NotFound";
 import ReceiptPage from "./pages/Receipt";
+import PublicBooking from "./pages/PublicBooking";
+import FleetOverview from "./pages/FleetOverview";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +43,7 @@ const App = () => (
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/receipt/:orderId" element={<ReceiptPage />} />
+            <Route path="/book" element={<PublicBooking />} />
 
             {/* Protected routes */}
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
