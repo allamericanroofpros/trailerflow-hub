@@ -56,8 +56,13 @@ export default function POS() {
   const createOrder = useCreateOrder();
   const updateStatus = useUpdateOrderStatus();
 
-  const [sodComplete, setSodComplete] = useState(false);
-  const [sodData, setSodData] = useState<{ trailerId: string | null; eventId: string | null; openingCash: number; notes: string } | null>(null);
+  const [sodComplete, setSodComplete] = useState(() => {
+    return sessionStorage.getItem("pos_sod_complete") === "true";
+  });
+  const [sodData, setSodData] = useState<{ trailerId: string | null; eventId: string | null; openingCash: number; notes: string } | null>(() => {
+    const saved = sessionStorage.getItem("pos_sod_data");
+    return saved ? JSON.parse(saved) : null;
+  });
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
@@ -373,6 +378,8 @@ export default function POS() {
         onComplete={(data) => {
           setSodData(data);
           setSodComplete(true);
+          sessionStorage.setItem("pos_sod_complete", "true");
+          sessionStorage.setItem("pos_sod_data", JSON.stringify(data));
         }}
       />
     );
@@ -811,7 +818,15 @@ export default function POS() {
       </Dialog>
 
       {/* End of Day */}
-      {showEOD && <POSEndOfDay onClose={() => setShowEOD(false)} />}
+      {showEOD && <POSEndOfDay onClose={() => {
+        setShowEOD(false);
+        // Clear SOD so next POS entry triggers Start of Day
+        sessionStorage.removeItem("pos_sod_complete");
+        sessionStorage.removeItem("pos_sod_data");
+        setSodComplete(false);
+        setSodData(null);
+        navigate("/");
+      }} />}
 
       {/* EOD Floating Button */}
       <button
