@@ -71,6 +71,18 @@ export default function POSStartOfDay({ onComplete }: { onComplete: (data: Start
 
   const todayStr = format(new Date(), "yyyy-MM-dd");
 
+  // Calculate drawer total from denominations
+  const denomTotal = useMemo(() => {
+    let total = 0;
+    [...billDenominations, ...coinDenominations].forEach(d => {
+      const count = Number(denomCounts[d.label] || 0);
+      total += count * d.value;
+    });
+    return total;
+  }, [denomCounts]);
+
+  const effectiveCash = useDenomCounter ? denomTotal : (Number(openingCash) || 0);
+
   const todaysEvents = useMemo(() => {
     if (!events) return [];
     return events.filter(e => {
