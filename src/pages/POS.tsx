@@ -8,7 +8,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "
 import {
   ShoppingCart, Plus, Minus, Trash2, CreditCard, Banknote,
   Smartphone, ChefHat, Clock, CheckCircle, Loader2, ArrowLeft,
-  Truck, X, ChevronUp, BarChart3, Package, FileText, Tag, Receipt,
+  Truck, X, ChevronUp, BarChart3, Package, FileText, Tag, Receipt, Moon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -20,12 +20,20 @@ import POSReportView from "@/components/pos/POSReportView";
 import POSCheckoutFlow from "@/components/pos/POSCheckoutFlow";
 import POSConfirmation from "@/components/pos/POSConfirmation";
 import POSOrderHistory from "@/components/pos/POSOrderHistory";
+import POSEndOfDay from "@/components/pos/POSEndOfDay";
+
+type Modifier = {
+  name: string;
+  options: { label: string; priceAdjust: number }[];
+  required: boolean;
+};
 
 type CartItem = {
   menu_item_id: string;
   name: string;
   price: number;
   quantity: number;
+  selectedModifiers?: { groupName: string; label: string; priceAdjust: number }[];
 };
 
 const TAX_RATE = 0.0875;
@@ -53,6 +61,9 @@ export default function POS() {
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCustomItem, setShowCustomItem] = useState(false);
+  const [showModifierPicker, setShowModifierPicker] = useState<{ item: any; modifiers: Modifier[] } | null>(null);
+  const [pendingModifiers, setPendingModifiers] = useState<Record<string, { label: string; priceAdjust: number }>>({});
+  const [showEOD, setShowEOD] = useState(false);
   const [customItemName, setCustomItemName] = useState("");
   const [customItemPrice, setCustomItemPrice] = useState("");
   const [confirmation, setConfirmation] = useState<{
@@ -71,20 +82,49 @@ export default function POS() {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  const addToCart = (item: { id: string; name: string; price: number }) => {
+  const addToCart = (item: { id: string; name: string; price: number }, selectedModifiers?: CartItem["selectedModifiers"]) => {
+    const modExtra = selectedModifiers?.reduce((s, m) => s + m.priceAdjust, 0) || 0;
+    const finalPrice = Number(item.price) + modExtra;
+    const modSuffix = selectedModifiers?.length ? ` (${selectedModifiers.map(m => m.label).join(", ")})` : "";
+    const cartKey = item.id + modSuffix;
+
     setCart((prev) => {
-      const existing = prev.find((c) => c.menu_item_id === item.id);
+      const existing = prev.find((c) => c.menu_item_id === cartKey);
       if (existing) {
         return prev.map((c) =>
-          c.menu_item_id === item.id ? { ...c, quantity: c.quantity + 1 } : c
+          c.menu_item_id === cartKey ? { ...c, quantity: c.quantity + 1 } : c
         );
       }
-      return [...prev, { menu_item_id: item.id, name: item.name, price: Number(item.price), quantity: 1 }];
+      return [...prev, { menu_item_id: cartKey, name: item.name + modSuffix, price: finalPrice, quantity: 1, selectedModifiers }];
     });
-    // On compact, briefly show cart indicator
-    if (isCompact && !mobileCartOpen) {
-      // Haptic-like visual pulse handled by AnimatePresence on FAB
+  };
+
+  const handleItemTap = (item: any) => {
+    const modifiers: Modifier[] = Array.isArray(item.modifiers) ? item.modifiers : [];
+    if (modifiers.length > 0) {
+      setShowModifierPicker({ item, modifiers });
+      setPendingModifiers({});
+    } else {
+      addToCart({ id: item.id, name: item.name, price: Number(item.price) });
     }
+  };
+
+  const confirmModifiers = () => {
+    if (!showModifierPicker) return;
+    const { item, modifiers } = showModifierPicker;
+    // Check required
+    for (const mod of modifiers) {
+      if (mod.required && !pendingModifiers[mod.name]) {
+        toast.error(`Please select ${mod.name}`);
+        return;
+      }
+    }
+    const selected = Object.entries(pendingModifiers).map(([groupName, opt]) => ({
+      groupName, ...opt,
+    }));
+    addToCart({ id: item.id, name: item.name, price: Number(item.price) }, selected.length > 0 ? selected : undefined);
+    setShowModifierPicker(null);
+    setPendingModifiers({});
   };
 
   const updateQuantity = (menuItemId: string, delta: number) => {
@@ -411,7 +451,7 @@ export default function POS() {
                     <motion.button
                       key={item.id}
                       whileTap={{ scale: 0.93 }}
-                      onClick={() => addToCart({ id: item.id, name: item.name, price: Number(item.price) })}
+                      onClick={() => handleItemTap(item)}
                       className="flex flex-col rounded-2xl border-2 border-border bg-card p-5 text-left hover:border-primary/40 hover:shadow-lg transition-all min-h-[120px] touch-manipulation"
                     >
                       <p className="text-base font-black text-card-foreground line-clamp-2 leading-tight">
@@ -689,6 +729,54 @@ export default function POS() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modifier Picker Dialog */}
+      <Dialog open={!!showModifierPicker} onOpenChange={(v) => { if (!v) setShowModifierPicker(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{showModifierPicker?.item?.name} — Options</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            {showModifierPicker?.modifiers.map((mod) => (
+              <div key={mod.name}>
+                <p className="text-sm font-bold text-card-foreground mb-2">{mod.name} {mod.required && <span className="text-destructive">*</span>}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {mod.options.map((opt) => (
+                    <button
+                      key={opt.label}
+                      onClick={() => setPendingModifiers(prev => ({ ...prev, [mod.name]: { label: opt.label, priceAdjust: opt.priceAdjust } }))}
+                      className={`rounded-xl border-2 p-3 text-left transition-all active:scale-95 touch-manipulation ${
+                        pendingModifiers[mod.name]?.label === opt.label
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/30"
+                      }`}
+                    >
+                      <p className="text-sm font-bold text-card-foreground">{opt.label}</p>
+                      {opt.priceAdjust !== 0 && (
+                        <p className="text-xs text-primary font-semibold">+${opt.priceAdjust.toFixed(2)}</p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <Button className="w-full h-12 font-black rounded-xl" onClick={confirmModifiers}>
+              Add to Order
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* End of Day */}
+      {showEOD && <POSEndOfDay onClose={() => setShowEOD(false)} />}
+
+      {/* EOD Floating Button */}
+      <button
+        onClick={() => setShowEOD(true)}
+        className="fixed bottom-6 left-6 z-[55] flex items-center gap-2 rounded-2xl bg-card border-2 border-border px-4 py-3 text-sm font-bold text-muted-foreground hover:text-foreground hover:border-primary/30 shadow-lg transition-all touch-manipulation"
+      >
+        <Moon className="h-4 w-4" /> End of Day
+      </button>
     </div>
   );
 }
