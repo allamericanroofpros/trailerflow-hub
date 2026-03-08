@@ -147,6 +147,7 @@ export default function Trailers() {
       staff_required: t.staff_required?.toString() || "1",
       staff_hourly_rate: t.staff_hourly_rate?.toString() || "15",
       avg_food_cost_percent: t.avg_food_cost_percent?.toString() || "30",
+      target_margin: t.target_margin?.toString() || "70",
     });
     setAddingNew(true);
     setShowAdvanced(true);
