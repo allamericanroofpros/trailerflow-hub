@@ -242,6 +242,7 @@ export default function Staff() {
               {([
                 ...(isOwner ? [{ key: "roles" as const, label: "Roles", icon: Shield }] : []),
                 { key: "roster" as const, label: "Roster", icon: UsersIcon },
+                { key: "availability" as const, label: "Availability", icon: CalendarClock },
                 { key: "schedule" as const, label: "Schedule", icon: Calendar },
               ]).map((t) => (
                 <button
