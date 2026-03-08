@@ -32,36 +32,36 @@ export default function AdminOverview() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Platform Overview</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Platform Overview</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             High-level metrics across all TrailerOS organizations.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {cards.map((card) => (
             <div
               key={card.label}
-              className="rounded-xl border border-border bg-card p-5 shadow-sm"
+              className="rounded-xl border border-border bg-card p-3 sm:p-5 shadow-sm"
             >
-              <div className="flex items-center gap-3">
-                <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-secondary ${card.color}`}>
-                  <card.icon className="h-5 w-5" />
+              <div className="flex items-center gap-2 sm:gap-3">
+                <div className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-secondary ${card.color}`}>
+                  <card.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">{card.label}</p>
-                  <p className="text-xl font-bold text-foreground">{card.value}</p>
+                <div className="min-w-0">
+                  <p className="text-[10px] sm:text-xs text-muted-foreground truncate">{card.label}</p>
+                  <p className="text-base sm:text-xl font-bold text-foreground">{card.value}</p>
                 </div>
               </div>
             </div>
           ))}
         </div>
 
-        <div className="rounded-xl border border-border bg-card p-6">
-          <h3 className="text-sm font-semibold text-foreground mb-4">Recent Activity</h3>
-          <p className="text-sm text-muted-foreground">
+        <div className="rounded-xl border border-border bg-card p-4 sm:p-6">
+          <h3 className="text-sm font-semibold text-foreground mb-3 sm:mb-4">Recent Activity</h3>
+          <p className="text-xs sm:text-sm text-muted-foreground">
             Activity feed will populate as organizations create content.
           </p>
         </div>
