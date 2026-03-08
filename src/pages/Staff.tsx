@@ -103,9 +103,53 @@ export default function Staff() {
   const [addingNew, setAddingNew] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: "", email: "", phone: "", hourly_rate: "", status: "active" });
+  const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
 
   // Schedule assign form
   const [scheduleForm, setScheduleForm] = useState({ staff_id: "", event_id: "", role: "crew" });
+
+  // Build week days for calendar
+  const weekDays = useMemo(() => {
+    return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  }, [weekStart]);
+
+  // Build staff-event calendar data
+  const calendarData = useMemo(() => {
+    if (!staff || !assignments || !events) return [];
+    const activeStaff = staff.filter((s) => s.status === "active");
+    return activeStaff.map((s) => {
+      const staffAssignments = assignments.filter((a: any) => a.staff_id === s.id);
+      const dayMap: Record<string, { eventName: string; eventId: string; assignmentId: string; role: string; stage: string; startTime?: string; endTime?: string }[]> = {};
+      weekDays.forEach((d) => { dayMap[format(d, "yyyy-MM-dd")] = []; });
+      staffAssignments.forEach((a: any) => {
+        const evt = events.find((e) => e.id === a.event_id);
+        if (!evt?.event_date) return;
+        const key = evt.event_date;
+        if (dayMap[key]) {
+          dayMap[key].push({
+            eventName: evt.name,
+            eventId: evt.id,
+            assignmentId: a.id,
+            role: a.role || "crew",
+            stage: evt.stage,
+            startTime: evt.start_time || undefined,
+            endTime: evt.end_time || undefined,
+          });
+        }
+      });
+      return { staff: s, dayMap };
+    });
+  }, [staff, assignments, events, weekDays]);
+
+  // Count staff per day for overlap detection
+  const staffCountByDay = useMemo(() => {
+    const counts: Record<string, number> = {};
+    weekDays.forEach((d) => {
+      const key = format(d, "yyyy-MM-dd");
+      counts[key] = calendarData.filter((row) => row.dayMap[key]?.length > 0).length;
+    });
+    return counts;
+  }, [calendarData, weekDays]);
 
   const resetForm = () => {
     setForm({ name: "", email: "", phone: "", hourly_rate: "", status: "active" });
