@@ -1,4 +1,5 @@
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrg } from "@/contexts/OrgContext";
 
 type Permission =
   | "view_dashboard"
@@ -58,12 +59,16 @@ const rolePermissions: Record<string, Permission[]> = {
 };
 
 export function useRoleAccess() {
-  const { role } = useAuth();
+  const { role: globalRole } = useAuth();
+  const { orgRole } = useOrg();
+
+  // Use org-scoped role as primary, fall back to global role for super_admin
+  const effectiveRole = globalRole === "super_admin" ? "super_admin" : orgRole || globalRole;
 
   const hasPermission = (permission: Permission): boolean => {
-    if (!role) return false;
-    if (role === "super_admin") return true; // Super admins have all permissions
-    return rolePermissions[role]?.includes(permission) ?? false;
+    if (!effectiveRole) return false;
+    if (effectiveRole === "super_admin") return true;
+    return rolePermissions[effectiveRole]?.includes(permission) ?? false;
   };
 
   const canView = (page: string): boolean => {
@@ -74,10 +79,10 @@ export function useRoleAccess() {
     return hasPermission(`manage_${resource}` as Permission);
   };
 
-  const isOwner = role === "owner" || role === "super_admin";
-  const isManager = role === "manager";
-  const isStaff = role === "staff";
-  const isSuperAdmin = role === "super_admin";
+  const isOwner = effectiveRole === "owner" || effectiveRole === "super_admin";
+  const isManager = effectiveRole === "manager";
+  const isStaff = effectiveRole === "staff";
+  const isSuperAdmin = globalRole === "super_admin";
 
-  return { role, hasPermission, canView, canManage, isOwner, isManager, isStaff, isSuperAdmin };
+  return { role: effectiveRole, hasPermission, canView, canManage, isOwner, isManager, isStaff, isSuperAdmin };
 }
