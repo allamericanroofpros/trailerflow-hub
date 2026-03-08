@@ -29,7 +29,10 @@ const baseSections = [
 type SectionId = typeof baseSections[number]["id"];
 
 export default function SettingsPage() {
-  const [activeSection, setActiveSection] = useState<SectionId>("profile");
+  const [searchParams] = useSearchParams();
+  const [activeSection, setActiveSection] = useState<SectionId>(
+    () => (searchParams.get("section") as SectionId) || "profile"
+  );
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isOwner } = useRoleAccess();
