@@ -67,7 +67,7 @@ export default function AdminSettings() {
             <h3 className="text-sm font-semibold text-foreground">Demo Environment</h3>
           </div>
           <p className="text-xs text-muted-foreground mb-4">
-            Reset the TrailerOS Demo organization to its original seeded state.
+            Reset the VendorFlow Demo organization to its original seeded state.
             This clears all demo transactional data and re-creates the sample dataset.
             <strong className="text-foreground"> Cone Corral data is never touched.</strong>
           </p>

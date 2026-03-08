@@ -32,7 +32,7 @@ IMPORTANT: You can ONLY access data for the current user's organization. Never r
   Return ONLY valid JSON, no markdown.`,
 
   // Internal admin AI — super admin only, can analyze all orgs
-  "admin-ai": `You are an internal platform analytics AI for TrailerOS. You help super admins analyze cross-org trends, churn risk, usage patterns, and support needs. You have access to aggregated platform data. Be analytical and direct. Use markdown.`,
+  "admin-ai": `You are an internal platform analytics AI for VendorFlow. You help super admins analyze cross-org trends, churn risk, usage patterns, and support needs. You have access to aggregated platform data. Be analytical and direct. Use markdown.`,
 };
 
 // Features that require specific plan entitlements

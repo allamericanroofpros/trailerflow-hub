@@ -486,7 +486,7 @@ export default function POS() {
             <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary">
               <Truck className="h-4.5 w-4.5 text-primary-foreground" />
             </div>
-            <span className="text-base font-black text-foreground tracking-tight hidden sm:block">TrailerOS POS</span>
+            <span className="text-base font-black text-foreground tracking-tight hidden sm:block">VendorFlow POS</span>
           </div>
         </div>
 

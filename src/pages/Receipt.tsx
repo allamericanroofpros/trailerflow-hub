@@ -57,7 +57,7 @@ export default function ReceiptPage() {
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary">
                 <Truck className="h-4 w-4 text-primary-foreground" />
               </div>
-              <span className="text-lg font-black text-card-foreground tracking-tight">TrailerOS</span>
+              <span className="text-lg font-black text-card-foreground tracking-tight">VendorFlow</span>
             </div>
             <p className="text-sm text-muted-foreground font-medium">
               {date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}

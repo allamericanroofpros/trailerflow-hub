@@ -41,7 +41,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
           </div>
           <div className="flex flex-col">
             <span className="text-lg font-bold text-foreground tracking-tight leading-tight">
-              TrailerOS
+              VendorFlow
             </span>
             <span className="text-[10px] font-medium text-destructive uppercase tracking-wider">
               Super Admin
