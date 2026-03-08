@@ -248,7 +248,7 @@ export default function MenuPage() {
 
   // Modifier helpers
   const addModifier = () => {
-    setForm(f => ({ ...f, modifiers: [...f.modifiers, { name: "", options: [{ label: "", priceAdjust: 0 }], required: false }] }));
+    setForm(f => ({ ...f, modifiers: [...f.modifiers, { name: "", options: [{ label: "", priceAdjust: 0 }], required: false, multiSelect: false }] }));
   };
   const removeModifier = (idx: number) => {
     setForm(f => ({ ...f, modifiers: f.modifiers.filter((_, i) => i !== idx) }));
