@@ -623,7 +623,7 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
             <div className="rounded-lg border border-border p-4 space-y-3">
               <button onClick={() => setShowModifiers(!showModifiers)} className="flex items-center gap-2 w-full text-left">
                 <DollarSign className="h-4 w-4 text-info" />
-                <span className="text-sm font-bold text-foreground flex-1">Modifiers — Options That Adjust Price</span>
+                <span className="text-sm font-bold text-foreground flex-1">Modifiers — Options That Adjust Price & Inventory</span>
                 {showModifiers ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
               </button>
               {showModifiers && (
