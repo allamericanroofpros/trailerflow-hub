@@ -29,6 +29,7 @@ import { useRoleAccess } from "@/hooks/useRoleAccess";
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { canView } = useRoleAccess();
   const { data: grouped, isLoading: eventsLoading } = useEventsByStage();
   const { data: bookings } = useBookings();
   const { data: transactions } = useTransactions();

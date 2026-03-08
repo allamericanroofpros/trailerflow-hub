@@ -26,7 +26,7 @@ import { useRoleAccess } from "@/hooks/useRoleAccess";
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard, viewKey: "dashboard" },
-  { title: "POS", url: "/pos", icon: ShoppingCart, viewKey: "pos" },
+  // POS removed from sidebar — launched via Dashboard "Open for Business" button
   { title: "Menu", url: "/menu", icon: UtensilsCrossed, viewKey: "menu" },
   { title: "Inventory", url: "/inventory", icon: Package, viewKey: "inventory" },
   { title: "Events Hub", url: "/events", icon: CalendarRange, viewKey: "events" },
