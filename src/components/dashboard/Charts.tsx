@@ -1,19 +1,8 @@
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, PieChart, Pie, Cell, Legend } from "recharts";
-
-const revenueByType = [
-  { type: "Festivals", revenue: 18400 },
-  { type: "Corporate", revenue: 12200 },
-  { type: "Weddings", revenue: 9800 },
-  { type: "Markets", revenue: 7600 },
-  { type: "Private", revenue: 5200 },
-  { type: "School", revenue: 3100 },
-];
-
-const trailerPerformance = [
-  { name: "Sweet Scoops", revenue: 24600, events: 18, utilization: 78 },
-  { name: "Brew Mobile", revenue: 19200, events: 22, utilization: 85 },
-  { name: "Kettle Kings", revenue: 15800, events: 14, utilization: 62 },
-];
+import { useEvents } from "@/hooks/useEvents";
+import { useTrailers } from "@/hooks/useTrailers";
+import { useOrders } from "@/hooks/useOrders";
+import { useMemo } from "react";
 
 const COLORS = [
   "hsl(16, 65%, 48%)",
@@ -25,24 +14,46 @@ const COLORS = [
 ];
 
 export function RevenueByTypeChart() {
+  const { data: events } = useEvents();
+
+  const chartData = useMemo(() => {
+    if (!events?.length) return [];
+    const byType: Record<string, number> = {};
+    events.forEach((e) => {
+      const type = e.event_type || "Other";
+      byType[type] = (byType[type] || 0) + (e.actual_revenue || 0);
+    });
+    return Object.entries(byType)
+      .map(([type, revenue]) => ({ type, revenue }))
+      .filter(d => d.revenue > 0)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 6);
+  }, [events]);
+
+  if (!chartData.length) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+        <h3 className="text-sm font-semibold text-card-foreground mb-4">Revenue by Event Type</h3>
+        <div className="flex items-center justify-center h-[260px] text-sm text-muted-foreground">
+          No revenue data yet. Complete events and log revenue to see charts.
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="rounded-xl border border-border bg-card p-5 shadow-card">
       <h3 className="text-sm font-semibold text-card-foreground mb-4">Revenue by Event Type</h3>
       <ResponsiveContainer width="100%" height={260}>
-        <BarChart data={revenueByType} barSize={32}>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(30, 18%, 89%)" vertical={false} />
-          <XAxis dataKey="type" tick={{ fontSize: 12, fill: "hsl(20, 10%, 48%)" }} axisLine={false} tickLine={false} />
-          <YAxis tick={{ fontSize: 12, fill: "hsl(20, 10%, 48%)" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
+        <BarChart data={chartData} barSize={32}>
+          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+          <XAxis dataKey="type" tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${(v / 1000).toFixed(0)}k`} />
           <Tooltip
-            contentStyle={{
-              backgroundColor: "hsl(0, 0%, 100%)",
-              border: "1px solid hsl(30, 18%, 89%)",
-              borderRadius: "8px",
-              fontSize: "12px",
-            }}
+            contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
             formatter={(value: number) => [`$${value.toLocaleString()}`, "Revenue"]}
           />
-          <Bar dataKey="revenue" fill="hsl(16, 65%, 48%)" radius={[6, 6, 0, 0]} />
+          <Bar dataKey="revenue" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -50,7 +61,41 @@ export function RevenueByTypeChart() {
 }
 
 export function TrailerPerformanceChart() {
-  const pieData = trailerPerformance.map((t) => ({ name: t.name, value: t.revenue }));
+  const { data: trailers } = useTrailers();
+  const { data: events } = useEvents();
+
+  const { pieData, stats } = useMemo(() => {
+    if (!trailers?.length || !events?.length) return { pieData: [], stats: [] };
+
+    const trailerRevenue: Record<string, { name: string; revenue: number; eventCount: number }> = {};
+    trailers.forEach(t => {
+      trailerRevenue[t.id] = { name: t.name, revenue: 0, eventCount: 0 };
+    });
+
+    events.forEach(e => {
+      if (e.trailer_id && trailerRevenue[e.trailer_id]) {
+        trailerRevenue[e.trailer_id].revenue += e.actual_revenue || 0;
+        trailerRevenue[e.trailer_id].eventCount += 1;
+      }
+    });
+
+    const entries = Object.values(trailerRevenue).filter(t => t.revenue > 0 || t.eventCount > 0);
+    return {
+      pieData: entries.map(t => ({ name: t.name, value: t.revenue || 1 })),
+      stats: entries.map(t => ({ name: t.name, events: t.eventCount, revenue: t.revenue })),
+    };
+  }, [trailers, events]);
+
+  if (!pieData.length) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+        <h3 className="text-sm font-semibold text-card-foreground mb-4">Trailer Performance</h3>
+        <div className="flex items-center justify-center h-[260px] text-sm text-muted-foreground">
+          No trailer performance data yet. Assign trailers to events to see stats.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="rounded-xl border border-border bg-card p-5 shadow-card">
@@ -63,24 +108,18 @@ export function TrailerPerformanceChart() {
             ))}
           </Pie>
           <Tooltip
-            contentStyle={{
-              backgroundColor: "hsl(0, 0%, 100%)",
-              border: "1px solid hsl(30, 18%, 89%)",
-              borderRadius: "8px",
-              fontSize: "12px",
-            }}
+            contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }}
             formatter={(value: number) => [`$${value.toLocaleString()}`, "Revenue"]}
           />
           <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: "12px" }} />
         </PieChart>
       </ResponsiveContainer>
-      {/* Stats row */}
       <div className="mt-4 grid grid-cols-3 gap-3">
-        {trailerPerformance.map((t) => (
+        {stats.slice(0, 3).map((t) => (
           <div key={t.name} className="text-center">
-            <p className="text-xs text-muted-foreground">{t.name}</p>
-            <p className="text-sm font-semibold text-card-foreground">{t.utilization}%</p>
-            <p className="text-xs text-muted-foreground">utilization</p>
+            <p className="text-xs text-muted-foreground truncate">{t.name}</p>
+            <p className="text-sm font-semibold text-card-foreground">{t.events}</p>
+            <p className="text-xs text-muted-foreground">events</p>
           </div>
         ))}
       </div>
