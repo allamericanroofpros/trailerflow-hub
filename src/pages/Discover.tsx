@@ -18,6 +18,16 @@ import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 
 export default function Discover() {
+  const ent = useEntitlements();
+
+  if (!ent.aiDiscovery) {
+    return (
+      <AppLayout>
+        <UpgradeBanner feature="AI Event Discovery" currentPlan={ent.currentPlan} requiredPlan="pro" />
+      </AppLayout>
+    );
+  }
+
   const [searchQuery, setSearchQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState<string | undefined>();
   const [locationFilter, setLocationFilter] = useState("");

@@ -10,6 +10,16 @@ import { useMemo } from "react";
 import { Truck, DollarSign, Calendar, Wrench, TrendingUp, Users, BarChart3, Loader2 } from "lucide-react";
 
 export default function FleetOverview() {
+  const ent = useEntitlements();
+
+  if (!ent.fleetOverview) {
+    return (
+      <AppLayout>
+        <UpgradeBanner feature="Fleet Overview" currentPlan={ent.currentPlan} requiredPlan="pro" />
+      </AppLayout>
+    );
+  }
+
   const { data: trailers, isLoading } = useTrailers();
   const { data: events } = useEvents();
   const { data: bookings } = useBookings();
