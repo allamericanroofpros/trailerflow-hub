@@ -884,6 +884,8 @@ Return ONLY a JSON object with: revenue_forecast_low (number), revenue_forecast_
             <p className="text-sm text-muted-foreground">Select an event from the pipeline above, or add a new one to get started.</p>
           </div>
         )}
+          </>
+        )}
       </div>
     </AppLayout>
   );
