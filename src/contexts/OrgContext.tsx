@@ -27,6 +27,7 @@ interface OrgContextType {
   orgRole: string | null;
   loading: boolean;
   switchOrg: (orgId: string) => void;
+  refreshOrg: () => void;
 }
 
 const OrgContext = createContext<OrgContextType>({
