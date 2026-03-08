@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+
 import { Loader2, Truck, Receipt } from "lucide-react";
 
 export default function ReceiptPage() {
@@ -9,13 +9,17 @@ export default function ReceiptPage() {
   const { data: order, isLoading, error } = useQuery({
     queryKey: ["receipt", orderId],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("orders")
-        .select("*, order_items(*, menu_items(name, price))")
-        .eq("id", orderId!)
-        .single();
-      if (error) throw error;
-      return data;
+      const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+      const res = await fetch(
+        `https://${projectId}.supabase.co/functions/v1/get-receipt?order_id=${orderId}`,
+        {
+          headers: {
+            apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          },
+        }
+      );
+      if (!res.ok) throw new Error("Receipt not found");
+      return res.json();
     },
     enabled: !!orderId,
   });
@@ -40,13 +44,12 @@ export default function ReceiptPage() {
     );
   }
 
-  const items = (order as any).order_items || [];
+  const items = order.order_items || [];
   const date = new Date(order.created_at);
 
   return (
     <div className="min-h-screen bg-background flex items-start justify-center p-4 pt-8">
       <div className="w-full max-w-sm">
-        {/* Receipt card */}
         <div className="rounded-2xl border-2 border-border bg-card shadow-lg overflow-hidden">
           {/* Header */}
           <div className="px-6 py-5 text-center border-b border-border">
@@ -72,7 +75,7 @@ export default function ReceiptPage() {
               <div key={item.id} className="flex justify-between text-sm">
                 <span className="text-muted-foreground">
                   <span className="font-black text-card-foreground">{item.quantity}×</span>{" "}
-                  {item.menu_items?.name || "Item"}
+                  {item.notes?.startsWith("Custom: ") ? item.notes.replace("Custom: ", "") : item.menu_items?.name || "Item"}
                 </span>
                 <span className="font-bold text-card-foreground">
                   ${(Number(item.unit_price) * item.quantity).toFixed(2)}
