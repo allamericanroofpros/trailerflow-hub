@@ -328,14 +328,16 @@ Return ONLY a JSON object with: revenue_forecast_low (number), revenue_forecast_
               >
                 <Calendar className="h-3 w-3" /> Pipeline
               </button>
-              <button
-                onClick={() => setMainTab("discover")}
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                  mainTab === "discover" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Compass className="h-3 w-3" /> Discover
-              </button>
+              {ent.aiDiscovery && (
+                <button
+                  onClick={() => setMainTab("discover")}
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    mainTab === "discover" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Compass className="h-3 w-3" /> Discover
+                </button>
+              )}
             </div>
             {mainTab === "pipeline" && (
               showAddForm ? (
