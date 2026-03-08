@@ -247,10 +247,10 @@ export default function POSCheckoutFlow({
               <Button
                 size="lg"
                 className="w-full h-14 text-base font-black rounded-xl active:scale-95 touch-manipulation"
-                onClick={handleCardComplete}
+                onClick={handleTipComplete}
                 disabled={isPending}
               >
-                {tipAmount > 0 ? `Charge Card · $${(total + tipAmount).toFixed(2)}` : `No Tip · Charge $${total.toFixed(2)}`}
+                {tipAmount > 0 ? `Add Tip · $${tipAmount.toFixed(2)}` : `No Tip · Done`}
               </Button>
             </motion.div>
           )}
