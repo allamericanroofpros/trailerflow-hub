@@ -49,7 +49,7 @@ Return ONLY valid JSON, no markdown or explanation.`,
     const systemPrompt = system || systemPrompts[feature] || systemPrompts.chat;
 
     const body: Record<string, unknown> = {
-      model: "claude-sonnet-4-20250514",
+      model: "claude-3-5-sonnet-20241022",
       max_tokens,
       system: systemPrompt,
       messages,
