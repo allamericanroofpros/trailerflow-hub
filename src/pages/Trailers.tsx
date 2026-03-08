@@ -77,6 +77,7 @@ export default function Trailers() {
   const updateTrailer = useUpdateTrailer();
   const deleteTrailer = useDeleteTrailer();
   const { user } = useAuth();
+  const orgId = useOrgId();
 
   const [addingNew, setAddingNew] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
