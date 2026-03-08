@@ -18,6 +18,7 @@ export default function Financials() {
   const { data: events } = useEvents();
   const createTx = useCreateTransaction();
   const { user } = useAuth();
+  const orgId = useOrgId();
 
   const [addingNew, setAddingNew] = useState(false);
   const [form, setForm] = useState({
