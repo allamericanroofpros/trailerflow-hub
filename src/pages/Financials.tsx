@@ -23,6 +23,8 @@ export default function Financials() {
   const createTx = useCreateTransaction();
   const { user } = useAuth();
   const orgId = useOrgId();
+  const ent = useEntitlements();
+  const navigate = useNavigate();
 
   const [addingNew, setAddingNew] = useState(false);
   const [form, setForm] = useState({
