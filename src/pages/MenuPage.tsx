@@ -131,7 +131,8 @@ export default function MenuPage() {
     return form.ingredients.reduce((sum, ing) => {
       const invItem = inventoryItems?.find(ii => ii.id === ing.inventoryItemId);
       const costPerUnit = Number(invItem?.cost_per_unit) || 0;
-      return sum + costPerUnit * ing.quantityUsed;
+      const conversion = Number((invItem as any)?.serving_unit_conversion) || 1;
+      return sum + (costPerUnit / conversion) * ing.quantityUsed;
     }, 0);
   }, [form.ingredients, inventoryItems]);
 
