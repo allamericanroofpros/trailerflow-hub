@@ -698,7 +698,8 @@ export default function POS() {
                     )}
                   </div>
                 </motion.div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>
