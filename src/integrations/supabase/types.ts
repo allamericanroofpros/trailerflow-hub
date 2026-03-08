@@ -269,6 +269,107 @@ export type Database = {
           },
         ]
       }
+      inventory_items: {
+        Row: {
+          cost_per_unit: number | null
+          created_at: string
+          current_stock: number
+          id: string
+          is_active: boolean
+          name: string
+          par_level: number | null
+          reorder_point: number | null
+          supplier: string | null
+          trailer_id: string | null
+          unit: Database["public"]["Enums"]["inventory_unit"]
+          updated_at: string
+        }
+        Insert: {
+          cost_per_unit?: number | null
+          created_at?: string
+          current_stock?: number
+          id?: string
+          is_active?: boolean
+          name: string
+          par_level?: number | null
+          reorder_point?: number | null
+          supplier?: string | null
+          trailer_id?: string | null
+          unit?: Database["public"]["Enums"]["inventory_unit"]
+          updated_at?: string
+        }
+        Update: {
+          cost_per_unit?: number | null
+          created_at?: string
+          current_stock?: number
+          id?: string
+          is_active?: boolean
+          name?: string
+          par_level?: number | null
+          reorder_point?: number | null
+          supplier?: string | null
+          trailer_id?: string | null
+          unit?: Database["public"]["Enums"]["inventory_unit"]
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_trailer_id_fkey"
+            columns: ["trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventory_logs: {
+        Row: {
+          change_amount: number
+          created_at: string
+          created_by: string | null
+          event_id: string | null
+          id: string
+          inventory_item_id: string
+          notes: string | null
+          reason: string
+        }
+        Insert: {
+          change_amount: number
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          inventory_item_id: string
+          notes?: string | null
+          reason?: string
+        }
+        Update: {
+          change_amount?: number
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          inventory_item_id?: string
+          notes?: string | null
+          reason?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_logs_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_logs_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       maintenance_records: {
         Row: {
           completed_by: string | null
@@ -315,6 +416,218 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "maintenance_records_trailer_id_fkey"
+            columns: ["trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_item_ingredients: {
+        Row: {
+          created_at: string
+          id: string
+          inventory_item_id: string
+          menu_item_id: string
+          quantity_used: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          inventory_item_id: string
+          menu_item_id: string
+          quantity_used?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          inventory_item_id?: string
+          menu_item_id?: string
+          quantity_used?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_item_ingredients_inventory_item_id_fkey"
+            columns: ["inventory_item_id"]
+            isOneToOne: false
+            referencedRelation: "inventory_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "menu_item_ingredients_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      menu_items: {
+        Row: {
+          category: Database["public"]["Enums"]["menu_category"]
+          cost: number | null
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          modifiers: Json | null
+          name: string
+          price: number
+          sort_order: number | null
+          trailer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          category?: Database["public"]["Enums"]["menu_category"]
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          modifiers?: Json | null
+          name: string
+          price?: number
+          sort_order?: number | null
+          trailer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: Database["public"]["Enums"]["menu_category"]
+          cost?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          modifiers?: Json | null
+          name?: string
+          price?: number
+          sort_order?: number | null
+          trailer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "menu_items_trailer_id_fkey"
+            columns: ["trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      order_items: {
+        Row: {
+          created_at: string
+          id: string
+          menu_item_id: string
+          modifiers: Json | null
+          notes: string | null
+          order_id: string
+          quantity: number
+          unit_price: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          menu_item_id: string
+          modifiers?: Json | null
+          notes?: string | null
+          order_id: string
+          quantity?: number
+          unit_price?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          menu_item_id?: string
+          modifiers?: Json | null
+          notes?: string | null
+          order_id?: string
+          quantity?: number
+          unit_price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "order_items_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          event_id: string | null
+          id: string
+          notes: string | null
+          order_number: number
+          payment_method: Database["public"]["Enums"]["payment_method"] | null
+          payment_received: boolean
+          status: Database["public"]["Enums"]["order_status"]
+          subtotal: number
+          tax: number
+          tip: number | null
+          total: number
+          trailer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          order_number?: number
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_received?: boolean
+          status?: Database["public"]["Enums"]["order_status"]
+          subtotal?: number
+          tax?: number
+          tip?: number | null
+          total?: number
+          trailer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          event_id?: string | null
+          id?: string
+          notes?: string | null
+          order_number?: number
+          payment_method?: Database["public"]["Enums"]["payment_method"] | null
+          payment_received?: boolean
+          status?: Database["public"]["Enums"]["order_status"]
+          subtotal?: number
+          tax?: number
+          tip?: number | null
+          total?: number
+          trailer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "orders_trailer_id_fkey"
             columns: ["trailer_id"]
             isOneToOne: false
             referencedRelation: "trailers"
@@ -547,6 +860,27 @@ export type Database = {
         | "confirmed"
         | "completed"
         | "closed"
+      inventory_unit:
+        | "oz"
+        | "lb"
+        | "g"
+        | "kg"
+        | "ml"
+        | "l"
+        | "gal"
+        | "each"
+        | "dozen"
+        | "case"
+      menu_category:
+        | "appetizer"
+        | "entree"
+        | "side"
+        | "dessert"
+        | "drink"
+        | "combo"
+        | "other"
+      order_status: "pending" | "preparing" | "ready" | "served" | "cancelled"
+      payment_method: "cash" | "card" | "digital" | "other"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -684,6 +1018,29 @@ export const Constants = {
         "completed",
         "closed",
       ],
+      inventory_unit: [
+        "oz",
+        "lb",
+        "g",
+        "kg",
+        "ml",
+        "l",
+        "gal",
+        "each",
+        "dozen",
+        "case",
+      ],
+      menu_category: [
+        "appetizer",
+        "entree",
+        "side",
+        "dessert",
+        "drink",
+        "combo",
+        "other",
+      ],
+      order_status: ["pending", "preparing", "ready", "served", "cancelled"],
+      payment_method: ["cash", "card", "digital", "other"],
     },
   },
 } as const
