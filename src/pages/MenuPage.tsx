@@ -318,11 +318,14 @@ export default function MenuPage() {
     if (!menuItems?.length) return toast.error("Add menu items first");
     setAiLoading(true);
     try {
-      const context = `Here are my menu items: ${JSON.stringify(menuItems.map((i) => ({
-        name: i.name, category: i.category, price: Number(i.price), cost: Number(i.cost),
-        margin: Number(i.price) > 0 ? ((Number(i.price) - Number(i.cost)) / Number(i.price) * 100).toFixed(1) + "%" : "N/A",
-        ingredients: (i as any).menu_item_ingredients?.length || 0,
-      })))}
+      const context = `Here are my menu items: ${JSON.stringify(menuItems.map((i) => {
+        const liveCost = computeLiveCost(i, inventoryItems);
+        return {
+          name: i.name, category: i.category, price: Number(i.price), cost: Number(liveCost.toFixed(2)),
+          margin: Number(i.price) > 0 ? ((Number(i.price) - liveCost) / Number(i.price) * 100).toFixed(1) + "%" : "N/A",
+          ingredients: (i as any).menu_item_ingredients?.length || 0,
+        };
+      }))}
 Analyze my menu and provide: 1. Best/worst margins 2. Pricing suggestions 3. Menu mix recommendations 4. Combo/upsell suggestions. Keep it concise.`;
       const result = await claudeNonStreaming("chat", [{ role: "user", content: context }]);
       setAiInsights(result);
