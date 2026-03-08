@@ -26,7 +26,38 @@ export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<SectionId>("profile");
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isOwner } = useRoleAccess();
   const qc = useQueryClient();
+
+  const sections = baseSections.filter((s) => !("ownerOnly" in s && s.ownerOnly) || isOwner);
+
+  // Team & roles data (owner only)
+  const { data: teamMembers, isLoading: teamLoading } = useQuery({
+    queryKey: ["team_roles"],
+    enabled: isOwner,
+    queryFn: async () => {
+      const { data: roles } = await supabase.from("user_roles").select("*");
+      if (!roles) return [];
+      const userIds = roles.map((r) => r.user_id);
+      const { data: profiles } = await supabase.from("profiles").select("*").in("user_id", userIds);
+      return roles.map((r) => ({
+        ...r,
+        profile: profiles?.find((p) => p.user_id === r.user_id),
+      }));
+    },
+  });
+
+  const updateRole = useMutation({
+    mutationFn: async ({ id, role }: { id: string; role: string }) => {
+      const { error } = await supabase.from("user_roles").update({ role }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["team_roles"] });
+      toast.success("Role updated");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
