@@ -9,14 +9,6 @@ Deno.serve(async (req) => {
   }
 
   try {
-    const apiKey = Deno.env.get('PERPLEXITY_API_KEY');
-    if (!apiKey) {
-      return new Response(
-        JSON.stringify({ error: 'Perplexity connector not configured' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
     const { eventName, location } = await req.json();
 
     if (!eventName) {
@@ -26,22 +18,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    const searchQuery = location
-      ? `"${eventName}" event ${location} 2025 2026 date venue attendance vendor fee`
-      : `"${eventName}" event 2025 2026 date venue location attendance vendor fee`;
+    // Try Perplexity first (has web search), fall back to Lovable AI
+    const perplexityKey = Deno.env.get('PERPLEXITY_API_KEY');
+    const lovableKey = Deno.env.get('LOVABLE_API_KEY');
 
-    const response = await fetch('https://api.perplexity.ai/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'sonar',
-        messages: [
-          {
-            role: 'system',
-            content: `You are an event research assistant for food trailer/truck vendors. Given an event name, search for real information about it. Return a JSON object with these fields (use null for unknown):
+    const systemPrompt = `You are an event research assistant for food trailer/truck vendors. Given an event name, provide the best information you know about it. Return a JSON object with these fields (use null for unknown):
 {
   "name": "Official event name",
   "location": "City, State",
@@ -56,40 +37,78 @@ Deno.serve(async (req) => {
   "description": "Brief description",
   "notes": "Vendor-relevant details like application deadlines, requirements, etc."
 }
-Return ONLY valid JSON, no markdown, no code fences.`
-          },
-          { role: 'user', content: searchQuery }
-        ],
-        search_recency_filter: 'year',
-      }),
-    });
+Return ONLY valid JSON, no markdown, no code fences.`;
 
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('Perplexity API error:', response.status, errText);
-      
-      if (response.status === 402) {
-        return new Response(
-          JSON.stringify({ error: 'Perplexity credits depleted. Please top up your Perplexity account.' }),
-          { status: 402, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+    const searchQuery = location
+      ? `"${eventName}" event ${location} 2025 2026 date venue attendance vendor fee`
+      : `"${eventName}" event 2025 2026 date venue location attendance vendor fee`;
+
+    let content = '';
+    let citations: string[] = [];
+
+    if (perplexityKey) {
+      try {
+        const response = await fetch('https://api.perplexity.ai/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${perplexityKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'sonar',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: searchQuery }
+            ],
+            search_recency_filter: 'year',
+          }),
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          content = data.choices?.[0]?.message?.content || '';
+          citations = data.citations || [];
+        } else {
+          console.error('Perplexity failed, falling back to Lovable AI:', response.status);
+        }
+      } catch (e) {
+        console.error('Perplexity error, falling back:', e);
       }
-      if (response.status === 429) {
-        return new Response(
-          JSON.stringify({ error: 'Rate limit exceeded. Please try again in a moment.' }),
-          { status: 429, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
+    }
+
+    // Fallback to Lovable AI gateway
+    if (!content && lovableKey) {
+      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${lovableKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemini-2.5-flash',
+          messages: [
+            { role: 'system', content: systemPrompt },
+            { role: 'user', content: `Research this event and provide details: ${searchQuery}` }
+          ],
+          stream: false,
+        }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        content = data.choices?.[0]?.message?.content || '';
+      } else {
+        const errText = await response.text();
+        console.error('Lovable AI error:', response.status, errText);
       }
-      
+    }
+
+    if (!content) {
       return new Response(
-        JSON.stringify({ error: `Perplexity API error: ${response.status}` }),
+        JSON.stringify({ error: 'No AI provider available. Check API configuration.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
-
-    const data = await response.json();
-    const content = data.choices?.[0]?.message?.content || '';
-    const citations = data.citations || [];
 
     // Try to parse JSON from the response
     let eventData = null;
