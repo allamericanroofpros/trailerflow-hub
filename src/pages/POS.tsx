@@ -34,7 +34,7 @@ type CartItem = {
   name: string;
   price: number;
   quantity: number;
-  selectedModifiers?: { groupName: string; label: string; priceAdjust: number }[];
+  selectedModifiers?: { groupName: string; label: string; priceAdjust: number; inventoryAdjustments?: { inventoryItemId: string; extraQty: number }[] }[];
 };
 
 const TAX_RATE = 0.0875;
