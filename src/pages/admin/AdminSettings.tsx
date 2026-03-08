@@ -34,7 +34,7 @@ export default function AdminSettings() {
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Platform Settings</h1>
           <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-            Global configuration for the TrailerOS SaaS platform.
+            Global configuration for the VendorFlow SaaS platform.
           </p>
         </div>
 
