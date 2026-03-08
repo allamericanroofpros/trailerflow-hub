@@ -1,6 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { RevenueByTypeChart, TrailerPerformanceChart } from "@/components/dashboard/Charts";
+import { useAIForecast } from "@/hooks/useAIForecast";
 import {
   DollarSign,
   TrendingUp,
@@ -28,13 +29,16 @@ const pipelineStages = [
   { stage: "Completed", count: 12, color: "bg-primary" },
 ];
 
-const aiSuggestions = [
+const defaultSuggestions = [
   { event: "Downtown Food Festival", date: "Mar 15-16", revenue: "$3,200–$4,800", confidence: "87%" },
   { event: "Corporate Wellness Fair", date: "Mar 22", revenue: "$1,800–$2,400", confidence: "72%" },
   { event: "Spring Market Series", date: "Apr 5-6", revenue: "$2,100–$3,000", confidence: "91%" },
 ];
 
 export default function Dashboard() {
+  const { data: forecast } = useAIForecast();
+  const aiSuggestions = forecast?.suggestions?.length ? forecast.suggestions : defaultSuggestions;
+
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">

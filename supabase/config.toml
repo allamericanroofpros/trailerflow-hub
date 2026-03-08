@@ -1,1 +1,4 @@
 project_id = "vtobvrsbmymcdfwzcigo"
+
+[functions.claude-ai]
+verify_jwt = false
