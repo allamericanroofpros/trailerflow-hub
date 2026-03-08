@@ -170,6 +170,11 @@ export default function POSCheckoutFlow({
                 <p className="text-sm text-muted-foreground mt-1">
                   Charge <span className="font-black text-card-foreground">${total.toFixed(2)}</span>
                 </p>
+                {surchargeSettings?.enabled && (
+                  <p className="text-xs text-amber-600 mt-1">
+                    Card payments include a {surchargeSettings.percent}% {surchargeSettings.label.toLowerCase()}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-3">
