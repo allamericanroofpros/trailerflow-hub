@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
 
     const { data: order, error } = await supabase
       .from("orders")
-      .select("id, order_number, subtotal, tax, tax_label, tip, total, payment_method, surcharge_amount, surcharge_label, created_at, order_items(id, quantity, unit_price, notes, menu_items(name))")
+      .select("id, order_number, subtotal, tax, tax_label, tax_inclusive, tip, total, payment_method, surcharge_amount, surcharge_label, created_at, order_items(id, quantity, unit_price, notes, menu_items(name))")
       .eq("id", orderId)
       .single();
 

@@ -48,6 +48,7 @@ export function useCreateOrder() {
       subtotal: number;
       tax: number;
       tax_label?: string;
+      tax_inclusive?: boolean;
       total: number;
       payment_method?: string;
       payment_received?: boolean;

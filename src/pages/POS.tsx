@@ -5,7 +5,7 @@ import { useCreateOrder } from "@/hooks/useOrders";
 import { useActiveOrders, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { useOrgId } from "@/hooks/useOrgId";
 import { useSurchargeSettings } from "@/hooks/useSurchargeSettings";
-import { useTaxSettings, calcTax } from "@/hooks/useTaxSettings";
+import { useTaxSettings, calcTax, calcTotalWithTax } from "@/hooks/useTaxSettings";
 import { toast } from "sonner";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import {
@@ -93,7 +93,7 @@ export default function POS() {
   const [confirmation, setConfirmation] = useState<{
     orderNumber: number;
     items: { name: string; quantity: number; price: number }[];
-    subtotal: number; tax: number; taxLabel?: string; tip: number; total: number;
+    subtotal: number; tax: number; taxLabel?: string; taxInclusive?: boolean; tip: number; total: number;
     paymentMethod: string; cashTendered?: number; changeDue?: number;
     orderId: string; surchargeAmount?: number; surchargeLabel?: string;
   } | null>(null);
@@ -201,7 +201,7 @@ export default function POS() {
 
   const subtotal = cart.reduce((sum, c) => sum + c.price * c.quantity, 0);
   const tax = calcTax(taxSettings, subtotal);
-  const total = subtotal + tax;
+  const total = calcTotalWithTax(taxSettings, subtotal);
   const itemCount = cart.reduce((s, c) => s + c.quantity, 0);
 
   const handleCheckout = async (data: {
@@ -224,6 +224,7 @@ export default function POS() {
         subtotal,
         tax,
         tax_label: taxSettings.label || "Sales Tax",
+        tax_inclusive: taxSettings.inclusive,
         total: grandTotal,
         tip: tipAmount,
         surcharge_amount: surcharge,
@@ -260,7 +261,7 @@ export default function POS() {
       setConfirmation({
         orderNumber: (newOrder as any).order_number,
         items: cart.map((c) => ({ name: c.name, quantity: c.quantity, price: c.price })),
-        subtotal, tax, taxLabel: taxSettings.label, tip: tipAmount, total: grandTotal,
+        subtotal, tax, taxLabel: taxSettings.label, taxInclusive: taxSettings.inclusive, tip: tipAmount, total: grandTotal,
         paymentMethod: data.paymentMethod,
         cashTendered: data.cashTendered,
         changeDue,
@@ -385,10 +386,19 @@ export default function POS() {
             <span>Subtotal</span>
             <span className="font-semibold">${subtotal.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between text-sm text-muted-foreground">
-            <span>{taxSettings.label}{taxSettings.enabled && taxSettings.percent > 0 ? ` (${taxSettings.percent}%)` : ""}</span>
-            <span className="font-semibold">${tax.toFixed(2)}</span>
-          </div>
+          {taxSettings.inclusive ? (
+            tax > 0 && (
+              <div className="flex justify-between text-xs text-muted-foreground/70 italic">
+                <span>Includes {taxSettings.label}</span>
+                <span>${tax.toFixed(2)}</span>
+              </div>
+            )
+          ) : (
+            <div className="flex justify-between text-sm text-muted-foreground">
+              <span>{taxSettings.label}{taxSettings.enabled && taxSettings.percent > 0 ? ` (${taxSettings.percent}%)` : ""}</span>
+              <span className="font-semibold">${tax.toFixed(2)}</span>
+            </div>
+          )}
           <div className="flex justify-between font-black text-xl text-card-foreground pt-2 border-t-2 border-border">
             <span>Total</span>
             <span>${total.toFixed(2)}</span>

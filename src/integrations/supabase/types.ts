@@ -707,6 +707,7 @@ export type Database = {
           surcharge_amount: number | null
           surcharge_label: string | null
           tax: number
+          tax_inclusive: boolean | null
           tax_label: string | null
           tip: number | null
           total: number
@@ -728,6 +729,7 @@ export type Database = {
           surcharge_amount?: number | null
           surcharge_label?: string | null
           tax?: number
+          tax_inclusive?: boolean | null
           tax_label?: string | null
           tip?: number | null
           total?: number
@@ -749,6 +751,7 @@ export type Database = {
           surcharge_amount?: number | null
           surcharge_label?: string | null
           tax?: number
+          tax_inclusive?: boolean | null
           tax_label?: string | null
           tip?: number | null
           total?: number
