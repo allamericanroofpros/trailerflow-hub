@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { format, parseISO, startOfWeek, addDays, isSameDay, addWeeks, subWeeks } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
+import { useOrgId } from "@/hooks/useOrgId";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, "0")}:00`);
