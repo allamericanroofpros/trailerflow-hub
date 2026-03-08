@@ -18,7 +18,7 @@ serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    const { amount, description, metadata } = await req.json();
+    const { amount, description, metadata, org_id } = await req.json();
 
     if (!amount || amount <= 0) {
       throw new Error("Invalid amount");
