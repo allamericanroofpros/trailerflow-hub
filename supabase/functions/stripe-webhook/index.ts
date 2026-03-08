@@ -1,0 +1,199 @@
+import Stripe from "https://esm.sh/stripe@18.5.0";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
+
+const log = (step: string, details?: unknown) =>
+  console.log(`[STRIPE-WEBHOOK] ${step}${details ? ` - ${JSON.stringify(details)}` : ""}`);
+
+Deno.serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response(null, {
+      headers: {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, stripe-signature",
+      },
+    });
+  }
+
+  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+  const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+  if (!stripeKey) return new Response("STRIPE_SECRET_KEY not set", { status: 500 });
+
+  const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+  const supabase = createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+    { auth: { persistSession: false } }
+  );
+
+  const body = await req.text();
+  let event: Stripe.Event;
+
+  // Verify signature if webhook secret is set
+  if (webhookSecret) {
+    const sig = req.headers.get("stripe-signature");
+    if (!sig) return new Response("Missing stripe-signature", { status: 400 });
+    try {
+      event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Unknown";
+      log("Signature verification failed", { error: msg });
+      return new Response(`Webhook signature verification failed: ${msg}`, { status: 400 });
+    }
+  } else {
+    // No secret configured — parse raw (dev mode)
+    log("WARNING: No STRIPE_WEBHOOK_SECRET set, skipping signature verification");
+    event = JSON.parse(body);
+  }
+
+  log("Event received", { type: event.type, id: event.id });
+
+  const handled = [
+    "checkout.session.completed",
+    "customer.subscription.created",
+    "customer.subscription.updated",
+    "customer.subscription.deleted",
+    "invoice.paid",
+    "invoice.payment_failed",
+  ];
+
+  if (!handled.includes(event.type)) {
+    log("Unhandled event type, ignoring");
+    return new Response(JSON.stringify({ received: true }), { status: 200 });
+  }
+
+  try {
+    switch (event.type) {
+      case "checkout.session.completed": {
+        const session = event.data.object as Stripe.Checkout.Session;
+        const orgId = session.metadata?.organization_id;
+        const customerId = typeof session.customer === "string" ? session.customer : session.customer?.id;
+        const subscriptionId = typeof session.subscription === "string" ? session.subscription : session.subscription?.id;
+
+        log("Checkout completed", { orgId, customerId, subscriptionId });
+
+        if (orgId && customerId) {
+          const updates: Record<string, unknown> = {
+            stripe_customer_id: customerId,
+          };
+          if (subscriptionId) {
+            // Fetch full subscription to get price + period
+            const sub = await stripe.subscriptions.retrieve(subscriptionId);
+            updates.stripe_subscription_id = sub.id;
+            updates.stripe_price_id = sub.items.data[0]?.price.id ?? null;
+            updates.subscription_status = sub.status;
+            updates.current_period_end = new Date(sub.current_period_end * 1000).toISOString();
+            updates.cancel_at_period_end = sub.cancel_at_period_end;
+            updates.plan = session.metadata?.plan_tier || derivePlanFromPrice(sub.items.data[0]?.price.id);
+          }
+
+          const { error } = await supabase.from("organizations").update(updates).eq("id", orgId);
+          if (error) log("DB update error (checkout)", { error: error.message });
+          else log("Organization updated from checkout", { orgId });
+        }
+        break;
+      }
+
+      case "customer.subscription.created":
+      case "customer.subscription.updated": {
+        const sub = event.data.object as Stripe.Subscription;
+        await syncSubscription(supabase, sub);
+        break;
+      }
+
+      case "customer.subscription.deleted": {
+        const sub = event.data.object as Stripe.Subscription;
+        const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
+        log("Subscription deleted", { customerId, subId: sub.id });
+
+        if (customerId) {
+          const { error } = await supabase
+            .from("organizations")
+            .update({
+              subscription_status: "canceled",
+              cancel_at_period_end: false,
+              plan: "free",
+            })
+            .eq("stripe_customer_id", customerId);
+          if (error) log("DB update error (delete)", { error: error.message });
+          else log("Organization downgraded to free");
+        }
+        break;
+      }
+
+      case "invoice.paid": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const customerId = typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id;
+        const subId = typeof invoice.subscription === "string" ? invoice.subscription : invoice.subscription?.id;
+        log("Invoice paid", { customerId, subId });
+
+        if (customerId && subId) {
+          const sub = await stripe.subscriptions.retrieve(subId);
+          await syncSubscription(supabase, sub);
+        }
+        break;
+      }
+
+      case "invoice.payment_failed": {
+        const invoice = event.data.object as Stripe.Invoice;
+        const customerId = typeof invoice.customer === "string" ? invoice.customer : invoice.customer?.id;
+        log("Invoice payment failed", { customerId });
+
+        if (customerId) {
+          const { error } = await supabase
+            .from("organizations")
+            .update({ subscription_status: "past_due" })
+            .eq("stripe_customer_id", customerId);
+          if (error) log("DB update error (payment_failed)", { error: error.message });
+        }
+        break;
+      }
+    }
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Unknown";
+    log("Processing error", { error: msg, eventType: event.type });
+    return new Response(JSON.stringify({ error: msg }), { status: 500 });
+  }
+
+  return new Response(JSON.stringify({ received: true }), {
+    headers: { "Content-Type": "application/json" },
+    status: 200,
+  });
+});
+
+// ─── Helpers ───
+
+async function syncSubscription(
+  supabase: ReturnType<typeof createClient>,
+  sub: Stripe.Subscription
+) {
+  const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;
+  if (!customerId) return;
+
+  const priceId = sub.items.data[0]?.price.id ?? null;
+  const updates = {
+    stripe_subscription_id: sub.id,
+    stripe_price_id: priceId,
+    subscription_status: sub.status,
+    current_period_end: new Date(sub.current_period_end * 1000).toISOString(),
+    cancel_at_period_end: sub.cancel_at_period_end,
+    plan: derivePlanFromPrice(priceId),
+  };
+
+  const { error } = await supabase
+    .from("organizations")
+    .update(updates)
+    .eq("stripe_customer_id", customerId);
+
+  if (error) log("syncSubscription DB error", { error: error.message });
+  else log("Subscription synced", { customerId, status: sub.status, plan: updates.plan });
+}
+
+function derivePlanFromPrice(priceId: string | null): string {
+  // Maps Stripe price IDs to plan names — keep in sync with src/config/tiers.ts
+  const map: Record<string, string> = {
+    price_1T8ntxEHIsr46VcJ3J4mPMEq: "starter",
+    price_1T8nuWEHIsr46VcJxMizsKl7: "pro",
+    price_1T8nugEHIsr46VcJ6ugiRGFR: "enterprise",
+  };
+  return priceId ? map[priceId] ?? "free" : "free";
+}
