@@ -24,6 +24,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
+import { OrgSwitcher } from "./OrgSwitcher";
 
 type NavItem = {
   title: string;
@@ -103,6 +104,11 @@ export function AppSidebar() {
             )}
           </div>
         )}
+      </div>
+
+      {/* Org Switcher */}
+      <div className="border-b border-sidebar-border px-1 py-2">
+        <OrgSwitcher collapsed={collapsed} />
       </div>
 
       {/* Navigation */}
