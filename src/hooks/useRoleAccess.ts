@@ -58,6 +58,7 @@ export function useRoleAccess() {
 
   const hasPermission = (permission: Permission): boolean => {
     if (!role) return false;
+    if (role === "super_admin") return true; // Super admins have all permissions
     return rolePermissions[role]?.includes(permission) ?? false;
   };
 
