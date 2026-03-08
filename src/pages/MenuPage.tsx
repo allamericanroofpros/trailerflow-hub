@@ -107,6 +107,7 @@ export default function MenuPage() {
   const { data: menuItems, isLoading } = useAllMenuItems();
   const { data: inventoryItems } = useInventoryItems();
   const { data: trailers } = useTrailers();
+  const orgId = useOrgId();
   const createItem = useCreateMenuItem();
   const updateItem = useUpdateMenuItem();
   const deleteItem = useDeleteMenuItem();
