@@ -85,6 +85,7 @@ export default function Trailers() {
     setAddingNew(false);
     setEditingId(null);
     setShowAdvanced(false);
+    clearValidation();
   };
 
   const handleSave = async () => {
