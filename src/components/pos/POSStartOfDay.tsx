@@ -263,19 +263,95 @@ export default function POSStartOfDay({ onComplete }: { onComplete: (data: Start
                 <p className="text-sm text-muted-foreground mt-1">Count the cash in your drawer before you start</p>
               </div>
 
-              <div>
-                <Input
-                  type="number"
-                  step="0.01"
-                  value={openingCash}
-                  onChange={(e) => setOpeningCash(e.target.value)}
-                  placeholder="e.g. 200.00"
-                  className="h-16 rounded-xl border-2 text-2xl font-black text-center"
-                />
-                <p className="text-xs text-muted-foreground text-center mt-2">
-                  This will be used to reconcile at End of Day
-                </p>
+              {/* Toggle between denomination and quick entry */}
+              <div className="flex items-center gap-2 rounded-xl border-2 border-border p-2">
+                <button
+                  onClick={() => setUseDenomCounter(true)}
+                  className={`flex-1 rounded-lg py-2 text-xs font-bold transition-all ${useDenomCounter ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}
+                >
+                  <Banknote className="h-3.5 w-3.5 inline mr-1" />Count by Denomination
+                </button>
+                <button
+                  onClick={() => setUseDenomCounter(false)}
+                  className={`flex-1 rounded-lg py-2 text-xs font-bold transition-all ${!useDenomCounter ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-secondary"}`}
+                >
+                  Quick Total
+                </button>
               </div>
+
+              {useDenomCounter ? (
+                <div className="space-y-4">
+                  {/* Bills */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Bills</p>
+                    <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
+                      {billDenominations.map(d => (
+                        <div key={d.label} className="rounded-xl border-2 border-border bg-background p-2 text-center">
+                          <p className="text-xs font-bold text-muted-foreground mb-1">{d.label}</p>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={denomCounts[d.label] || ""}
+                            onChange={(e) => setDenomCounts(prev => ({ ...prev, [d.label]: e.target.value }))}
+                            placeholder="0"
+                            className="h-10 text-center text-sm font-bold border-border"
+                          />
+                          {Number(denomCounts[d.label] || 0) > 0 && (
+                            <p className="text-[10px] text-primary font-bold mt-0.5">
+                              ${(Number(denomCounts[d.label]) * d.value).toFixed(2)}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Coins */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Coins</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                      {coinDenominations.map(d => (
+                        <div key={d.label} className="rounded-xl border-2 border-border bg-background p-2 text-center">
+                          <p className="text-xs font-bold text-muted-foreground mb-1">{d.label}</p>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={denomCounts[d.label] || ""}
+                            onChange={(e) => setDenomCounts(prev => ({ ...prev, [d.label]: e.target.value }))}
+                            placeholder="0"
+                            className="h-10 text-center text-sm font-bold border-border"
+                          />
+                          {Number(denomCounts[d.label] || 0) > 0 && (
+                            <p className="text-[10px] text-primary font-bold mt-0.5">
+                              ${(Number(denomCounts[d.label]) * d.value).toFixed(2)}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Drawer total */}
+                  <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-4 text-center">
+                    <p className="text-xs font-bold text-muted-foreground">Drawer Total</p>
+                    <p className="text-3xl font-black text-card-foreground">${denomTotal.toFixed(2)}</p>
+                  </div>
+                </div>
+              ) : (
+                <div>
+                  <Input
+                    type="number"
+                    step="0.01"
+                    value={openingCash}
+                    onChange={(e) => setOpeningCash(e.target.value)}
+                    placeholder="e.g. 200.00"
+                    className="h-16 rounded-xl border-2 text-2xl font-black text-center"
+                  />
+                  <p className="text-xs text-muted-foreground text-center mt-2">
+                    This will be used to reconcile at End of Day
+                  </p>
+                </div>
+              )}
 
               <div className="flex gap-3">
                 <Button variant="outline" className="flex-1 h-12 font-bold rounded-xl" onClick={() => setStep("event")}>Back</Button>
