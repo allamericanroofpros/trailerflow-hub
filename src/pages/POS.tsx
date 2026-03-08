@@ -344,6 +344,17 @@ export default function POS() {
           />
         </div>
 
+        {/* Special Instructions */}
+        <div>
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Special Instructions</label>
+          <Input
+            value={specialInstructions}
+            onChange={(e) => setSpecialInstructions(e.target.value)}
+            placeholder="Allergies, preferences, etc."
+            className="mt-1 h-12 rounded-xl border-2 text-base"
+          />
+        </div>
+
         {cart.length > 0 && (
           <>
             <Button
