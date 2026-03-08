@@ -37,7 +37,7 @@ import AdminUsers from "./pages/admin/AdminUsers";
 import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminAuditLog from "./pages/admin/AdminAuditLog";
-
+import AdminSupport from "./pages/admin/AdminSupport";
 const queryClient = new QueryClient();
 
 const App = () => (
