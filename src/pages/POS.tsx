@@ -75,6 +75,7 @@ export default function POS() {
   const [showEOD, setShowEOD] = useState(false);
   const [customItemName, setCustomItemName] = useState("");
   const [customItemPrice, setCustomItemPrice] = useState("");
+  const [specialInstructions, setSpecialInstructions] = useState("");
   const [confirmation, setConfirmation] = useState<{
     orderNumber: number;
     items: { name: string; quantity: number; price: number }[];
