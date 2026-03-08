@@ -1174,10 +1174,17 @@ export type Database = {
           currency: string | null
           full_name: string | null
           id: string
+          onboarding_completed: boolean
+          onboarding_step: number
           phone: string | null
+          primary_use_case: string | null
+          referral_source: string | null
+          team_size: string | null
           timezone: string | null
+          trailer_count: string | null
           updated_at: string
           user_id: string
+          vendor_type: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -1186,10 +1193,17 @@ export type Database = {
           currency?: string | null
           full_name?: string | null
           id?: string
+          onboarding_completed?: boolean
+          onboarding_step?: number
           phone?: string | null
+          primary_use_case?: string | null
+          referral_source?: string | null
+          team_size?: string | null
           timezone?: string | null
+          trailer_count?: string | null
           updated_at?: string
           user_id: string
+          vendor_type?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -1198,10 +1212,17 @@ export type Database = {
           currency?: string | null
           full_name?: string | null
           id?: string
+          onboarding_completed?: boolean
+          onboarding_step?: number
           phone?: string | null
+          primary_use_case?: string | null
+          referral_source?: string | null
+          team_size?: string | null
           timezone?: string | null
+          trailer_count?: string | null
           updated_at?: string
           user_id?: string
+          vendor_type?: string | null
         }
         Relationships: []
       }
@@ -1378,6 +1399,50 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "support_tickets_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      team_invites: {
+        Row: {
+          accepted_at: string | null
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string
+          org_id: string
+          role: Database["public"]["Enums"]["app_role"]
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          invited_by: string
+          org_id: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string
+          org_id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_invites_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"

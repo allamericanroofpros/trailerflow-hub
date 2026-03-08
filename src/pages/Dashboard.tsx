@@ -1,6 +1,8 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { RevenueByTypeChart, TrailerPerformanceChart } from "@/components/dashboard/Charts";
+import { SetupWizard } from "@/components/onboarding/SetupWizard";
+import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
 import { useNavigate } from "react-router-dom";
 import { useEventsByStage } from "@/hooks/useEvents";
 import { useBookings } from "@/hooks/useBookings";
@@ -23,13 +25,15 @@ import {
   Loader2,
   ShoppingCart,
 } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { canView } = useRoleAccess();
+  const { completedSteps, isComplete } = useOnboardingStatus();
+  const [wizardDismissed, setWizardDismissed] = useState(false);
   const { data: grouped, isLoading: eventsLoading } = useEventsByStage();
   const { data: bookings } = useBookings();
   const { data: transactions } = useTransactions();
@@ -145,6 +149,11 @@ export default function Dashboard() {
             </button>
           )}
         </div>
+
+        {/* Setup Wizard */}
+        {!isComplete && !wizardDismissed && (
+          <SetupWizard completedSteps={completedSteps} onDismiss={() => setWizardDismissed(true)} />
+        )}
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
