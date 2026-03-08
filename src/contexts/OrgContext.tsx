@@ -49,13 +49,7 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   );
   const [loading, setLoading] = useState(true);
 
-  // Get QueryClient if available (wrapped in try/catch for safety during mount)
-  let queryClient: ReturnType<typeof useQueryClient> | null = null;
-  try {
-    queryClient = useQueryClient();
-  } catch {
-    // QueryClient not available yet
-  }
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!user) {
