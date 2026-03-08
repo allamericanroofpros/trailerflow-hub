@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import {
   Users as UsersIcon, AlertTriangle, Clock, Shield, Eye, Plus, Pencil,
-  Trash2, X, Save, Calendar, Loader2, ChevronLeft, ChevronRight,
+  Trash2, X, Save, Calendar, Loader2, ChevronLeft, ChevronRight, UserPlus,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useStaffMembers, useCreateStaffMember, useUpdateStaffMember, useDeleteStaffMember } from "@/hooks/useStaffMembers";
