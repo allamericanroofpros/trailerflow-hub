@@ -189,15 +189,44 @@ export default function Inventory() {
     <div className="space-y-3 mt-2">
       <div><Label>Name</Label><Input value={item.name} onChange={(e) => setItem({ ...item, name: e.target.value })} className="h-11" /></div>
       <div className="grid grid-cols-2 gap-3">
-        <div><Label>Unit</Label>
+        <div><Label>Stock Unit (counting)</Label>
           <Select value={item.unit} onValueChange={(v) => setItem({ ...item, unit: v })}>
             <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
             <SelectContent>{units.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
           </Select>
+          <p className="text-[10px] text-muted-foreground mt-0.5">Unit staff counts in (e.g. gal)</p>
         </div>
         {!isEdit && (
           <div><Label>Current Stock</Label><Input type="number" value={item.current_stock} onChange={(e) => setItem({ ...item, current_stock: Number(e.target.value) })} className="h-11" /></div>
         )}
+      </div>
+      {/* Serving unit for recipes */}
+      <div className="rounded-lg border border-border bg-secondary/30 p-3 space-y-2">
+        <p className="text-xs font-bold text-muted-foreground">Recipe / Serving Unit (optional)</p>
+        <p className="text-[10px] text-muted-foreground">If recipes use a different unit than how you count stock. E.g. stock in gallons, recipes in oz.</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div><Label className="text-[10px]">Serving Unit</Label>
+            <Select value={item.serving_unit || ""} onValueChange={(v) => setItem({ ...item, serving_unit: v || "" })}>
+              <SelectTrigger className="h-9"><SelectValue placeholder="Same as stock" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Same as stock unit</SelectItem>
+                {units.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div><Label className="text-[10px]">Serving units per 1 stock unit</Label>
+            <Input
+              type="number" step="0.01" min="0"
+              placeholder="e.g. 128"
+              value={item.serving_unit_conversion || ""}
+              onChange={(e) => setItem({ ...item, serving_unit_conversion: e.target.value })}
+              className="h-9"
+            />
+            {item.serving_unit && item.serving_unit_conversion && (
+              <p className="text-[10px] text-primary mt-0.5">1 {item.unit} = {item.serving_unit_conversion} {item.serving_unit}</p>
+            )}
+          </div>
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div><Label>Par Level</Label><Input type="number" value={item.par_level} onChange={(e) => setItem({ ...item, par_level: Number(e.target.value) })} className="h-11" /></div>
