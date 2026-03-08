@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import {
   Package, AlertTriangle, Plus, ArrowDown, ArrowUp,
   Loader2, Search, ShoppingCart, CalendarDays, Clock,
-  Pencil, Trash2, ArrowUpDown, SortAsc, SortDesc,
+  Pencil, Trash2, ArrowUpDown, SortAsc, SortDesc, HelpCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -19,6 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 const units = ["oz", "lb", "g", "kg", "ml", "l", "gal", "each", "dozen", "case"];
 
