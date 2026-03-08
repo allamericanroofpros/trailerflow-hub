@@ -555,29 +555,78 @@ export default function EventsHub() {
               )}
             </div>
 
-            {/* AI Insights Panel */}
-            <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-              <div className="flex items-center gap-2 mb-4">
+            {/* AI Insights & Forecast Panel */}
+            <div className="rounded-xl border border-border bg-card p-5 shadow-card space-y-4">
+              <div className="flex items-center gap-2">
                 <Sparkles className="h-4 w-4 text-primary" />
-                <h3 className="text-sm font-semibold text-card-foreground">AI Insights</h3>
+                <h3 className="text-sm font-semibold text-card-foreground">Forecast & Insights</h3>
               </div>
-              <div className="space-y-3">
+
+              {/* Revenue Forecast */}
+              {(selectedEvent.revenue_forecast_low || selectedEvent.revenue_forecast_high) ? (
+                <div className="rounded-lg bg-success/5 border border-success/20 p-3.5">
+                  <p className="text-[11px] font-medium text-success mb-1">Projected Revenue</p>
+                  <p className="text-lg font-bold text-card-foreground">
+                    {formatRevenue(selectedEvent.revenue_forecast_low, selectedEvent.revenue_forecast_high, selectedEvent.actual_revenue)}
+                  </p>
+                  {selectedEvent.vendor_fee ? (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      After vendor fee (${selectedEvent.vendor_fee.toLocaleString()}): <strong className="text-card-foreground">
+                        ${((selectedEvent.revenue_forecast_low || 0) - selectedEvent.vendor_fee).toLocaleString()}–${((selectedEvent.revenue_forecast_high || 0) - selectedEvent.vendor_fee).toLocaleString()}
+                      </strong> net
+                    </p>
+                  ) : null}
+                  {selectedEvent.attendance_estimate ? (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      ~${((selectedEvent.revenue_forecast_low || 0) / selectedEvent.attendance_estimate).toFixed(2)}-${((selectedEvent.revenue_forecast_high || 0) / selectedEvent.attendance_estimate).toFixed(2)} rev/attendee
+                    </p>
+                  ) : null}
+                </div>
+              ) : (
                 <div className="rounded-lg bg-background border border-border p-3.5">
-                  <p className="text-sm text-card-foreground leading-relaxed">
-                    Click <strong>"AI Search"</strong> to search the web for real event data — dates, venues, attendance, vendor fees, and more.
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    No forecast yet. Use <strong>"AI Search"</strong> to pull event data or manually enter revenue estimates by clicking Edit.
                   </p>
                 </div>
-                {selectedEvent.event_type && (
-                  <div className="rounded-lg bg-background border border-border p-3.5">
-                    <p className="text-sm text-card-foreground leading-relaxed">
-                      This <strong>{selectedEvent.event_type}</strong> event
-                      {selectedEvent.attendance_estimate ? ` expects ~${selectedEvent.attendance_estimate.toLocaleString()} attendees` : ""}.
-                      {selectedEvent.vendor_fee ? ` Vendor fee: $${selectedEvent.vendor_fee.toLocaleString()}.` : ""}
-                    </p>
+              )}
+
+              {/* Confidence meter */}
+              {(selectedEvent.confidence ?? 0) > 0 && (
+                <div className="rounded-lg bg-background border border-border p-3.5">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[11px] font-medium text-muted-foreground">Confidence Score</p>
+                    <span className={`text-sm font-bold ${
+                      (selectedEvent.confidence ?? 0) >= 80 ? "text-success"
+                      : (selectedEvent.confidence ?? 0) >= 50 ? "text-warning"
+                      : "text-destructive"
+                    }`}>{selectedEvent.confidence}%</span>
                   </div>
-                )}
-              </div>
-              <div className="mt-4 rounded-lg gradient-warm p-4">
+                  <div className="h-2 rounded-full bg-muted overflow-hidden">
+                    <div
+                      className={`h-full rounded-full transition-all ${
+                        (selectedEvent.confidence ?? 0) >= 80 ? "bg-success"
+                        : (selectedEvent.confidence ?? 0) >= 50 ? "bg-warning"
+                        : "bg-destructive"
+                      }`}
+                      style={{ width: `${selectedEvent.confidence}%` }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Event summary */}
+              {selectedEvent.event_type && (
+                <div className="rounded-lg bg-background border border-border p-3.5">
+                  <p className="text-sm text-card-foreground leading-relaxed">
+                    <strong>{selectedEvent.event_type}</strong> event
+                    {selectedEvent.attendance_estimate ? ` · ~${selectedEvent.attendance_estimate.toLocaleString()} attendees` : ""}
+                    {selectedEvent.vendor_fee ? ` · $${selectedEvent.vendor_fee.toLocaleString()} fee` : ""}
+                  </p>
+                </div>
+              )}
+
+              {/* Quick Actions */}
+              <div className="rounded-lg gradient-warm p-4">
                 <p className="text-sm font-medium text-primary-foreground">Quick Actions</p>
                 <div className="mt-3 space-y-2">
                   <button
