@@ -21,6 +21,7 @@ import POSCheckoutFlow from "@/components/pos/POSCheckoutFlow";
 import POSConfirmation from "@/components/pos/POSConfirmation";
 import POSOrderHistory from "@/components/pos/POSOrderHistory";
 import POSEndOfDay from "@/components/pos/POSEndOfDay";
+import POSStartOfDay from "@/components/pos/POSStartOfDay";
 
 type Modifier = {
   name: string;
