@@ -70,9 +70,10 @@ export function useRoleAccess() {
     return hasPermission(`manage_${resource}` as Permission);
   };
 
-  const isOwner = role === "owner";
+  const isOwner = role === "owner" || role === "super_admin";
   const isManager = role === "manager";
   const isStaff = role === "staff";
+  const isSuperAdmin = role === "super_admin";
 
-  return { role, hasPermission, canView, canManage, isOwner, isManager, isStaff };
+  return { role, hasPermission, canView, canManage, isOwner, isManager, isStaff, isSuperAdmin };
 }
