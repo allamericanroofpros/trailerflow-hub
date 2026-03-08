@@ -818,7 +818,15 @@ export default function POS() {
       </Dialog>
 
       {/* End of Day */}
-      {showEOD && <POSEndOfDay onClose={() => setShowEOD(false)} />}
+      {showEOD && <POSEndOfDay onClose={() => {
+        setShowEOD(false);
+        // Clear SOD so next POS entry triggers Start of Day
+        sessionStorage.removeItem("pos_sod_complete");
+        sessionStorage.removeItem("pos_sod_data");
+        setSodComplete(false);
+        setSodData(null);
+        navigate("/");
+      }} />}
 
       {/* EOD Floating Button */}
       <button
