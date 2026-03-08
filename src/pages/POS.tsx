@@ -325,12 +325,29 @@ export default function POS() {
           </div>
         </div>
 
+        {/* Customer Name */}
+        <div>
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Customer Name *</label>
+          <Input
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+            placeholder="Enter name for order"
+            className="mt-1 h-12 rounded-xl border-2 text-base font-semibold"
+          />
+        </div>
+
         {cart.length > 0 && (
           <>
             <Button
               size="lg"
               className="w-full h-14 text-base font-black rounded-xl active:scale-95 touch-manipulation"
-              onClick={() => setShowCheckout(true)}
+              onClick={() => {
+                if (!customerName.trim()) {
+                  toast.error("Please enter a customer name before checkout");
+                  return;
+                }
+                setShowCheckout(true);
+              }}
               disabled={createOrder.isPending}
             >
               Charge ${total.toFixed(2)}
