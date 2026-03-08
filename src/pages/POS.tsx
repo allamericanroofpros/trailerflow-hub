@@ -729,6 +729,54 @@ export default function POS() {
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modifier Picker Dialog */}
+      <Dialog open={!!showModifierPicker} onOpenChange={(v) => { if (!v) setShowModifierPicker(null); }}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>{showModifierPicker?.item?.name} — Options</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 mt-2">
+            {showModifierPicker?.modifiers.map((mod) => (
+              <div key={mod.name}>
+                <p className="text-sm font-bold text-card-foreground mb-2">{mod.name} {mod.required && <span className="text-destructive">*</span>}</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {mod.options.map((opt) => (
+                    <button
+                      key={opt.label}
+                      onClick={() => setPendingModifiers(prev => ({ ...prev, [mod.name]: { label: opt.label, priceAdjust: opt.priceAdjust } }))}
+                      className={`rounded-xl border-2 p-3 text-left transition-all active:scale-95 touch-manipulation ${
+                        pendingModifiers[mod.name]?.label === opt.label
+                          ? "border-primary bg-primary/10"
+                          : "border-border hover:border-primary/30"
+                      }`}
+                    >
+                      <p className="text-sm font-bold text-card-foreground">{opt.label}</p>
+                      {opt.priceAdjust !== 0 && (
+                        <p className="text-xs text-primary font-semibold">+${opt.priceAdjust.toFixed(2)}</p>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <Button className="w-full h-12 font-black rounded-xl" onClick={confirmModifiers}>
+              Add to Order
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* End of Day */}
+      {showEOD && <POSEndOfDay onClose={() => setShowEOD(false)} />}
+
+      {/* EOD Floating Button */}
+      <button
+        onClick={() => setShowEOD(true)}
+        className="fixed bottom-6 left-6 z-[55] flex items-center gap-2 rounded-2xl bg-card border-2 border-border px-4 py-3 text-sm font-bold text-muted-foreground hover:text-foreground hover:border-primary/30 shadow-lg transition-all touch-manipulation"
+      >
+        <Moon className="h-4 w-4" /> End of Day
+      </button>
     </div>
   );
 }
