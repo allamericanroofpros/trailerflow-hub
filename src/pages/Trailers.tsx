@@ -231,7 +231,7 @@ export default function Trailers() {
                 <select
                   value={form.status}
                   onChange={(e) => setForm({ ...form, status: e.target.value })}
-                  className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none"
+                  className="mt-1 w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm outline-none"
                 >
                   <option value="active">Active</option>
                   <option value="maintenance">Maintenance</option>

@@ -1,5 +1,5 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ClipboardList, DollarSign, Check, Clock, Plus, Pencil, Trash2, Save, Loader2, X } from "lucide-react";
+import { ClipboardList, DollarSign, Check, Clock, Plus, Pencil, Trash2, Save, Loader2, X, Link2, Copy } from "lucide-react";
 import { useState } from "react";
 import { useBookings, useCreateBooking, useUpdateBooking } from "@/hooks/useBookings";
 import { useTrailers } from "@/hooks/useTrailers";
@@ -109,13 +109,27 @@ export default function Bookings() {
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between flex-wrap gap-3">
-          <div>
+         <div>
             <h1 className="text-2xl font-bold tracking-tight">Bookings</h1>
             <p className="text-sm text-muted-foreground mt-1">Manage client bookings and private events.</p>
           </div>
-          <Button size="sm" onClick={() => { resetForm(); setAddingNew(true); }} className="gap-1.5">
-            <Plus className="h-3.5 w-3.5" /> New Booking
-          </Button>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={() => {
+                const url = `${window.location.origin}/book`;
+                navigator.clipboard.writeText(url);
+                toast.success("Booking link copied! Share it with clients.");
+              }}
+            >
+              <Link2 className="h-3.5 w-3.5" /> Share Booking Link
+            </Button>
+            <Button size="sm" onClick={() => { resetForm(); setAddingNew(true); }} className="gap-1.5">
+              <Plus className="h-3.5 w-3.5" /> New Booking
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -170,7 +184,7 @@ export default function Bookings() {
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Trailer</label>
                 <select value={form.trailer_id} onChange={(e) => setForm({ ...form, trailer_id: e.target.value })}
-                  className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none">
+                  className="mt-1 w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm outline-none">
                   <option value="">Unassigned</option>
                   {trailers?.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
                 </select>
@@ -194,7 +208,7 @@ export default function Bookings() {
               <div>
                 <label className="text-xs font-medium text-muted-foreground">Status</label>
                 <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as any })}
-                  className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none">
+                  className="mt-1 w-full rounded-md border border-border bg-background text-foreground px-3 py-2 text-sm outline-none">
                   <option value="pending">Pending</option>
                   <option value="confirmed">Confirmed</option>
                   <option value="cancelled">Cancelled</option>
