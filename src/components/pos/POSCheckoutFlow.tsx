@@ -51,7 +51,7 @@ const processStripePayment = async (amount: number): Promise<{ success: boolean;
 };
 
 export default function POSCheckoutFlow({
-  cart, subtotal, tax, total, onComplete, onCancel, isPending,
+  cart, subtotal, tax, total, surchargeSettings, onComplete, onCancel, isPending,
 }: CheckoutProps) {
   const [step, setStep] = useState<Step>("payment");
   const [tipType, setTipType] = useState<"percent" | "dollar">("percent");
@@ -60,12 +60,23 @@ export default function POSCheckoutFlow({
   const [cashTendered, setCashTendered] = useState("");
   const [selectedPayment, setSelectedPayment] = useState<"cash" | "card" | "digital" | null>(null);
 
+  // Calculate surcharge for card payments
+  const calcSurchargeAmount = (method: "cash" | "card" | "digital" | null): number => {
+    if (!surchargeSettings?.enabled || method !== "card") return 0;
+    let amt = subtotal * (surchargeSettings.percent / 100);
+    if (surchargeSettings.flat) amt += surchargeSettings.flat;
+    if (surchargeSettings.cap && amt > surchargeSettings.cap) amt = surchargeSettings.cap;
+    return Math.round(amt * 100) / 100;
+  };
+
+  const surchargeAmount = calcSurchargeAmount(selectedPayment);
+
   const tipAmount = tipType === "percent"
     ? subtotal * (tipPercent / 100)
     : Number(tipDollar) || 0;
 
-  // For card: grandTotal includes tip. For cash/digital: no tip.
-  const currentTotal = selectedPayment === "card" ? total + tipAmount : total;
+  // Grand total: base total + surcharge (card only) + tip (card only)
+  const currentTotal = selectedPayment === "card" ? total + surchargeAmount + tipAmount : total;
   const changeDue = Number(cashTendered) - total;
 
   const handlePaymentSelect = async (method: "cash" | "card" | "digital") => {
