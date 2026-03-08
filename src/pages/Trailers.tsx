@@ -401,6 +401,22 @@ export default function Trailers() {
                       className="mt-1"
                     />
                   </div>
+                  <div>
+                    <FieldLabel
+                      label="Target Margin %"
+                      tip="Target profit margin for menu items on this trailer. Used for AI pricing suggestions."
+                    />
+                    <Input
+                      type="number"
+                      step="1"
+                      min="0"
+                      max="95"
+                      value={form.target_margin}
+                      onChange={(e) => setForm({ ...form, target_margin: e.target.value })}
+                      placeholder="70"
+                      className="mt-1"
+                    />
+                  </div>
                 </div>
 
                 {/* Profit preview */}
