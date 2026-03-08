@@ -8,3 +8,9 @@ verify_jwt = false
 
 [functions.search-event]
 verify_jwt = false
+
+[functions.create-payment-intent]
+verify_jwt = false
+
+[functions.confirm-payment]
+verify_jwt = false

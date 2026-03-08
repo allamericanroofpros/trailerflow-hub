@@ -8,7 +8,7 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "
 import {
   ShoppingCart, Plus, Minus, Trash2, CreditCard, Banknote,
   Smartphone, ChefHat, Clock, CheckCircle, Loader2, ArrowLeft,
-  Truck, X, ChevronUp, BarChart3, Package, FileText, Tag,
+  Truck, X, ChevronUp, BarChart3, Package, FileText, Tag, Receipt,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +19,7 @@ import POSInventoryView from "@/components/pos/POSInventoryView";
 import POSReportView from "@/components/pos/POSReportView";
 import POSCheckoutFlow from "@/components/pos/POSCheckoutFlow";
 import POSConfirmation from "@/components/pos/POSConfirmation";
+import POSOrderHistory from "@/components/pos/POSOrderHistory";
 
 type CartItem = {
   menu_item_id: string;
@@ -48,7 +49,7 @@ export default function POS() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [view, setView] = useState<"register" | "orders" | "sales" | "inventory" | "report">("register");
+  const [view, setView] = useState<"register" | "orders" | "history" | "sales" | "inventory" | "report">("register");
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showCustomItem, setShowCustomItem] = useState(false);
@@ -327,6 +328,7 @@ export default function POS() {
           {[
             { key: "register" as const, label: "Register", icon: null },
             { key: "orders" as const, label: "Orders", icon: null, badge: activeOrders?.length },
+            { key: "history" as const, label: "History", icon: Receipt },
             { key: "sales" as const, label: "Sales", icon: BarChart3 },
             { key: "inventory" as const, label: "Stock", icon: Package },
             { key: "report" as const, label: "Report", icon: FileText },
@@ -618,6 +620,8 @@ export default function POS() {
             </div>
           )}
         </div>
+      ) : view === "history" ? (
+        <POSOrderHistory />
       ) : view === "sales" ? (
         <POSSalesView />
       ) : view === "inventory" ? (
