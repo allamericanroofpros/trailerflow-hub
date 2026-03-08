@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useOrgId } from "@/hooks/useOrgId";
 
 type Message = { role: "user" | "assistant"; content: string };
 
@@ -9,8 +10,9 @@ const AI_URL = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/claude-ai`;
 export function useClaudeChat() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const orgId = useOrgId();
 
-  const send = useCallback(async (input: string) => {
+  const send = useCallback(async (input: string, options?: { feature?: string; trailerId?: string; module?: string }) => {
     const userMsg: Message = { role: "user", content: input };
     setMessages((prev) => [...prev, userMsg]);
     setIsLoading(true);
@@ -29,8 +31,14 @@ export function useClaudeChat() {
         },
         body: JSON.stringify({
           messages: [...messages, userMsg].map((m) => ({ role: m.role, content: m.content })),
-          feature: "chat",
+          feature: options?.feature || "chat",
           stream: true,
+          context: {
+            org_id: orgId,
+            user_id: session.data.session?.user?.id || null,
+            trailer_id: options?.trailerId || null,
+            module: options?.module || null,
+          },
         }),
       });
 
