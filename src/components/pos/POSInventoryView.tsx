@@ -1,8 +1,8 @@
 import { useInventoryItems, useLowStockItems } from "@/hooks/useInventory";
 import { AlertTriangle, Package, Loader2, Search } from "lucide-react";
-import { useState } from "react";
+import { useState, forwardRef } from "react";
 
-export default function POSInventoryView() {
+const POSInventoryView = forwardRef<HTMLDivElement>(function POSInventoryView(_props, ref) {
   const { data: items, isLoading } = useInventoryItems();
   const { data: lowStock } = useLowStockItems();
   const [search, setSearch] = useState("");

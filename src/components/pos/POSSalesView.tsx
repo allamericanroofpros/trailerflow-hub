@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, forwardRef } from "react";
 import { useOrders } from "@/hooks/useOrders";
 import {
   DollarSign, TrendingUp, Receipt, CreditCard, Banknote,
@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
-export default function POSSalesView() {
+const POSSalesView = forwardRef<HTMLDivElement>(function POSSalesView(_props, ref) {
   const { data: orders, isLoading } = useOrders();
 
   const todayStats = useMemo(() => {

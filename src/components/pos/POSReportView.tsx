@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, forwardRef } from "react";
 import { useOrders } from "@/hooks/useOrders";
 import { useInventoryLogs } from "@/hooks/useInventory";
 import {
@@ -7,7 +7,7 @@ import {
 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 
-export default function POSReportView() {
+const POSReportView = forwardRef<HTMLDivElement>(function POSReportView(_props, ref) {
   const { data: orders, isLoading } = useOrders();
   const { data: logs } = useInventoryLogs();
 
