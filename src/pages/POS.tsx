@@ -709,6 +709,8 @@ export default function POS() {
             </div>
           )}
         </div>
+      ) : view === "timeclock" ? (
+        <POSTimeClock eventId={sodData?.eventId} trailerId={sodData?.trailerId} />
       ) : view === "history" ? (
         <POSOrderHistory />
       ) : view === "sales" ? (
