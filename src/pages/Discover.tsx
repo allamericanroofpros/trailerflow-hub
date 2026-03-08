@@ -18,6 +18,7 @@ export default function Discover() {
   const [searchQuery, setSearchQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState<string | undefined>();
   const [locationFilter, setLocationFilter] = useState("");
+  const [radiusMiles, setRadiusMiles] = useState<number>(50);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const { data: aiEvents, isLoading, isFetching } = useAIDiscovery(submittedQuery);
   const createEvent = useCreateEvent();
