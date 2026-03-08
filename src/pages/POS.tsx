@@ -194,6 +194,7 @@ export default function POS() {
       });
       setCart([]);
       setCustomerName("");
+      setSpecialInstructions("");
       setMobileCartOpen(false);
       setShowCheckout(false);
     } catch (e: any) {
