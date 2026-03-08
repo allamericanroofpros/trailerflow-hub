@@ -24,6 +24,8 @@ export default function Staff() {
   const { user } = useAuth();
   const { isOwner, canManage } = useRoleAccess();
   const orgId = useOrgId();
+  const ent = useEntitlements();
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const { data: staff, isLoading } = useStaffMembers();
   const createStaff = useCreateStaffMember();
   const updateStaff = useUpdateStaffMember();
