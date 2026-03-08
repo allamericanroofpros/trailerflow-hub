@@ -8,10 +8,13 @@ import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "
 import {
   ShoppingCart, Plus, Minus, Trash2, CreditCard, Banknote,
   Smartphone, ChefHat, Clock, CheckCircle, Loader2, ArrowLeft,
-  Truck, X, ChevronUp,
+  Truck, X, ChevronUp, BarChart3, Package, FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import POSSalesView from "@/components/pos/POSSalesView";
+import POSInventoryView from "@/components/pos/POSInventoryView";
+import POSReportView from "@/components/pos/POSReportView";
 
 type CartItem = {
   menu_item_id: string;
@@ -41,7 +44,7 @@ export default function POS() {
 
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [view, setView] = useState<"register" | "orders">("register");
+  const [view, setView] = useState<"register" | "orders" | "sales" | "inventory" | "report">("register");
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
 
   // Detect tablet-ish (<=1024px)
@@ -276,32 +279,33 @@ export default function POS() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setView("register")}
-            className={`rounded-xl px-5 py-2.5 text-sm font-bold transition-all active:scale-95 touch-manipulation ${
-              view === "register"
-                ? "bg-primary text-primary-foreground shadow-md"
-                : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-            }`}
-          >
-            Register
-          </button>
-          <button
-            onClick={() => setView("orders")}
-            className={`relative rounded-xl px-5 py-2.5 text-sm font-bold transition-all active:scale-95 touch-manipulation ${
-              view === "orders"
-                ? "bg-primary text-primary-foreground shadow-md"
-                : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
-            }`}
-          >
-            Orders
-            {activeOrders?.length ? (
-              <span className="absolute -top-2 -right-2 flex h-6 min-w-6 items-center justify-center rounded-full bg-destructive px-1.5 text-xs font-black text-destructive-foreground">
-                {activeOrders.length}
-              </span>
-            ) : null}
-          </button>
+        <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide">
+          {[
+            { key: "register" as const, label: "Register", icon: null },
+            { key: "orders" as const, label: "Orders", icon: null, badge: activeOrders?.length },
+            { key: "sales" as const, label: "Sales", icon: BarChart3 },
+            { key: "inventory" as const, label: "Stock", icon: Package },
+            { key: "report" as const, label: "Report", icon: FileText },
+          ].map(({ key, label, icon: Icon, badge }) => (
+            <button
+              key={key}
+              onClick={() => setView(key)}
+              className={`relative shrink-0 rounded-xl px-4 py-2.5 text-sm font-bold transition-all active:scale-95 touch-manipulation flex items-center gap-1.5 ${
+                view === key
+                  ? "bg-primary text-primary-foreground shadow-md"
+                  : "bg-secondary text-secondary-foreground hover:bg-secondary/80"
+              }`}
+            >
+              {Icon && <Icon className="h-4 w-4" />}
+              <span className="hidden sm:inline">{label}</span>
+              <span className="sm:hidden">{Icon ? "" : label}</span>
+              {badge ? (
+                <span className="absolute -top-2 -right-2 flex h-6 min-w-6 items-center justify-center rounded-full bg-destructive px-1.5 text-xs font-black text-destructive-foreground">
+                  {badge}
+                </span>
+              ) : null}
+            </button>
+          ))}
         </div>
 
         <p className="text-sm text-muted-foreground hidden md:block font-medium">
@@ -482,7 +486,7 @@ export default function POS() {
             </>
           )}
         </div>
-      ) : (
+      ) : view === "orders" ? (
         /* ── ORDERS VIEW ── */
         <div className="flex-1 overflow-y-auto p-4">
           {!activeOrders?.length ? (
@@ -560,6 +564,12 @@ export default function POS() {
             </div>
           )}
         </div>
+      ) : view === "sales" ? (
+        <POSSalesView />
+      ) : view === "inventory" ? (
+        <POSInventoryView />
+      ) : (
+        <POSReportView />
       )}
     </div>
   );
