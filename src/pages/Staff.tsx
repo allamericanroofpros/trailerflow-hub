@@ -1,16 +1,16 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import {
   Users as UsersIcon, AlertTriangle, Clock, Shield, Eye, Plus, Pencil,
-  Trash2, X, Save, Calendar, Loader2,
+  Trash2, X, Save, Calendar, Loader2, ChevronLeft, ChevronRight,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useStaffMembers, useCreateStaffMember, useUpdateStaffMember, useDeleteStaffMember } from "@/hooks/useStaffMembers";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, startOfWeek, addDays, isSameDay, addWeeks, subWeeks } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 export default function Staff() {
