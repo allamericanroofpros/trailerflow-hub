@@ -144,7 +144,9 @@ export default function MenuPage() {
       const optionCosts = mod.options.map(opt => {
         return (opt.inventoryAdjustments || []).reduce((sum, adj) => {
           const invItem = inventoryItems.find(ii => ii.id === adj.inventoryItemId);
-          return sum + (Number(invItem?.cost_per_unit) || 0) * adj.extraQty;
+          const costPerUnit = Number(invItem?.cost_per_unit) || 0;
+          const conversion = Number((invItem as any)?.serving_unit_conversion) || 1;
+          return sum + (costPerUnit / conversion) * adj.extraQty;
         }, 0);
       });
       if (optionCosts.length > 0) {
