@@ -13,6 +13,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import POSSalesView from "@/components/pos/POSSalesView";
 import POSInventoryView from "@/components/pos/POSInventoryView";
 import POSReportView from "@/components/pos/POSReportView";
