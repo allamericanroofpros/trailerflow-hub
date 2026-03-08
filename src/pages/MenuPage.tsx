@@ -73,11 +73,12 @@ const emptyForm: FormState = {
 
 // Compute live cost from ingredients + modifiers using current inventory prices
 function computeLiveCost(item: any, allInventory?: any[]): number {
-  // Base recipe cost from menu_item_ingredients join
+  // Base recipe cost — prefer fresh inventory data over stale joined data
   let baseCost = 0;
   const ingredients = item.menu_item_ingredients || [];
   for (const ing of ingredients) {
-    const costPerUnit = Number(ing.inventory_items?.cost_per_unit) || 0;
+    const freshInv = allInventory?.find((ii: any) => ii.id === ing.inventory_item_id);
+    const costPerUnit = Number(freshInv?.cost_per_unit ?? ing.inventory_items?.cost_per_unit) || 0;
     baseCost += costPerUnit * Number(ing.quantity_used);
   }
 
