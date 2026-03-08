@@ -264,9 +264,31 @@ export default function Staff() {
               ))}
             </div>
             {tab === "roster" && canManage("staff") && (
-              <Button size="sm" onClick={() => { resetForm(); setAddingNew(true); }} className="gap-1.5">
-                <Plus className="h-3.5 w-3.5" /> Add Staff
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (!ent.canAddStaff) {
+                      setShowUpgrade(true);
+                      return;
+                    }
+                    resetForm(); setAddingNew(true);
+                  }}
+                  className="gap-1.5"
+                  variant={ent.canAddStaff ? "default" : "outline"}
+                >
+                  {ent.canAddStaff ? <Plus className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+                  Add Staff
+                  {!ent.canAddStaff && <span className="text-xs text-muted-foreground ml-1">({ent.staffCount}/{ent.maxStaff})</span>}
+                </Button>
+                <UpgradeModal
+                  open={showUpgrade}
+                  onOpenChange={setShowUpgrade}
+                  feature="More Staff Members"
+                  currentPlan={ent.currentPlan}
+                  requiredPlan={ent.suggestedUpgrade || "pro"}
+                />
+              </>
             )}
           </div>
         </div>
