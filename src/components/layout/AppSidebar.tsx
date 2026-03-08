@@ -107,7 +107,7 @@ export function AppSidebar() {
         {!collapsed && (
           <div className="flex flex-col">
             <span className="text-lg font-bold text-sidebar-accent-foreground tracking-tight leading-tight">
-              TrailerOS
+              VendorFlow
             </span>
             {role && (
               <span className="text-[10px] font-medium text-sidebar-muted uppercase tracking-wider flex items-center gap-1">

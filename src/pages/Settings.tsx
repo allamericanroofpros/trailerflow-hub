@@ -189,7 +189,7 @@ export default function SettingsPage() {
       <div className="space-y-6 animate-fade-in">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
-          <p className="text-sm text-muted-foreground mt-1">Manage your TrailerOS account and preferences.</p>
+          <p className="text-sm text-muted-foreground mt-1">Manage your VendorFlow account and preferences.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
