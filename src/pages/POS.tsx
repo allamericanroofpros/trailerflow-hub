@@ -345,8 +345,8 @@ export default function POS() {
     );
   };
 
-  // Cart content (shared between sidebar and bottom sheet)
-  const CartContent = () => (
+  // Cart content JSX (not a component — avoids remounting inputs on every render)
+  const cartContent = (
     <>
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2.5">
         {cart.length === 0 ? (
@@ -355,7 +355,7 @@ export default function POS() {
             <p className="text-base font-medium">Tap items to add</p>
           </div>
         ) : (
-          cart.map((item) => <SwipeableCartItem key={item.menu_item_id} item={item} />)
+          cart.map((item) => <SwipeableCartItem key={item.menu_item_id} item={item} cart={cart} setCart={setCart} updateQuantity={updateQuantity} />)
         )}
       </div>
 
