@@ -297,7 +297,7 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
                 </div>
                 <div>
                   <label className="text-xs font-bold text-muted-foreground">Confirm PIN</label>
-                  <Input inputMode="numeric" pattern="[0-9]*" maxLength={6} value={confirmPin} onChange={e => setConfirmPin(e.target.value.replace(/\D/g, ""))}
+                  <Input inputMode="numeric" pattern="[0-9]*" maxLength={4} value={confirmPin} onChange={e => setConfirmPin(e.target.value.replace(/\D/g, ""))}
                     className="h-12 text-center text-2xl font-black tracking-[0.5em] rounded-xl border-2" placeholder="Confirm PIN" />
                 </div>
                 <div className="flex gap-2">

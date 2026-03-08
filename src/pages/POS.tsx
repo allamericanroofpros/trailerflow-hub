@@ -76,7 +76,7 @@ export default function POS() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [view, setView] = useState<"register" | "orders" | "history" | "sales" | "inventory" | "report" | "timeclock">("register");
+  const [view, setView] = useState<"register" | "orders" | "history" | "timeclock">("register");
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showModifierPicker, setShowModifierPicker] = useState<{ item: any; modifiers: Modifier[] } | null>(null);
