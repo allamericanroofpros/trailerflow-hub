@@ -1,6 +1,22 @@
 /**
  * Centralized plan entitlements — single source of truth for limits & feature flags.
  * All gating logic reads from here.
+ *
+ * PLAN MATRIX:
+ * ┌──────────────┬──────┬─────────┬─────┬────────────┐
+ * │ Feature      │ Free │ Starter │ Pro │ Enterprise │
+ * ├──────────────┼──────┼─────────┼─────┼────────────┤
+ * │ Trailers     │  1   │   1     │ ∞   │     ∞      │
+ * │ Staff        │  2   │   5     │ ∞   │     ∞      │
+ * │ AI Discovery │  ✗   │   ✗     │ ✓   │     ✓      │
+ * │ AI Forecast  │  ✗   │   ✗     │ ✓   │     ✓      │
+ * │ AI Chat      │  ✗   │   ✓     │ ✓   │     ✓      │
+ * │ Fleet View   │  ✗   │   ✗     │ ✓   │     ✓      │
+ * │ Adv.Analytics│  ✗   │   ✗     │ ✓   │     ✓      │
+ * │ Multi-Org    │  ✗   │   ✗     │ ✗   │     ✓      │
+ * │ Integrations │  ✗   │   ✗     │ ✗   │     ✓      │
+ * │ White-Label  │  ✗   │   ✗     │ ✗   │     ✓      │
+ * └──────────────┴──────┴─────────┴─────┴────────────┘
  */
 
 export type PlanKey = "free" | "starter" | "pro" | "enterprise";
@@ -9,6 +25,7 @@ export interface PlanEntitlements {
   label: string;
   maxTrailers: number;
   maxStaff: number;
+  aiChat: boolean;
   aiDiscovery: boolean;
   aiForecasting: boolean;
   fleetOverview: boolean;
@@ -24,6 +41,7 @@ export const PLAN_ENTITLEMENTS: Record<PlanKey, PlanEntitlements> = {
     label: "Free",
     maxTrailers: 1,
     maxStaff: 2,
+    aiChat: false,
     aiDiscovery: false,
     aiForecasting: false,
     fleetOverview: false,
@@ -35,7 +53,8 @@ export const PLAN_ENTITLEMENTS: Record<PlanKey, PlanEntitlements> = {
   starter: {
     label: "Starter",
     maxTrailers: 1,
-    maxStaff: 2,
+    maxStaff: 5,
+    aiChat: true,
     aiDiscovery: false,
     aiForecasting: false,
     fleetOverview: false,
@@ -48,6 +67,7 @@ export const PLAN_ENTITLEMENTS: Record<PlanKey, PlanEntitlements> = {
     label: "Pro",
     maxTrailers: Infinity,
     maxStaff: Infinity,
+    aiChat: true,
     aiDiscovery: true,
     aiForecasting: true,
     fleetOverview: true,
@@ -60,6 +80,7 @@ export const PLAN_ENTITLEMENTS: Record<PlanKey, PlanEntitlements> = {
     label: "Enterprise",
     maxTrailers: Infinity,
     maxStaff: Infinity,
+    aiChat: true,
     aiDiscovery: true,
     aiForecasting: true,
     fleetOverview: true,
@@ -80,11 +101,12 @@ export function getEntitlements(plan: string | null | undefined): PlanEntitlemen
 export function suggestedUpgrade(plan: string | null | undefined): PlanKey | null {
   switch (plan) {
     case "free":
+      return "starter";
     case "starter":
       return "pro";
     case "pro":
       return "enterprise";
     default:
-      return "pro";
+      return "starter";
   }
 }

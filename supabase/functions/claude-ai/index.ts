@@ -35,12 +35,26 @@ IMPORTANT: You can ONLY access data for the current user's organization. Never r
   "admin-ai": `You are an internal platform analytics AI for TrailerOS. You help super admins analyze cross-org trends, churn risk, usage patterns, and support needs. You have access to aggregated platform data. Be analytical and direct. Use markdown.`,
 };
 
-// Scope levels: org-private, benchmark (cross-org aggregated), admin (super admin only)
+// Features that require specific plan entitlements
+const GATED_FEATURES: Record<string, string> = {
+  discovery: "aiDiscovery",
+  forecast: "aiForecasting",
+  chat: "aiChat",
+  "validate-trailer": "aiChat",
+};
+
+// Plan entitlements (must mirror src/config/entitlements.ts)
+const PLAN_ENTITLEMENTS: Record<string, Record<string, boolean>> = {
+  free: { aiChat: false, aiDiscovery: false, aiForecasting: false },
+  starter: { aiChat: true, aiDiscovery: false, aiForecasting: false },
+  pro: { aiChat: true, aiDiscovery: true, aiForecasting: true },
+  enterprise: { aiChat: true, aiDiscovery: true, aiForecasting: true },
+};
+
 type AIScope = "org-private" | "benchmark" | "admin";
 
 function resolveScope(feature: string, role: string): AIScope {
   if (feature === "admin-ai") return "admin";
-  // All user-facing features are org-private
   return "org-private";
 }
 
@@ -53,27 +67,27 @@ serve(async (req) => {
 
     const { messages, system, stream = true, max_tokens = 2048, feature, context } = await req.json();
 
-    // ─── AI CONTEXT GATING ───
-    // Verify caller identity and enforce scoping
+    // ─── AUTH & IDENTITY ───
     const authHeader = req.headers.get("Authorization");
-    let callerOrgId: string | null = null;
     let callerUserId: string | null = null;
     let callerRole: string | null = null;
     let isSuperAdmin = false;
+    let orgPlan = "free";
+
+    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
     if (authHeader) {
-      const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-      const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
       const callerClient = createClient(supabaseUrl, anonKey, {
         global: { headers: { Authorization: authHeader } },
       });
       const { data: { user } } = await callerClient.auth.getUser();
       if (user) {
         callerUserId = user.id;
+        const adminClient = createClient(supabaseUrl, serviceKey);
 
         // Check super admin
-        const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-        const adminClient = createClient(supabaseUrl, serviceKey);
         const { data: roleData } = await adminClient
           .from("user_roles")
           .select("role")
@@ -81,32 +95,62 @@ serve(async (req) => {
           .single();
         callerRole = roleData?.role || "staff";
         isSuperAdmin = callerRole === "super_admin";
+
+        // Get org plan
+        const ctxOrgId = context?.org_id;
+        if (ctxOrgId) {
+          const { data: orgData } = await adminClient
+            .from("organizations")
+            .select("plan")
+            .eq("id", ctxOrgId)
+            .single();
+          orgPlan = orgData?.plan || "free";
+        }
       }
     }
 
-    // Extract context from client
     const ctxOrgId = context?.org_id || null;
     const ctxTrailerId = context?.trailer_id || null;
     const ctxModule = context?.module || null;
 
-    callerOrgId = ctxOrgId;
-
     const scope = resolveScope(feature || "chat", callerRole || "staff");
 
-    // Block admin-ai for non-super-admins
+    // ─── ADMIN-AI GATING ───
     if (scope === "admin" && !isSuperAdmin) {
       return new Response(JSON.stringify({ error: "Admin AI access requires super admin role." }), {
         status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
+    // ─── PLAN ENTITLEMENT GATING ───
+    if (!isSuperAdmin) {
+      const featureKey = feature || "chat";
+      const entitlementKey = GATED_FEATURES[featureKey];
+      if (entitlementKey) {
+        const planEnts = PLAN_ENTITLEMENTS[orgPlan] || PLAN_ENTITLEMENTS.free;
+        if (!planEnts[entitlementKey]) {
+          const featureLabels: Record<string, string> = {
+            aiDiscovery: "AI Event Discovery",
+            aiForecasting: "AI Revenue Forecasting",
+            aiChat: "AI Assistant",
+          };
+          const label = featureLabels[entitlementKey] || "This AI feature";
+          return new Response(JSON.stringify({
+            error: `${label} requires a plan upgrade. Please upgrade to access this feature.`,
+            code: "PLAN_LIMIT",
+          }), {
+            status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+      }
+    }
+
     // Build scoped system prompt
     let systemPrompt = system || systemPrompts[feature] || systemPrompts.chat;
 
-    // Inject context metadata into the system prompt for org-private scope
-    if (scope === "org-private" && callerOrgId) {
+    if (scope === "org-private" && ctxOrgId) {
       systemPrompt += `\n\nCONTEXT:
-- Organization ID: ${callerOrgId}
+- Organization ID: ${ctxOrgId}
 - User ID: ${callerUserId || "unknown"}
 - Role: ${callerRole || "unknown"}
 - Active Trailer: ${ctxTrailerId || "none"}
