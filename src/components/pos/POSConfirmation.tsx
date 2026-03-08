@@ -20,6 +20,7 @@ type ConfirmationProps = {
   items: ReceiptItem[];
   subtotal: number;
   tax: number;
+  taxLabel?: string;
   tip: number;
   total: number;
   paymentMethod: string;
