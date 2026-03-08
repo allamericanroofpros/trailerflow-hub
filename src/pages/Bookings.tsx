@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useOrgId } from "@/hooks/useOrgId";
 
 export default function Bookings() {
   const { data: bookings, isLoading } = useBookings();
