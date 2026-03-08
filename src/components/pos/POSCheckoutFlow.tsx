@@ -28,7 +28,7 @@ type CheckoutProps = {
   isPending: boolean;
 };
 
-type Step = "payment" | "tip" | "cash" | "processing";
+type Step = "payment" | "tip" | "cash" | "processing" | "card-done";
 
 const tipPresets = [0, 15, 18, 20, 25];
 
@@ -60,8 +60,12 @@ export default function POSCheckoutFlow({
   const handlePaymentSelect = async (method: "cash" | "card" | "digital") => {
     setSelectedPayment(method);
     if (method === "card") {
-      // Card → show tip screen first
-      setStep("tip");
+      // Card → process payment first, then ask for tip
+      setStep("processing");
+      const result = await processStripePayment(total);
+      if (result.success) {
+        setStep("tip");
+      }
     } else if (method === "cash") {
       setStep("cash");
     } else {
@@ -71,13 +75,9 @@ export default function POSCheckoutFlow({
     }
   };
 
-  const handleCardComplete = async () => {
+  const handleTipComplete = async () => {
     setStep("processing");
-    // TODO: Call real Stripe API here
-    const result = await processStripePayment(total + tipAmount);
-    if (result.success) {
-      await onComplete({ paymentMethod: "card", tip: tipAmount });
-    }
+    await onComplete({ paymentMethod: "card", tip: tipAmount });
   };
 
   const handleCashComplete = async () => {
@@ -247,10 +247,10 @@ export default function POSCheckoutFlow({
               <Button
                 size="lg"
                 className="w-full h-14 text-base font-black rounded-xl active:scale-95 touch-manipulation"
-                onClick={handleCardComplete}
+                onClick={handleTipComplete}
                 disabled={isPending}
               >
-                {tipAmount > 0 ? `Charge Card · $${(total + tipAmount).toFixed(2)}` : `No Tip · Charge $${total.toFixed(2)}`}
+                {tipAmount > 0 ? `Add Tip · $${tipAmount.toFixed(2)}` : `No Tip · Done`}
               </Button>
             </motion.div>
           )}
