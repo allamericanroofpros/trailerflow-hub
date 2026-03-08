@@ -1,5 +1,5 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ClipboardList, DollarSign, Check, Clock, Plus, Pencil, Trash2, Save, Loader2, X } from "lucide-react";
+import { ClipboardList, DollarSign, Check, Clock, Plus, Pencil, Trash2, Save, Loader2, X, Link2, Copy } from "lucide-react";
 import { useState } from "react";
 import { useBookings, useCreateBooking, useUpdateBooking } from "@/hooks/useBookings";
 import { useTrailers } from "@/hooks/useTrailers";
