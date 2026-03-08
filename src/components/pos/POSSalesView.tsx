@@ -169,4 +169,6 @@ const POSSalesView = forwardRef<HTMLDivElement>(function POSSalesView(_props, re
       </div>
     </div>
   );
-}
+});
+
+export default POSSalesView;

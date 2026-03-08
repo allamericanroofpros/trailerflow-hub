@@ -106,4 +106,6 @@ const POSInventoryView = forwardRef<HTMLDivElement>(function POSInventoryView(_p
       )}
     </div>
   );
-}
+});
+
+export default POSInventoryView;

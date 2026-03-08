@@ -220,4 +220,6 @@ const POSReportView = forwardRef<HTMLDivElement>(function POSReportView(_props, 
       )}
     </div>
   );
-}
+});
+
+export default POSReportView;
