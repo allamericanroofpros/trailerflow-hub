@@ -19,10 +19,13 @@ type CheckoutProps = {
   subtotal: number;
   tax: number;
   total: number;
+  surchargeSettings?: { enabled: boolean; label: string; percent: number; flat: number | null; cap: number | null };
   onComplete: (data: {
     paymentMethod: "cash" | "card" | "digital";
     tip: number;
     cashTendered?: number;
+    surchargeAmount?: number;
+    surchargeLabel?: string;
   }) => Promise<void>;
   onCancel: () => void;
   isPending: boolean;
