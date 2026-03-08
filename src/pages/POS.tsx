@@ -74,7 +74,6 @@ export default function POS() {
   const [pendingModifiers, setPendingModifiers] = useState<Record<string, { label: string; priceAdjust: number; inventoryAdjustments?: { inventoryItemId: string; extraQty: number }[] }[]>>({});
   const [showEOD, setShowEOD] = useState(false);
   const [specialInstructions, setSpecialInstructions] = useState("");
-  const [specialInstructions, setSpecialInstructions] = useState("");
   const [confirmation, setConfirmation] = useState<{
     orderNumber: number;
     items: { name: string; quantity: number; price: number }[];
