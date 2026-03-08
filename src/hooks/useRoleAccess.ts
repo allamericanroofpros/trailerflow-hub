@@ -15,6 +15,8 @@ type Permission =
   | "view_financials"
   | "view_maintenance"
   | "view_settings"
+  | "view_management"
+  | "view_timeclock"
   | "manage_menu"
   | "manage_inventory"
   | "manage_events"
