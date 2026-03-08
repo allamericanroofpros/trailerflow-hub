@@ -15,6 +15,8 @@ type Permission =
   | "view_financials"
   | "view_maintenance"
   | "view_settings"
+  | "view_management"
+  | "view_timeclock"
   | "manage_menu"
   | "manage_inventory"
   | "manage_events"
@@ -34,6 +36,7 @@ const rolePermissions: Record<string, Permission[]> = {
     "view_dashboard", "view_pos", "view_menu", "view_inventory", "view_events",
     "view_discover", "view_calendar", "view_fleet", "view_trailers", "view_staff",
     "view_bookings", "view_financials", "view_maintenance", "view_settings",
+    "view_management", "view_timeclock",
     "manage_menu", "manage_inventory", "manage_events", "manage_trailers",
     "manage_staff", "manage_bookings", "manage_financials", "manage_maintenance",
     "manage_settings", "manage_roles", "delete_records", "run_end_of_day", "view_reports",
@@ -42,13 +45,14 @@ const rolePermissions: Record<string, Permission[]> = {
     "view_dashboard", "view_pos", "view_menu", "view_inventory", "view_events",
     "view_discover", "view_calendar", "view_fleet", "view_trailers", "view_staff",
     "view_bookings", "view_financials", "view_maintenance", "view_settings",
+    "view_management", "view_timeclock",
     "manage_menu", "manage_inventory", "manage_events", "manage_trailers",
     "manage_staff", "manage_bookings", "manage_maintenance",
     "run_end_of_day", "view_reports",
   ],
   staff: [
     "view_dashboard", "view_pos", "view_menu", "view_inventory", "view_calendar",
-    "view_bookings", "view_maintenance",
+    "view_bookings", "view_maintenance", "view_management", "view_timeclock",
     "run_end_of_day",
   ],
 };

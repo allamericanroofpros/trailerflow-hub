@@ -49,7 +49,7 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
   }, []);
 
   const appendDigit = useCallback((d: string) => {
-    setPin_(prev => prev.length < 6 ? prev + d : prev);
+    setPin_(prev => prev.length < 4 ? prev + d : prev);
   }, []);
   const backspace = useCallback(() => setPin_(prev => prev.slice(0, -1)), []);
   const clearPin = () => { setPin_(""); setMatchedStaff(null); setMatchedClock(null); setStep("pin-entry"); };
@@ -220,7 +220,7 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
 
                 {/* PIN display */}
                 <div className="flex justify-center gap-3">
-                  {Array.from({ length: 6 }).map((_, i) => (
+                  {Array.from({ length: 4 }).map((_, i) => (
                     <div
                       key={i}
                       className={`h-14 w-12 rounded-xl border-2 flex items-center justify-center text-2xl font-black transition-all ${
@@ -291,13 +291,13 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
                   <p className="text-sm font-bold text-card-foreground">Setting PIN for {setupStaffName}</p>
                 </div>
                 <div>
-                  <label className="text-xs font-bold text-muted-foreground">New PIN (4-6 digits)</label>
-                  <Input inputMode="numeric" pattern="[0-9]*" maxLength={6} value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, ""))}
+                  <label className="text-xs font-bold text-muted-foreground">New PIN (4 digits)</label>
+                  <Input inputMode="numeric" pattern="[0-9]*" maxLength={4} value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, ""))}
                     className="h-12 text-center text-2xl font-black tracking-[0.5em] rounded-xl border-2" placeholder="Enter PIN" autoFocus />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-muted-foreground">Confirm PIN</label>
-                  <Input inputMode="numeric" pattern="[0-9]*" maxLength={6} value={confirmPin} onChange={e => setConfirmPin(e.target.value.replace(/\D/g, ""))}
+                  <Input inputMode="numeric" pattern="[0-9]*" maxLength={4} value={confirmPin} onChange={e => setConfirmPin(e.target.value.replace(/\D/g, ""))}
                     className="h-12 text-center text-2xl font-black tracking-[0.5em] rounded-xl border-2" placeholder="Confirm PIN" />
                 </div>
                 <div className="flex gap-2">

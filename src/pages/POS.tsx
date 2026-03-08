@@ -76,7 +76,7 @@ export default function POS() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
-  const [view, setView] = useState<"register" | "orders" | "history" | "sales" | "inventory" | "report" | "timeclock">("register");
+  const [view, setView] = useState<"register" | "orders" | "history" | "timeclock">("register");
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
   const [showCheckout, setShowCheckout] = useState(false);
   const [showModifierPicker, setShowModifierPicker] = useState<{ item: any; modifiers: Modifier[] } | null>(null);
@@ -466,9 +466,6 @@ export default function POS() {
             { key: "orders" as const, label: "Orders", icon: null, badge: activeOrders?.length },
             { key: "timeclock" as const, label: "Clock", icon: Clock },
             { key: "history" as const, label: "History", icon: Receipt },
-            { key: "sales" as const, label: "Sales", icon: BarChart3 },
-            { key: "inventory" as const, label: "Stock", icon: Package },
-            { key: "report" as const, label: "Report", icon: FileText },
           ].map(({ key, label, icon: Icon, badge }) => (
             <button
               key={key}
@@ -762,13 +759,7 @@ export default function POS() {
         <POSTimeClock eventId={sodData?.eventId} trailerId={sodData?.trailerId} />
       ) : view === "history" ? (
         <POSOrderHistory />
-      ) : view === "sales" ? (
-        <POSSalesView />
-      ) : view === "inventory" ? (
-        <POSInventoryView />
-      ) : (
-        <POSReportView />
-      )}
+      ) : null}
 
       {/* Checkout Flow */}
       {showCheckout && cart.length > 0 && (
@@ -878,7 +869,7 @@ export default function POS() {
           <p className="text-sm text-muted-foreground text-center">Enter an owner or manager PIN to exit the POS terminal.</p>
 
           <div className="flex justify-center gap-3 my-4">
-            {Array.from({ length: 6 }).map((_, i) => (
+            {Array.from({ length: 4 }).map((_, i) => (
               <div
                 key={i}
                 className={`h-12 w-10 rounded-xl border-2 flex items-center justify-center text-xl font-black transition-all ${
@@ -905,7 +896,7 @@ export default function POS() {
                 </button>
               );
               return (
-                <button key={i} onClick={() => setExitPin(prev => prev.length < 6 ? prev + key : prev)}
+                <button key={i} onClick={() => setExitPin(prev => prev.length < 4 ? prev + key : prev)}
                   className="h-14 rounded-xl border-2 border-border bg-background text-lg font-black text-card-foreground hover:bg-secondary active:scale-90 active:bg-primary/10 touch-manipulation transition-all">
                   {key}
                 </button>
