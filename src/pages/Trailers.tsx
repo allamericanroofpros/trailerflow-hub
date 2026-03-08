@@ -635,6 +635,14 @@ export default function Trailers() {
                       <Pencil className="h-3 w-3" /> Edit
                     </Button>
                     <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-1.5 text-xs"
+                      onClick={() => handleCopyTrailer(t)}
+                    >
+                      <Copy className="h-3 w-3" /> Copy
+                    </Button>
+                    <Button
                       variant="ghost"
                       size="sm"
                       className="gap-1.5 text-xs text-destructive hover:text-destructive hover:bg-destructive/10"
