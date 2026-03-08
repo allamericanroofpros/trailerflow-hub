@@ -87,6 +87,45 @@ export default function SettingsPage() {
   const [phone, setPhone] = useState("");
   const [timezone, setTimezone] = useState("");
 
+  // Surcharge settings
+  const [surchargeEnabled, setSurchargeEnabled] = useState(false);
+  const [surchargeLabel, setSurchargeLabel] = useState("Non-Cash Adjustment");
+  const [surchargePercent, setSurchargePercent] = useState("3.0");
+  const [surchargeFlat, setSurchargeFlat] = useState("");
+  const [surchargeCap, setSurchargeCap] = useState("");
+  const [surchargeLoaded, setSurchargeLoaded] = useState(false);
+
+  useEffect(() => {
+    if (currentOrg && !surchargeLoaded) {
+      const org = currentOrg as any;
+      setSurchargeEnabled(org.surcharge_enabled ?? false);
+      setSurchargeLabel(org.surcharge_label ?? "Non-Cash Adjustment");
+      setSurchargePercent(String(org.surcharge_percent ?? 3.0));
+      setSurchargeFlat(org.surcharge_flat != null ? String(org.surcharge_flat) : "");
+      setSurchargeCap(org.surcharge_cap != null ? String(org.surcharge_cap) : "");
+      setSurchargeLoaded(true);
+    }
+  }, [currentOrg, surchargeLoaded]);
+
+  const saveSurcharge = useMutation({
+    mutationFn: async () => {
+      if (!currentOrg) throw new Error("No org");
+      const { error } = await supabase.from("organizations").update({
+        surcharge_enabled: surchargeEnabled,
+        surcharge_label: surchargeLabel,
+        surcharge_percent: parseFloat(surchargePercent) || 3.0,
+        surcharge_flat: surchargeFlat ? parseFloat(surchargeFlat) : null,
+        surcharge_cap: surchargeCap ? parseFloat(surchargeCap) : null,
+      } as any).eq("id", currentOrg.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["org_memberships"] });
+      toast.success("Payment settings saved");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   // Sync form state when profile loads
   const profileLoaded = profile && !businessName && !fullName;
   if (profileLoaded) {
