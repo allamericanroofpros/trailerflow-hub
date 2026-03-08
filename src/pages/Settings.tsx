@@ -48,7 +48,7 @@ export default function SettingsPage() {
   });
 
   const updateRole = useMutation({
-    mutationFn: async ({ id, role }: { id: string; role: string }) => {
+    mutationFn: async ({ id, role }: { id: string; role: "owner" | "manager" | "staff" }) => {
       const { error } = await supabase.from("user_roles").update({ role }).eq("id", id);
       if (error) throw error;
     },
