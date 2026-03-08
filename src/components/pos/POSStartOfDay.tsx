@@ -7,12 +7,30 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import {
   Sun, DollarSign, Package, Truck, Calendar, Users, ChevronRight,
-  Loader2, CheckCircle, MapPin, Clock, AlertTriangle,
+  Loader2, CheckCircle, MapPin, Clock, AlertTriangle, Banknote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { format } from "date-fns";
+
+type Denomination = { label: string; value: number };
+
+const billDenominations: Denomination[] = [
+  { label: "$100", value: 100 },
+  { label: "$50", value: 50 },
+  { label: "$20", value: 20 },
+  { label: "$10", value: 10 },
+  { label: "$5", value: 5 },
+  { label: "$1", value: 1 },
+];
+
+const coinDenominations: Denomination[] = [
+  { label: "Quarter", value: 0.25 },
+  { label: "Dime", value: 0.10 },
+  { label: "Nickel", value: 0.05 },
+  { label: "Penny", value: 0.01 },
+];
 
 type SODStep = "event" | "cash" | "inventory" | "checklist" | "ready";
 
