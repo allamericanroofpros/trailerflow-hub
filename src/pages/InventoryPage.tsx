@@ -36,7 +36,7 @@ export default function Inventory() {
   const [showAdd, setShowAdd] = useState(false);
   const [newItem, setNewItem] = useState({
     name: "", unit: "each", current_stock: 0, par_level: 0, reorder_point: 0,
-    cost_per_unit: 0, supplier: "", shelf_life_days: "",
+    cost_per_unit: 0, supplier: "", shelf_life_days: "", unit_size: "", serving_size: "",
   });
   const [adjustDialog, setAdjustDialog] = useState<{ id: string; name: string; unit: string } | null>(null);
   const [adjustAmount, setAdjustAmount] = useState("");
