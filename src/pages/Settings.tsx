@@ -75,6 +75,7 @@ export default function SettingsPage() {
   });
 
   const [businessName, setBusinessName] = useState("");
+  const [posLockMode, setPosLockMode] = useState(() => localStorage.getItem("pos_lock_mode") === "true");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [timezone, setTimezone] = useState("");
