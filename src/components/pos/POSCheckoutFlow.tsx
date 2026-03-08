@@ -2,7 +2,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   DollarSign, CreditCard, Banknote, Smartphone, ArrowLeft,
-  Loader2, Check, Percent,
+  Loader2, Percent,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,14 +28,21 @@ type CheckoutProps = {
   isPending: boolean;
 };
 
-type Step = "tip" | "payment" | "cash" | "processing";
+type Step = "payment" | "tip" | "cash" | "processing";
 
 const tipPresets = [0, 15, 18, 20, 25];
+
+// TODO: Replace with real Stripe integration
+const processStripePayment = async (_amount: number): Promise<{ success: boolean; chargeId?: string }> => {
+  // Placeholder: simulate Stripe API call
+  await new Promise((r) => setTimeout(r, 1500));
+  return { success: true, chargeId: `ch_placeholder_${Date.now()}` };
+};
 
 export default function POSCheckoutFlow({
   cart, subtotal, tax, total, onComplete, onCancel, isPending,
 }: CheckoutProps) {
-  const [step, setStep] = useState<Step>("tip");
+  const [step, setStep] = useState<Step>("payment");
   const [tipType, setTipType] = useState<"percent" | "dollar">("percent");
   const [tipPercent, setTipPercent] = useState(0);
   const [tipDollar, setTipDollar] = useState("");
@@ -45,36 +52,60 @@ export default function POSCheckoutFlow({
   const tipAmount = tipType === "percent"
     ? subtotal * (tipPercent / 100)
     : Number(tipDollar) || 0;
-  const grandTotal = total + tipAmount;
-  const changeDue = Number(cashTendered) - grandTotal;
+
+  // For card: grandTotal includes tip. For cash/digital: no tip.
+  const currentTotal = selectedPayment === "card" ? total + tipAmount : total;
+  const changeDue = Number(cashTendered) - total;
 
   const handlePaymentSelect = async (method: "cash" | "card" | "digital") => {
     setSelectedPayment(method);
-    if (method === "cash") {
+    if (method === "card") {
+      // Card → show tip screen first
+      setStep("tip");
+    } else if (method === "cash") {
       setStep("cash");
     } else {
+      // Digital (Apple Pay, etc.) → process immediately, no tip
       setStep("processing");
-      await onComplete({ paymentMethod: method, tip: tipAmount });
+      await onComplete({ paymentMethod: method, tip: 0 });
+    }
+  };
+
+  const handleCardComplete = async () => {
+    setStep("processing");
+    // TODO: Call real Stripe API here
+    const result = await processStripePayment(total + tipAmount);
+    if (result.success) {
+      await onComplete({ paymentMethod: "card", tip: tipAmount });
     }
   };
 
   const handleCashComplete = async () => {
-    if (Number(cashTendered) < grandTotal) return;
+    if (Number(cashTendered) < total) return;
     setStep("processing");
     await onComplete({
       paymentMethod: "cash",
-      tip: tipAmount,
+      tip: 0,
       cashTendered: Number(cashTendered),
     });
   };
 
   // Quick cash buttons
   const cashQuick = [
-    Math.ceil(grandTotal),
-    Math.ceil(grandTotal / 5) * 5,
-    Math.ceil(grandTotal / 10) * 10,
-    Math.ceil(grandTotal / 20) * 20,
-  ].filter((v, i, a) => a.indexOf(v) === i && v >= grandTotal).slice(0, 4);
+    Math.ceil(total),
+    Math.ceil(total / 5) * 5,
+    Math.ceil(total / 10) * 10,
+    Math.ceil(total / 20) * 20,
+  ].filter((v, i, a) => a.indexOf(v) === i && v >= total).slice(0, 4);
+
+  const getBackAction = () => {
+    switch (step) {
+      case "payment": return onCancel;
+      case "tip": return () => setStep("payment");
+      case "cash": return () => setStep("payment");
+      default: return onCancel;
+    }
+  };
 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center bg-foreground/50 backdrop-blur-sm">
@@ -86,19 +117,60 @@ export default function POSCheckoutFlow({
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-4 border-b-2 border-border bg-secondary/30">
           <button
-            onClick={step === "payment" ? () => setStep("tip") : step === "cash" ? () => setStep("payment") : onCancel}
+            onClick={getBackAction()}
             className="flex items-center gap-1.5 text-sm font-bold text-muted-foreground hover:text-foreground active:scale-95 transition-all touch-manipulation"
           >
             <ArrowLeft className="h-4 w-4" /> Back
           </button>
           <div className="text-right">
             <p className="text-xs text-muted-foreground font-semibold">Total</p>
-            <p className="text-xl font-black text-card-foreground">${grandTotal.toFixed(2)}</p>
+            <p className="text-xl font-black text-card-foreground">${currentTotal.toFixed(2)}</p>
           </div>
         </div>
 
         <AnimatePresence mode="wait">
-          {/* ── TIP STEP ── */}
+          {/* ── PAYMENT METHOD STEP (now first) ── */}
+          {step === "payment" && (
+            <motion.div
+              key="payment"
+              initial={{ x: 50, opacity: 0 }}
+              animate={{ x: 0, opacity: 1 }}
+              exit={{ x: -50, opacity: 0 }}
+              className="p-6 space-y-4"
+            >
+              <div className="text-center">
+                <h3 className="text-lg font-black text-card-foreground">Payment Method</h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Charge <span className="font-black text-card-foreground">${total.toFixed(2)}</span>
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                {[
+                  { method: "cash" as const, icon: Banknote, label: "Cash", desc: "Accept cash payment" },
+                  { method: "card" as const, icon: CreditCard, label: "Card", desc: "Credit or debit card (Stripe)" },
+                  { method: "digital" as const, icon: Smartphone, label: "Digital", desc: "Apple Pay, Google Pay, Venmo" },
+                ].map(({ method, icon: Icon, label, desc }) => (
+                  <button
+                    key={method}
+                    onClick={() => handlePaymentSelect(method)}
+                    disabled={isPending}
+                    className="w-full flex items-center gap-4 rounded-2xl border-2 border-border bg-background p-5 hover:border-primary/40 hover:shadow-md active:scale-[0.98] transition-all touch-manipulation text-left"
+                  >
+                    <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Icon className="h-7 w-7" />
+                    </div>
+                    <div>
+                      <p className="text-base font-black text-card-foreground">{label}</p>
+                      <p className="text-sm text-muted-foreground">{desc}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── TIP STEP (card only) ── */}
           {step === "tip" && (
             <motion.div
               key="tip"
@@ -167,7 +239,7 @@ export default function POSCheckoutFlow({
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">
                     Tip: <span className="font-black text-success">${tipAmount.toFixed(2)}</span>
-                    {" · "}New total: <span className="font-black text-card-foreground">${grandTotal.toFixed(2)}</span>
+                    {" · "}New total: <span className="font-black text-card-foreground">${(total + tipAmount).toFixed(2)}</span>
                   </p>
                 </div>
               )}
@@ -175,51 +247,11 @@ export default function POSCheckoutFlow({
               <Button
                 size="lg"
                 className="w-full h-14 text-base font-black rounded-xl active:scale-95 touch-manipulation"
-                onClick={() => setStep("payment")}
+                onClick={handleCardComplete}
+                disabled={isPending}
               >
-                {tipAmount > 0 ? `Continue · $${grandTotal.toFixed(2)}` : "No Tip · Continue"}
+                {tipAmount > 0 ? `Charge Card · $${(total + tipAmount).toFixed(2)}` : `No Tip · Charge $${total.toFixed(2)}`}
               </Button>
-            </motion.div>
-          )}
-
-          {/* ── PAYMENT STEP ── */}
-          {step === "payment" && (
-            <motion.div
-              key="payment"
-              initial={{ x: 50, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              exit={{ x: -50, opacity: 0 }}
-              className="p-6 space-y-4"
-            >
-              <div className="text-center">
-                <h3 className="text-lg font-black text-card-foreground">Payment Method</h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Charge <span className="font-black text-card-foreground">${grandTotal.toFixed(2)}</span>
-                </p>
-              </div>
-
-              <div className="space-y-3">
-                {[
-                  { method: "cash" as const, icon: Banknote, label: "Cash", desc: "Accept cash payment" },
-                  { method: "card" as const, icon: CreditCard, label: "Card", desc: "Credit or debit card" },
-                  { method: "digital" as const, icon: Smartphone, label: "Digital", desc: "Apple Pay, Google Pay, Venmo" },
-                ].map(({ method, icon: Icon, label, desc }) => (
-                  <button
-                    key={method}
-                    onClick={() => handlePaymentSelect(method)}
-                    disabled={isPending}
-                    className="w-full flex items-center gap-4 rounded-2xl border-2 border-border bg-background p-5 hover:border-primary/40 hover:shadow-md active:scale-[0.98] transition-all touch-manipulation text-left"
-                  >
-                    <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                      <Icon className="h-7 w-7" />
-                    </div>
-                    <div>
-                      <p className="text-base font-black text-card-foreground">{label}</p>
-                      <p className="text-sm text-muted-foreground">{desc}</p>
-                    </div>
-                  </button>
-                ))}
-              </div>
             </motion.div>
           )}
 
@@ -235,7 +267,7 @@ export default function POSCheckoutFlow({
               <div className="text-center">
                 <h3 className="text-lg font-black text-card-foreground">Cash Tendered</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Amount due: <span className="font-black text-card-foreground">${grandTotal.toFixed(2)}</span>
+                  Amount due: <span className="font-black text-card-foreground">${total.toFixed(2)}</span>
                 </p>
               </div>
 
@@ -267,7 +299,7 @@ export default function POSCheckoutFlow({
                 autoFocus
               />
 
-              {Number(cashTendered) >= grandTotal && (
+              {Number(cashTendered) >= total && (
                 <div className="rounded-2xl bg-success/10 border-2 border-success/30 p-4 text-center">
                   <p className="text-sm text-muted-foreground font-semibold">Change Due</p>
                   <p className="text-4xl font-black text-success">${changeDue.toFixed(2)}</p>
@@ -278,12 +310,12 @@ export default function POSCheckoutFlow({
                 size="lg"
                 className="w-full h-14 text-base font-black rounded-xl active:scale-95 touch-manipulation"
                 onClick={handleCashComplete}
-                disabled={Number(cashTendered) < grandTotal || isPending}
+                disabled={Number(cashTendered) < total || isPending}
               >
                 {isPending ? (
                   <><Loader2 className="h-5 w-5 animate-spin mr-2" /> Processing...</>
                 ) : (
-                  `Complete Sale · $${grandTotal.toFixed(2)}`
+                  `Complete Sale · $${total.toFixed(2)}`
                 )}
               </Button>
             </motion.div>
@@ -299,6 +331,9 @@ export default function POSCheckoutFlow({
             >
               <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
               <p className="text-lg font-black text-card-foreground">Processing payment...</p>
+              {selectedPayment === "card" && (
+                <p className="text-sm text-muted-foreground mt-2">Connecting to Stripe...</p>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
