@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
+import { useEntitlements } from "@/hooks/useEntitlements";
 
 export default function Dashboard() {
   const navigate = useNavigate();
