@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { supabase } from "@/integrations/supabase/client";
+
 import { Loader2, Truck, Receipt } from "lucide-react";
 
 export default function ReceiptPage() {
