@@ -280,6 +280,8 @@ export type Database = {
           par_level: number | null
           reorder_point: number | null
           serving_size: number | null
+          serving_unit: string | null
+          serving_unit_conversion: number | null
           shelf_life_days: number | null
           supplier: string | null
           trailer_id: string | null
@@ -297,6 +299,8 @@ export type Database = {
           par_level?: number | null
           reorder_point?: number | null
           serving_size?: number | null
+          serving_unit?: string | null
+          serving_unit_conversion?: number | null
           shelf_life_days?: number | null
           supplier?: string | null
           trailer_id?: string | null
@@ -314,6 +318,8 @@ export type Database = {
           par_level?: number | null
           reorder_point?: number | null
           serving_size?: number | null
+          serving_unit?: string | null
+          serving_unit_conversion?: number | null
           shelf_life_days?: number | null
           supplier?: string | null
           trailer_id?: string | null

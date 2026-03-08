@@ -46,6 +46,7 @@ export default function Inventory() {
   const emptyNew = {
     name: "", unit: "each", current_stock: 0, par_level: 0, reorder_point: 0,
     cost_per_unit: 0, supplier: "", shelf_life_days: "", unit_size: "", serving_size: "",
+    serving_unit: "", serving_unit_conversion: "",
   };
   const [newItem, setNewItem] = useState(emptyNew);
 
@@ -121,11 +122,13 @@ export default function Inventory() {
   const handleAddItem = async () => {
     if (!newItem.name.trim()) return toast.error("Name is required");
     try {
-      const { shelf_life_days, unit_size, serving_size, ...rest } = newItem;
+      const { shelf_life_days, unit_size, serving_size, serving_unit, serving_unit_conversion, ...rest } = newItem;
       const insertData: any = { ...rest };
       if (shelf_life_days) insertData.shelf_life_days = Number(shelf_life_days);
       if (unit_size) insertData.unit_size = Number(unit_size);
       if (serving_size) insertData.serving_size = Number(serving_size);
+      if (serving_unit) insertData.serving_unit = serving_unit;
+      if (serving_unit_conversion) insertData.serving_unit_conversion = Number(serving_unit_conversion);
       await createItem.mutateAsync(insertData);
       setShowAdd(false);
       setNewItem(emptyNew);
@@ -147,6 +150,8 @@ export default function Inventory() {
         shelf_life_days: editItem.shelf_life_days ? Number(editItem.shelf_life_days) : null,
         unit_size: editItem.unit_size ? Number(editItem.unit_size) : null,
         serving_size: editItem.serving_size ? Number(editItem.serving_size) : null,
+        serving_unit: editItem.serving_unit || null,
+        serving_unit_conversion: editItem.serving_unit_conversion ? Number(editItem.serving_unit_conversion) : null,
       });
       setEditItem(null);
       toast.success("Item updated");
@@ -186,15 +191,44 @@ export default function Inventory() {
     <div className="space-y-3 mt-2">
       <div><Label>Name</Label><Input value={item.name} onChange={(e) => setItem({ ...item, name: e.target.value })} className="h-11" /></div>
       <div className="grid grid-cols-2 gap-3">
-        <div><Label>Unit</Label>
+        <div><Label>Stock Unit (counting)</Label>
           <Select value={item.unit} onValueChange={(v) => setItem({ ...item, unit: v })}>
             <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
             <SelectContent>{units.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}</SelectContent>
           </Select>
+          <p className="text-[10px] text-muted-foreground mt-0.5">Unit staff counts in (e.g. gal)</p>
         </div>
         {!isEdit && (
           <div><Label>Current Stock</Label><Input type="number" value={item.current_stock} onChange={(e) => setItem({ ...item, current_stock: Number(e.target.value) })} className="h-11" /></div>
         )}
+      </div>
+      {/* Serving unit for recipes */}
+      <div className="rounded-lg border border-border bg-secondary/30 p-3 space-y-2">
+        <p className="text-xs font-bold text-muted-foreground">Recipe / Serving Unit (optional)</p>
+        <p className="text-[10px] text-muted-foreground">If recipes use a different unit than how you count stock. E.g. stock in gallons, recipes in oz.</p>
+        <div className="grid grid-cols-2 gap-3">
+          <div><Label className="text-[10px]">Serving Unit</Label>
+            <Select value={item.serving_unit || ""} onValueChange={(v) => setItem({ ...item, serving_unit: v || "" })}>
+              <SelectTrigger className="h-9"><SelectValue placeholder="Same as stock" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="">Same as stock unit</SelectItem>
+                {units.map((u) => <SelectItem key={u} value={u}>{u}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div><Label className="text-[10px]">Serving units per 1 stock unit</Label>
+            <Input
+              type="number" step="0.01" min="0"
+              placeholder="e.g. 128"
+              value={item.serving_unit_conversion || ""}
+              onChange={(e) => setItem({ ...item, serving_unit_conversion: e.target.value })}
+              className="h-9"
+            />
+            {item.serving_unit && item.serving_unit_conversion && (
+              <p className="text-[10px] text-primary mt-0.5">1 {item.unit} = {item.serving_unit_conversion} {item.serving_unit}</p>
+            )}
+          </div>
+        </div>
       </div>
       <div className="grid grid-cols-2 gap-3">
         <div><Label>Par Level</Label><Input type="number" value={item.par_level} onChange={(e) => setItem({ ...item, par_level: Number(e.target.value) })} className="h-11" /></div>

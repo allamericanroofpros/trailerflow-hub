@@ -215,7 +215,8 @@ export default function MenuPage() {
         if (i !== idx) return ing;
         if (field === "inventoryItemId") {
           const invItem = inventoryItems?.find(ii => ii.id === value);
-          return { ...ing, inventoryItemId: value, inventoryItemName: invItem?.name || "", unit: invItem?.unit || "" };
+          const servUnit = invItem ? (invItem as any).serving_unit : null;
+          return { ...ing, inventoryItemId: value, inventoryItemName: invItem?.name || "", unit: servUnit || invItem?.unit || "" };
         }
         return { ...ing, [field]: value };
       }),
@@ -485,7 +486,11 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                           className="w-full rounded-md border border-border bg-background text-foreground px-2 py-1.5 text-sm"
                         >
                           <option value="">Select item...</option>
-                          {inventoryItems?.map(ii => <option key={ii.id} value={ii.id}>{ii.name} ({ii.unit})</option>)}
+                          {inventoryItems?.map(ii => {
+                            const servUnit = (ii as any).serving_unit;
+                            const displayUnit = servUnit || ii.unit;
+                            return <option key={ii.id} value={ii.id}>{ii.name} ({displayUnit})</option>;
+                          })}
                         </select>
                       </div>
                       <div className="w-24">
@@ -499,7 +504,13 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                           className="h-8 text-sm"
                         />
                       </div>
-                      <div className="w-12 text-[10px] text-muted-foreground pb-1">{ing.unit}</div>
+                      <div className="w-16 text-[10px] text-muted-foreground pb-1">
+                        {(() => {
+                          const invItem = inventoryItems?.find(ii => ii.id === ing.inventoryItemId);
+                          const servUnit = invItem ? (invItem as any).serving_unit : null;
+                          return servUnit || ing.unit;
+                        })()}
+                      </div>
                       <button onClick={() => removeIngredient(idx)} className="p-1 text-destructive hover:bg-destructive/10 rounded">
                         <X className="h-3.5 w-3.5" />
                       </button>
