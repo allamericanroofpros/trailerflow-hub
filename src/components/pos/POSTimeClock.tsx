@@ -1,8 +1,8 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Clock, LogIn, LogOut, Delete, User, DollarSign,
-  Timer, Users, AlertCircle, CheckCircle, Loader2,
+  Timer, Users, CheckCircle, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -40,6 +40,7 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
   const [tipsInput, setTipsInput] = useState("");
   const [notesInput, setNotesInput] = useState("");
   const [now, setNow] = useState(new Date());
+  const containerRef = useRef<HTMLDivElement>(null);
 
   // Live timer
   useEffect(() => {
@@ -47,24 +48,42 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
     return () => clearInterval(interval);
   }, []);
 
-  const appendDigit = (d: string) => {
-    if (pin.length < 6) setPin_(pin + d);
-  };
-  const backspace = () => setPin_(pin.slice(0, -1));
+  const appendDigit = useCallback((d: string) => {
+    setPin_(prev => prev.length < 6 ? prev + d : prev);
+  }, []);
+  const backspace = useCallback(() => setPin_(prev => prev.slice(0, -1)), []);
   const clearPin = () => { setPin_(""); setMatchedStaff(null); setMatchedClock(null); setStep("pin-entry"); };
+
+  // Keyboard support for PIN entry
+  useEffect(() => {
+    if (step !== "pin-entry") return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key >= "0" && e.key <= "9") {
+        e.preventDefault();
+        appendDigit(e.key);
+      } else if (e.key === "Backspace") {
+        e.preventDefault();
+        backspace();
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        // trigger submit
+        handlePinSubmitRef.current?.();
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [step, appendDigit, backspace]);
 
   const handlePinSubmit = async () => {
     if (pin.length < 4) return toast.error("PIN must be at least 4 digits");
     try {
       const staff = await staffByPin.mutateAsync(pin);
-      // Check if currently clocked in
       const activeClock = activeClocks?.find(c => c.staff_id === staff.id);
       setMatchedStaff(staff);
       if (activeClock) {
         setMatchedClock(activeClock);
         setStep("clock-out-confirm");
       } else {
-        // Clock in
         await clockIn.mutateAsync({
           staff_id: staff.id,
           hourly_rate: Number(staff.hourly_rate) || 0,
@@ -80,6 +99,10 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
       toast.error("Invalid PIN. If you're new, ask your manager to add you to staff first.");
     }
   };
+
+  // Ref for keyboard Enter
+  const handlePinSubmitRef = useRef(handlePinSubmit);
+  handlePinSubmitRef.current = handlePinSubmit;
 
   const handleClockOut = async () => {
     if (!matchedClock) return;
@@ -113,10 +136,8 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
     }
   };
 
-  // Staff without PINs (for setup)
   const staffWithoutPin = staffMembers?.filter(s => !(s as any).pin && s.status === "active") || [];
 
-  // Calculate hours/cost for active clocks
   const activeWithCost = useMemo(() => {
     return (activeClocks || []).map(c => {
       const start = new Date(c.clock_in);
@@ -129,7 +150,6 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
   const totalActiveCost = activeWithCost.reduce((s, c) => s + c.cost, 0);
   const totalActiveHours = activeWithCost.reduce((s, c) => s + c.hours, 0);
 
-  // Today's completed shifts
   const completedToday = (todayEntries || []).filter(e => e.clock_out);
   const todayTotalHours = completedToday.reduce((s, e) => {
     const hrs = (new Date(e.clock_out!).getTime() - new Date(e.clock_in).getTime()) / 3600000;
@@ -148,10 +168,10 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
     return `${h}h ${m.toString().padStart(2, "0")}m ${sec.toString().padStart(2, "0")}s`;
   };
 
-  const numPad = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "back"];
+  const numPad = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "clear", "0", "back"];
 
   return (
-    <div className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6">
+    <div ref={containerRef} className="flex-1 overflow-y-auto p-4 md:p-6 space-y-6" tabIndex={-1}>
       {/* Active Shifts Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         <div className="rounded-2xl border-2 border-border bg-card p-4">
@@ -196,15 +216,15 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
           <AnimatePresence mode="wait">
             {step === "pin-entry" && (
               <motion.div key="pin" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
-                <p className="text-sm text-muted-foreground">Enter your PIN to clock in or out.</p>
+                <p className="text-sm text-muted-foreground">Enter your PIN to clock in or out. Type on keyboard or tap the numpad.</p>
 
                 {/* PIN display */}
-                <div className="flex justify-center gap-2">
+                <div className="flex justify-center gap-3">
                   {Array.from({ length: 6 }).map((_, i) => (
                     <div
                       key={i}
-                      className={`h-12 w-10 rounded-xl border-2 flex items-center justify-center text-xl font-black transition-all ${
-                        i < pin.length ? "border-primary bg-primary/10 text-primary" : "border-border bg-background text-transparent"
+                      className={`h-14 w-12 rounded-xl border-2 flex items-center justify-center text-2xl font-black transition-all ${
+                        i < pin.length ? "border-primary bg-primary/10 text-primary" : i === pin.length ? "border-primary/50 bg-background animate-pulse" : "border-border bg-background text-transparent"
                       }`}
                     >
                       {i < pin.length ? "•" : ""}
@@ -213,18 +233,23 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
                 </div>
 
                 {/* Numpad */}
-                <div className="grid grid-cols-3 gap-2 max-w-[280px] mx-auto">
+                <div className="grid grid-cols-3 gap-2.5 max-w-[300px] mx-auto">
                   {numPad.map((key, i) => {
-                    if (key === "") return <div key={i} />;
+                    if (key === "clear") return (
+                      <button key={i} onClick={() => setPin_("")}
+                        className="h-16 rounded-xl border-2 border-border bg-background flex items-center justify-center hover:bg-secondary active:scale-90 touch-manipulation text-xs font-bold text-muted-foreground uppercase">
+                        Clear
+                      </button>
+                    );
                     if (key === "back") return (
                       <button key={i} onClick={backspace}
-                        className="h-14 rounded-xl border-2 border-border bg-background flex items-center justify-center hover:bg-secondary active:scale-95 touch-manipulation">
+                        className="h-16 rounded-xl border-2 border-border bg-background flex items-center justify-center hover:bg-secondary active:scale-90 touch-manipulation">
                         <Delete className="h-5 w-5 text-muted-foreground" />
                       </button>
                     );
                     return (
                       <button key={i} onClick={() => appendDigit(key)}
-                        className="h-14 rounded-xl border-2 border-border bg-background text-lg font-black text-card-foreground hover:bg-secondary active:scale-95 touch-manipulation">
+                        className="h-16 rounded-xl border-2 border-border bg-background text-xl font-black text-card-foreground hover:bg-secondary active:scale-90 active:bg-primary/10 touch-manipulation transition-all">
                         {key}
                       </button>
                     );
@@ -240,7 +265,6 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
                   Submit PIN
                 </Button>
 
-                {/* Setup PIN link */}
                 {staffWithoutPin.length > 0 && (
                   <div className="pt-2 border-t border-border">
                     <p className="text-xs text-muted-foreground mb-2">First time? Set up your PIN:</p>
@@ -268,13 +292,13 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
                 </div>
                 <div>
                   <label className="text-xs font-bold text-muted-foreground">New PIN (4-6 digits)</label>
-                  <Input type="password" inputMode="numeric" maxLength={6} value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, ""))}
-                    className="h-12 text-center text-2xl font-black tracking-[0.5em] rounded-xl border-2" placeholder="••••" />
+                  <Input inputMode="numeric" pattern="[0-9]*" maxLength={6} value={newPin} onChange={e => setNewPin(e.target.value.replace(/\D/g, ""))}
+                    className="h-12 text-center text-2xl font-black tracking-[0.5em] rounded-xl border-2" placeholder="Enter PIN" autoFocus />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-muted-foreground">Confirm PIN</label>
-                  <Input type="password" inputMode="numeric" maxLength={6} value={confirmPin} onChange={e => setConfirmPin(e.target.value.replace(/\D/g, ""))}
-                    className="h-12 text-center text-2xl font-black tracking-[0.5em] rounded-xl border-2" placeholder="••••" />
+                  <Input inputMode="numeric" pattern="[0-9]*" maxLength={6} value={confirmPin} onChange={e => setConfirmPin(e.target.value.replace(/\D/g, ""))}
+                    className="h-12 text-center text-2xl font-black tracking-[0.5em] rounded-xl border-2" placeholder="Confirm PIN" />
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" className="flex-1 h-12 font-bold rounded-xl" onClick={clearPin}>Cancel</Button>
@@ -313,7 +337,7 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
 
                 <div>
                   <label className="text-xs font-bold text-muted-foreground">Tips Earned ($)</label>
-                  <Input type="number" step="0.01" min="0" value={tipsInput} onChange={e => setTipsInput(e.target.value)}
+                  <Input type="number" inputMode="decimal" step="0.01" min="0" value={tipsInput} onChange={e => setTipsInput(e.target.value)}
                     placeholder="0.00" className="h-12 rounded-xl border-2 text-lg font-bold" />
                 </div>
                 <div>
@@ -360,35 +384,33 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-card-foreground truncate">{(c as any).staff_members?.name || "Staff"}</p>
                     <p className="text-xs text-muted-foreground">
-                      In: {new Date(c.clock_in).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                      {" · "}{formatDuration(c.hours)}
+                      {formatDuration(c.hours)} · ${c.cost.toFixed(2)}
                     </p>
                   </div>
-                  <div className="text-right shrink-0">
-                    <p className="text-sm font-black text-warning">${c.cost.toFixed(2)}</p>
-                    <p className="text-[10px] text-muted-foreground">${Number(c.hourly_rate).toFixed(2)}/hr</p>
-                  </div>
+                  <p className="text-xs font-bold text-primary">${Number(c.hourly_rate).toFixed(0)}/hr</p>
                 </div>
               ))}
             </div>
           )}
 
-          {/* Today's completed shifts */}
+          {/* Today's completed */}
           {completedToday.length > 0 && (
             <div className="pt-4 border-t border-border space-y-2">
               <p className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Completed Today</p>
-              {completedToday.map(c => {
-                const hrs = (new Date(c.clock_out!).getTime() - new Date(c.clock_in).getTime()) / 3600000;
-                const cost = hrs * Number(c.hourly_rate);
+              {completedToday.map(e => {
+                const hrs = (new Date(e.clock_out!).getTime() - new Date(e.clock_in).getTime()) / 3600000;
                 return (
-                  <div key={c.id} className="flex items-center gap-3 rounded-lg bg-secondary/30 p-2.5 text-xs">
-                    <span className="font-bold text-card-foreground">{(c as any).staff_members?.name}</span>
-                    <span className="text-muted-foreground">
-                      {new Date(c.clock_in).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                      –{new Date(c.clock_out!).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                    </span>
-                    <span className="ml-auto font-bold text-card-foreground">{hrs.toFixed(1)}h · ${cost.toFixed(2)}</span>
-                    {Number(c.tips_earned) > 0 && <span className="text-success font-bold">+${Number(c.tips_earned).toFixed(2)} tips</span>}
+                  <div key={e.id} className="flex items-center gap-3 rounded-xl bg-muted/30 border border-border p-2.5">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold text-card-foreground truncate">{(e as any).staff_members?.name || "Staff"}</p>
+                      <p className="text-[10px] text-muted-foreground">
+                        {new Date(e.clock_in).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })} — {new Date(e.clock_out!).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-bold text-card-foreground">{hrs.toFixed(1)}h</p>
+                      <p className="text-[10px] text-muted-foreground">${(hrs * Number(e.hourly_rate)).toFixed(2)}</p>
+                    </div>
                   </div>
                 );
               })}
