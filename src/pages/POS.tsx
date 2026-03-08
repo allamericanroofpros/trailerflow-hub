@@ -580,7 +580,7 @@ export default function POS() {
                   </Badge>
                 )}
               </div>
-              <CartContent />
+              {cartContent}
             </div>
           )}
 
