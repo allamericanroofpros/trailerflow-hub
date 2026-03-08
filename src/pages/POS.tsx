@@ -206,6 +206,10 @@ export default function POS() {
     cashTendered?: number;
   }) => {
     if (cart.length === 0) return;
+    if (!orgId) {
+      toast.error("Organization context missing. Please reload.");
+      return;
+    }
     const tipAmount = data.tip;
     const grandTotal = total + tipAmount;
     try {
