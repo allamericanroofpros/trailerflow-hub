@@ -12,6 +12,9 @@ import {
   ChevronLeft,
   ChevronRight,
   LogOut,
+  ShoppingCart,
+  Package,
+  UtensilsCrossed,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
@@ -20,6 +23,9 @@ import { useAuth } from "@/contexts/AuthContext";
 
 const navItems = [
   { title: "Dashboard", url: "/", icon: LayoutDashboard },
+  { title: "POS", url: "/pos", icon: ShoppingCart },
+  { title: "Menu", url: "/menu", icon: UtensilsCrossed },
+  { title: "Inventory", url: "/inventory", icon: Package },
   { title: "Events Hub", url: "/events", icon: CalendarRange },
   { title: "Discover", url: "/discover", icon: Compass },
   { title: "Calendar", url: "/calendar", icon: Calendar },

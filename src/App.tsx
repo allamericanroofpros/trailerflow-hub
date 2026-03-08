@@ -6,6 +6,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 import Dashboard from "./pages/Dashboard";
+import POS from "./pages/POS";
+import MenuPage from "./pages/MenuPage";
+import InventoryPage from "./pages/InventoryPage";
 import EventsHub from "./pages/EventsHub";
 import Discover from "./pages/Discover";
 import CalendarPage from "./pages/CalendarPage";
@@ -39,6 +42,9 @@ const App = () => (
 
             {/* Protected routes */}
             <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+            <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
+            <Route path="/menu" element={<ProtectedRoute><MenuPage /></ProtectedRoute>} />
+            <Route path="/inventory" element={<ProtectedRoute><InventoryPage /></ProtectedRoute>} />
             <Route path="/events" element={<ProtectedRoute><EventsHub /></ProtectedRoute>} />
             <Route path="/discover" element={<ProtectedRoute><Discover /></ProtectedRoute>} />
             <Route path="/calendar" element={<ProtectedRoute><CalendarPage /></ProtectedRoute>} />
