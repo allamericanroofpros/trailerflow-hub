@@ -12,6 +12,7 @@ import { toast } from "sonner";
 
 const baseSections = [
   { id: "profile", title: "Profile", description: "Manage your account details and preferences.", icon: User },
+  { id: "pos", title: "POS Terminal", description: "Configure terminal lock mode and register behavior.", icon: Monitor, ownerOnly: true },
   { id: "notifications", title: "Notifications", description: "Configure alerts for bookings, events, and maintenance.", icon: Bell },
   { id: "trailers", title: "Trailers", description: "Add, remove, or configure your fleet.", icon: Truck, href: "/trailers" },
   { id: "billing", title: "Billing", description: "Manage subscription, payment methods, and invoices.", icon: CreditCard },
