@@ -97,7 +97,14 @@ export default function Discover() {
     );
   }, [opportunities, locationFilter]);
 
-  const handleSearch = () => {
+  if (!ent.aiDiscovery) {
+    return (
+      <AppLayout>
+        <UpgradeBanner feature="AI Event Discovery" currentPlan={ent.currentPlan} requiredPlan="pro" />
+      </AppLayout>
+    );
+  }
+
     const parts: string[] = [];
     if (searchQuery) parts.push(searchQuery);
     if (locationFilter) {
