@@ -30,6 +30,7 @@ type Modifier = {
   name: string;
   options: { label: string; priceAdjust: number; inventoryAdjustments?: { inventoryItemId: string; extraQty: number }[] }[];
   required: boolean;
+  multiSelect?: boolean;
 };
 
 type CartItem = {
