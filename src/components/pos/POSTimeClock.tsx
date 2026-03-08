@@ -220,7 +220,7 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
 
                 {/* PIN display */}
                 <div className="flex justify-center gap-3">
-                  {Array.from({ length: 6 }).map((_, i) => (
+                  {Array.from({ length: 4 }).map((_, i) => (
                     <div
                       key={i}
                       className={`h-14 w-12 rounded-xl border-2 flex items-center justify-center text-2xl font-black transition-all ${
