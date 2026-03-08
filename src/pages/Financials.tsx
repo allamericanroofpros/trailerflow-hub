@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrgId } from "@/hooks/useOrgId";
 
 export default function Financials() {
   const { data: transactions, isLoading } = useTransactions();
