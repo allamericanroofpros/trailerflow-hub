@@ -150,25 +150,29 @@ export default function Staff() {
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Staff</h1>
-            <p className="text-sm text-muted-foreground mt-1">Manage your team and schedule assignments.</p>
+            <h1 className="text-2xl font-bold tracking-tight">Team</h1>
+            <p className="text-sm text-muted-foreground mt-1">Manage your staff, roles, and event scheduling.</p>
           </div>
           <div className="flex items-center gap-2">
             <div className="flex items-center rounded-lg border border-border bg-card p-1">
-              {(["roster", "schedule"] as const).map((t) => (
+              {([
+                ...(isOwner ? [{ key: "roles" as const, label: "Roles", icon: Shield }] : []),
+                { key: "roster" as const, label: "Roster", icon: UsersIcon },
+                { key: "schedule" as const, label: "Schedule", icon: Calendar },
+              ]).map((t) => (
                 <button
-                  key={t}
-                  onClick={() => setTab(t)}
+                  key={t.key}
+                  onClick={() => setTab(t.key)}
                   className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                    tab === t ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                    tab === t.key ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  {t === "roster" ? <UsersIcon className="h-3 w-3" /> : <Calendar className="h-3 w-3" />}
-                  {t === "roster" ? "Roster" : "Schedule"}
+                  <t.icon className="h-3 w-3" />
+                  {t.label}
                 </button>
               ))}
             </div>
-            {tab === "roster" && (
+            {tab === "roster" && canManage("staff") && (
               <Button size="sm" onClick={() => { resetForm(); setAddingNew(true); }} className="gap-1.5">
                 <Plus className="h-3.5 w-3.5" /> Add Staff
               </Button>
