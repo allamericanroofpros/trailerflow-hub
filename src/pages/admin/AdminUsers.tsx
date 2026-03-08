@@ -45,15 +45,15 @@ export default function AdminUsers() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6 animate-fade-in">
+      <div className="space-y-4 sm:space-y-6 animate-fade-in">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Users</h1>
-          <p className="text-sm text-muted-foreground mt-1">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Users</h1>
+          <p className="text-xs sm:text-sm text-muted-foreground mt-1">
             All registered users across the platform.
           </p>
         </div>
 
-        <div className="relative max-w-sm">
+        <div className="relative max-w-full sm:max-w-sm">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
             placeholder="Search users..."
@@ -63,61 +63,95 @@ export default function AdminUsers() {
           />
         </div>
 
-        <div className="rounded-xl border border-border bg-card overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-border bg-muted/50">
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">User</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Global Role</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Organizations</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Joined</th>
-              </tr>
-            </thead>
-            <tbody>
-              {isLoading ? (
-                <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">Loading...</td>
-                </tr>
-              ) : filtered?.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">No users found.</td>
-                </tr>
-              ) : (
-                filtered?.map((u) => (
-                  <tr key={u.id} className="border-b border-border last:border-0 hover:bg-muted/30">
-                    <td className="px-4 py-3">
-                      <p className="font-medium text-foreground">{u.full_name || "Unnamed"}</p>
-                      <p className="text-xs text-muted-foreground">{u.phone || "No phone"}</p>
-                    </td>
-                    <td className="px-4 py-3">
-                      <Badge
-                        variant={(u.globalRole as string) === "super_admin" ? "destructive" : "secondary"}
-                        className="capitalize"
-                      >
-                        {u.globalRole}
+        {/* Mobile card layout */}
+        <div className="space-y-3 md:hidden">
+          {isLoading ? (
+            <p className="text-sm text-muted-foreground text-center py-8">Loading...</p>
+          ) : filtered?.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-8">No users found.</p>
+          ) : (
+            filtered?.map((u) => (
+              <div key={u.id} className="rounded-xl border border-border bg-card p-4 shadow-sm">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-foreground truncate">{u.full_name || "Unnamed"}</p>
+                    <p className="text-xs text-muted-foreground">{u.phone || "No phone"}</p>
+                  </div>
+                  <Badge
+                    variant={(u.globalRole as string) === "super_admin" ? "destructive" : "secondary"}
+                    className="capitalize text-xs shrink-0"
+                  >
+                    {u.globalRole}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap items-center gap-1.5 mt-3">
+                  {u.orgs.length === 0 ? (
+                    <span className="text-xs text-muted-foreground">No organizations</span>
+                  ) : (
+                    u.orgs.map((o: any) => (
+                      <Badge key={o.org_id} variant="outline" className="text-xs">
+                        {o.organization?.name || o.org_id.slice(0, 8)}
                       </Badge>
-                    </td>
-                    <td className="px-4 py-3">
-                      <div className="flex flex-wrap gap-1">
-                        {u.orgs.length === 0 ? (
-                          <span className="text-xs text-muted-foreground">None</span>
-                        ) : (
-                          u.orgs.map((o: any) => (
-                            <Badge key={o.org_id} variant="outline" className="text-xs">
-                              {o.organization?.name || o.org_id.slice(0, 8)}
-                            </Badge>
-                          ))
-                        )}
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-muted-foreground">
-                      {new Date(u.created_at).toLocaleDateString()}
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                    ))
+                  )}
+                  <span className="text-xs text-muted-foreground ml-auto">
+                    {new Date(u.created_at).toLocaleDateString()}
+                  </span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden md:block rounded-xl border border-border bg-card overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="border-b border-border bg-muted/50">
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">User</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Global Role</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Organizations</th>
+                  <th className="text-left px-4 py-3 font-medium text-muted-foreground">Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">Loading...</td></tr>
+                ) : filtered?.length === 0 ? (
+                  <tr><td colSpan={4} className="px-4 py-8 text-center text-muted-foreground">No users found.</td></tr>
+                ) : (
+                  filtered?.map((u) => (
+                    <tr key={u.id} className="border-b border-border last:border-0 hover:bg-muted/30">
+                      <td className="px-4 py-3">
+                        <p className="font-medium text-foreground">{u.full_name || "Unnamed"}</p>
+                        <p className="text-xs text-muted-foreground">{u.phone || "No phone"}</p>
+                      </td>
+                      <td className="px-4 py-3">
+                        <Badge variant={(u.globalRole as string) === "super_admin" ? "destructive" : "secondary"} className="capitalize">
+                          {u.globalRole}
+                        </Badge>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1">
+                          {u.orgs.length === 0 ? (
+                            <span className="text-xs text-muted-foreground">None</span>
+                          ) : (
+                            u.orgs.map((o: any) => (
+                              <Badge key={o.org_id} variant="outline" className="text-xs">
+                                {o.organization?.name || o.org_id.slice(0, 8)}
+                              </Badge>
+                            ))
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-muted-foreground">{new Date(u.created_at).toLocaleDateString()}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </AdminLayout>
