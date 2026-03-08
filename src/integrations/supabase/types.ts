@@ -44,6 +44,153 @@ export type Database = {
         }
         Relationships: []
       }
+      benchmark_avg_ticket_by_vendor_type: {
+        Row: {
+          avg_ticket: number | null
+          id: string
+          median_ticket: number | null
+          p25_ticket: number | null
+          p75_ticket: number | null
+          region: string | null
+          sample_size: number
+          updated_at: string
+          vendor_type: string
+        }
+        Insert: {
+          avg_ticket?: number | null
+          id?: string
+          median_ticket?: number | null
+          p25_ticket?: number | null
+          p75_ticket?: number | null
+          region?: string | null
+          sample_size?: number
+          updated_at?: string
+          vendor_type: string
+        }
+        Update: {
+          avg_ticket?: number | null
+          id?: string
+          median_ticket?: number | null
+          p25_ticket?: number | null
+          p75_ticket?: number | null
+          region?: string | null
+          sample_size?: number
+          updated_at?: string
+          vendor_type?: string
+        }
+        Relationships: []
+      }
+      benchmark_event_performance: {
+        Row: {
+          avg_attendance: number | null
+          avg_net_profit: number | null
+          avg_revenue: number | null
+          avg_vendor_fee: number | null
+          event_type: string
+          id: string
+          p25_revenue: number | null
+          p75_revenue: number | null
+          region: string | null
+          sample_size: number
+          updated_at: string
+        }
+        Insert: {
+          avg_attendance?: number | null
+          avg_net_profit?: number | null
+          avg_revenue?: number | null
+          avg_vendor_fee?: number | null
+          event_type: string
+          id?: string
+          p25_revenue?: number | null
+          p75_revenue?: number | null
+          region?: string | null
+          sample_size?: number
+          updated_at?: string
+        }
+        Update: {
+          avg_attendance?: number | null
+          avg_net_profit?: number | null
+          avg_revenue?: number | null
+          avg_vendor_fee?: number | null
+          event_type?: string
+          id?: string
+          p25_revenue?: number | null
+          p75_revenue?: number | null
+          region?: string | null
+          sample_size?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      benchmark_margin_by_event_type: {
+        Row: {
+          avg_food_cost_pct: number | null
+          avg_gross_margin_pct: number | null
+          avg_labor_cost_pct: number | null
+          avg_net_margin_pct: number | null
+          event_type: string
+          id: string
+          sample_size: number
+          updated_at: string
+          vendor_type: string | null
+        }
+        Insert: {
+          avg_food_cost_pct?: number | null
+          avg_gross_margin_pct?: number | null
+          avg_labor_cost_pct?: number | null
+          avg_net_margin_pct?: number | null
+          event_type: string
+          id?: string
+          sample_size?: number
+          updated_at?: string
+          vendor_type?: string | null
+        }
+        Update: {
+          avg_food_cost_pct?: number | null
+          avg_gross_margin_pct?: number | null
+          avg_labor_cost_pct?: number | null
+          avg_net_margin_pct?: number | null
+          event_type?: string
+          id?: string
+          sample_size?: number
+          updated_at?: string
+          vendor_type?: string | null
+        }
+        Relationships: []
+      }
+      benchmark_staffing_efficiency: {
+        Row: {
+          avg_customers_per_staff_hour: number | null
+          avg_revenue_per_labor_dollar: number | null
+          avg_staff_per_event: number | null
+          event_type: string | null
+          id: string
+          sample_size: number
+          updated_at: string
+          vendor_type: string
+        }
+        Insert: {
+          avg_customers_per_staff_hour?: number | null
+          avg_revenue_per_labor_dollar?: number | null
+          avg_staff_per_event?: number | null
+          event_type?: string | null
+          id?: string
+          sample_size?: number
+          updated_at?: string
+          vendor_type: string
+        }
+        Update: {
+          avg_customers_per_staff_hour?: number | null
+          avg_revenue_per_labor_dollar?: number | null
+          avg_staff_per_event?: number | null
+          event_type?: string | null
+          id?: string
+          sample_size?: number
+          updated_at?: string
+          vendor_type?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           add_ons: Json | null
@@ -812,6 +959,70 @@ export type Database = {
           },
         ]
       }
+      org_notes: {
+        Row: {
+          author_id: string
+          content: string
+          created_at: string
+          id: string
+          note_type: string
+          org_id: string
+        }
+        Insert: {
+          author_id: string
+          content: string
+          created_at?: string
+          id?: string
+          note_type?: string
+          org_id: string
+        }
+        Update: {
+          author_id?: string
+          content?: string
+          created_at?: string
+          id?: string
+          note_type?: string
+          org_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_notes_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      org_tags: {
+        Row: {
+          created_at: string
+          id: string
+          org_id: string
+          tag: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          org_id: string
+          tag: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          org_id?: string
+          tag?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "org_tags_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organization_members: {
         Row: {
           created_at: string
@@ -846,20 +1057,30 @@ export type Database = {
       }
       organizations: {
         Row: {
+          assigned_owner: string | null
           cancel_at_period_end: boolean
+          churn_risk: string
           created_at: string
+          crm_notes: string | null
           current_period_end: string | null
+          feature_request_notes: string | null
+          follow_up_date: string | null
+          health_status: string
           id: string
+          last_active_at: string | null
           logo_url: string | null
           name: string
+          onboarding_stage: string
           owner_user_id: string
           plan: string
           slug: string
+          source: string | null
           status: string
           stripe_customer_id: string | null
           stripe_price_id: string | null
           stripe_subscription_id: string | null
           subscription_status: string
+          support_notes: string | null
           surcharge_cap: number | null
           surcharge_enabled: boolean
           surcharge_flat: number | null
@@ -872,20 +1093,30 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          assigned_owner?: string | null
           cancel_at_period_end?: boolean
+          churn_risk?: string
           created_at?: string
+          crm_notes?: string | null
           current_period_end?: string | null
+          feature_request_notes?: string | null
+          follow_up_date?: string | null
+          health_status?: string
           id?: string
+          last_active_at?: string | null
           logo_url?: string | null
           name: string
+          onboarding_stage?: string
           owner_user_id: string
           plan?: string
           slug: string
+          source?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string
+          support_notes?: string | null
           surcharge_cap?: number | null
           surcharge_enabled?: boolean
           surcharge_flat?: number | null
@@ -898,20 +1129,30 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          assigned_owner?: string | null
           cancel_at_period_end?: boolean
+          churn_risk?: string
           created_at?: string
+          crm_notes?: string | null
           current_period_end?: string | null
+          feature_request_notes?: string | null
+          follow_up_date?: string | null
+          health_status?: string
           id?: string
+          last_active_at?: string | null
           logo_url?: string | null
           name?: string
+          onboarding_stage?: string
           owner_user_id?: string
           plan?: string
           slug?: string
+          source?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string
+          support_notes?: string | null
           surcharge_cap?: number | null
           surcharge_enabled?: boolean
           surcharge_flat?: number | null
@@ -1081,6 +1322,62 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "staff_members_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_tickets: {
+        Row: {
+          assigned_to: string | null
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          org_id: string | null
+          priority: string
+          reporter_user_id: string | null
+          resolution: string | null
+          resolved_at: string | null
+          status: string
+          subject: string
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          org_id?: string | null
+          priority?: string
+          reporter_user_id?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          status?: string
+          subject: string
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          org_id?: string | null
+          priority?: string
+          reporter_user_id?: string | null
+          resolution?: string | null
+          resolved_at?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_tickets_org_id_fkey"
             columns: ["org_id"]
             isOneToOne: false
             referencedRelation: "organizations"
