@@ -71,6 +71,36 @@ const emptyForm: FormState = {
   ingredients: [], modifiers: [],
 };
 
+// Compute live cost from ingredients + modifiers using current inventory prices
+function computeLiveCost(item: any, allInventory?: any[]): number {
+  // Base recipe cost from menu_item_ingredients join
+  let baseCost = 0;
+  const ingredients = item.menu_item_ingredients || [];
+  for (const ing of ingredients) {
+    const costPerUnit = Number(ing.inventory_items?.cost_per_unit) || 0;
+    baseCost += costPerUnit * Number(ing.quantity_used);
+  }
+
+  // Modifier average cost
+  const modifiers = Array.isArray(item.modifiers) ? item.modifiers as any[] : [];
+  let modAvg = 0;
+  if (modifiers.length > 0 && allInventory) {
+    for (const mod of modifiers) {
+      const optCosts = (mod.options || []).map((opt: any) => {
+        return (opt.inventoryAdjustments || []).reduce((sum: number, adj: any) => {
+          const invItem = allInventory.find((ii: any) => ii.id === adj.inventoryItemId);
+          return sum + (Number(invItem?.cost_per_unit) || 0) * (Number(adj.extraQty) || 0);
+        }, 0);
+      });
+      if (optCosts.length > 0) {
+        modAvg += (Math.min(...optCosts) + Math.max(...optCosts)) / 2;
+      }
+    }
+  }
+
+  return baseCost + modAvg;
+}
+
 export default function MenuPage() {
   const { data: menuItems, isLoading } = useAllMenuItems();
   const { data: inventoryItems } = useInventoryItems();
@@ -288,11 +318,14 @@ export default function MenuPage() {
     if (!menuItems?.length) return toast.error("Add menu items first");
     setAiLoading(true);
     try {
-      const context = `Here are my menu items: ${JSON.stringify(menuItems.map((i) => ({
-        name: i.name, category: i.category, price: Number(i.price), cost: Number(i.cost),
-        margin: Number(i.price) > 0 ? ((Number(i.price) - Number(i.cost)) / Number(i.price) * 100).toFixed(1) + "%" : "N/A",
-        ingredients: (i as any).menu_item_ingredients?.length || 0,
-      })))}
+      const context = `Here are my menu items: ${JSON.stringify(menuItems.map((i) => {
+        const liveCost = computeLiveCost(i, inventoryItems);
+        return {
+          name: i.name, category: i.category, price: Number(i.price), cost: Number(liveCost.toFixed(2)),
+          margin: Number(i.price) > 0 ? ((Number(i.price) - liveCost) / Number(i.price) * 100).toFixed(1) + "%" : "N/A",
+          ingredients: (i as any).menu_item_ingredients?.length || 0,
+        };
+      }))}
 Analyze my menu and provide: 1. Best/worst margins 2. Pricing suggestions 3. Menu mix recommendations 4. Combo/upsell suggestions. Keep it concise.`;
       const result = await claudeNonStreaming("chat", [{ role: "user", content: context }]);
       setAiInsights(result);
@@ -329,7 +362,7 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
   const avgPrice = menuItems?.length ? (menuItems.reduce((s, i) => s + Number(i.price), 0) / menuItems.length).toFixed(2) : "0.00";
   const nonCustomItems = menuItems?.filter(i => i.category !== "other") || [];
   const avgMargin = nonCustomItems.length
-    ? (nonCustomItems.reduce((s, i) => { const p = Number(i.price), c = Number(i.cost); return s + (p > 0 ? (p - c) / p * 100 : 0); }, 0) / nonCustomItems.length).toFixed(1)
+    ? (nonCustomItems.reduce((s, i) => { const p = Number(i.price), c = computeLiveCost(i, inventoryItems); return s + (p > 0 ? (p - c) / p * 100 : 0); }, 0) / nonCustomItems.length).toFixed(1)
     : "0.0";
 
   return (
@@ -391,7 +424,8 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
         ) : (
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {menuItems.map((item, idx) => {
-              const margin = Number(item.price) > 0 ? ((Number(item.price) - Number(item.cost)) / Number(item.price) * 100).toFixed(1) : "0.0";
+              const liveCost = computeLiveCost(item, inventoryItems);
+              const margin = Number(item.price) > 0 ? ((Number(item.price) - liveCost) / Number(item.price) * 100).toFixed(1) : "0.0";
               const ingredientCount = (item as any).menu_item_ingredients?.length || 0;
               const modifierCount = Array.isArray(item.modifiers) ? (item.modifiers as any[]).length : 0;
               return (
@@ -410,7 +444,7 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-lg font-bold text-primary">${Number(item.price).toFixed(2)}</p>
-                      <p className="text-[11px] text-muted-foreground">Cost: ${Number(item.cost).toFixed(2)} · Margin: {margin}%</p>
+                      <p className="text-[11px] text-muted-foreground">Cost: ${liveCost.toFixed(2)} · Margin: {margin}%</p>
                     </div>
                   </div>
                   {/* Recipe & modifier badges */}
