@@ -260,7 +260,7 @@ export default function POS() {
       setConfirmation({
         orderNumber: (newOrder as any).order_number,
         items: cart.map((c) => ({ name: c.name, quantity: c.quantity, price: c.price })),
-        subtotal, tax, tip: tipAmount, total: grandTotal,
+        subtotal, tax, taxLabel: taxSettings.label, tip: tipAmount, total: grandTotal,
         paymentMethod: data.paymentMethod,
         cashTendered: data.cashTendered,
         changeDue,
