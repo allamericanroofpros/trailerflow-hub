@@ -63,6 +63,7 @@ function formatDate(date?: string | null, endDate?: string | null): string {
 export default function EventsHub() {
   const { selectedTrailerId } = useSelectedTrailer();
   const orgId = useOrgId();
+  const ent = useEntitlements();
   const { data: grouped, isLoading } = useEventsByStage(selectedTrailerId);
   const { data: allEvents } = useEvents(undefined, selectedTrailerId);
   const { data: existingBookings } = useBookings();
