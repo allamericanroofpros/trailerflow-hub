@@ -28,9 +28,11 @@ Business: ${profileRes.data?.business_name || "Food trailer business"}
 Trailers: ${JSON.stringify(trailersRes.data || [])}
 Past events: ${JSON.stringify(eventsRes.data || [])}
 Today: ${new Date().toISOString().split("T")[0]}
-${searchQuery ? `User search: "${searchQuery}"` : "Find the best upcoming event opportunities in my area."}
+${searchQuery ? `User search: "${searchQuery}"` : "Find the best upcoming event opportunities near me."}
 
-Suggest 6 upcoming events that would be profitable for my business. Make them realistic with real-sounding event names, dates in the next 2 months, and realistic California locations.`;
+You MUST return a JSON array containing EXACTLY 6 event recommendations. Each object must have these fields: name, date, location, type, profitEstimate, aiRank (0-100), attendance, reasoning.
+
+Important: Return diverse locations relevant to the search. If a location or radius is specified, ALL 6 events must be within that area. Use realistic event names, dates within the next 2 months, and realistic US locations. Return ONLY the JSON array, no other text.`;
 
       const response = await claudeNonStreaming("discovery", [{ role: "user", content: context }]);
 
