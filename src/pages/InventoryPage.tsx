@@ -366,7 +366,7 @@ export default function Inventory() {
             <Label>Cost / Unit ($)</Label>
             <FieldTip tip="How much you pay for ONE unit. E.g. if a 2.5 gal tub costs $18, enter $18. Used to calculate recipe costs and margins." />
           </div>
-          <Input type="number" step="0.01" value={item.cost_per_unit} onChange={(e) => setItem({ ...item, cost_per_unit: Number(e.target.value) })} className="h-11" />
+          <Input type="number" step="0.01" value={item.cost_per_unit} onChange={(e) => setItem({ ...item, cost_per_unit: e.target.value })} className="h-11" />
           {unitSize > 0 && Number(item.cost_per_unit) > 0 && (
             <p className="text-[10px] text-muted-foreground mt-0.5">
               ${(Number(item.cost_per_unit) / unitSize).toFixed(3)} per {item.unit}

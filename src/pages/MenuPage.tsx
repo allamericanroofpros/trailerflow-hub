@@ -95,7 +95,9 @@ function computeLiveCost(item: any, allInventory?: any[]): number {
       const optCosts = (mod.options || []).map((opt: any) => {
         return (opt.inventoryAdjustments || []).reduce((sum: number, adj: any) => {
           const invItem = allInventory.find((ii: any) => ii.id === adj.inventoryItemId);
-          return sum + (Number(invItem?.cost_per_unit) || 0) * (Number(adj.extraQty) || 0);
+          const costPerUnit = Number(invItem?.cost_per_unit) || 0;
+          const conversion = Number(invItem?.serving_unit_conversion) || 1;
+          return sum + (costPerUnit / conversion) * (Number(adj.extraQty) || 0);
         }, 0);
       });
       if (optCosts.length > 0) {
