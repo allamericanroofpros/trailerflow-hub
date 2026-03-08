@@ -23,7 +23,9 @@ import POSOrderHistory from "@/components/pos/POSOrderHistory";
 import POSEndOfDay from "@/components/pos/POSEndOfDay";
 import POSStartOfDay from "@/components/pos/POSStartOfDay";
 import POSTimeClock from "@/components/pos/POSTimeClock";
-import { useActiveClocks, useStaffByPin } from "@/hooks/useTimeClock";
+import { useStaffByPin } from "@/hooks/useTimeClock";
+import { supabase } from "@/integrations/supabase/client";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 type Modifier = {
   name: string;
