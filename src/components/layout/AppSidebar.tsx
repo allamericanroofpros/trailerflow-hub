@@ -9,6 +9,7 @@ import {
   DollarSign,
   Wrench,
   Settings,
+  BarChart3,
   ChevronLeft,
   ChevronRight,
   LogOut,
