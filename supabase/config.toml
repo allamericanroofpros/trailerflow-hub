@@ -2,3 +2,6 @@ project_id = "vtobvrsbmymcdfwzcigo"
 
 [functions.claude-ai]
 verify_jwt = false
+
+[functions.get-receipt]
+verify_jwt = false
