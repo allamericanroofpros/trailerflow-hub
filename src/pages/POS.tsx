@@ -56,8 +56,13 @@ export default function POS() {
   const createOrder = useCreateOrder();
   const updateStatus = useUpdateOrderStatus();
 
-  const [sodComplete, setSodComplete] = useState(false);
-  const [sodData, setSodData] = useState<{ trailerId: string | null; eventId: string | null; openingCash: number; notes: string } | null>(null);
+  const [sodComplete, setSodComplete] = useState(() => {
+    return sessionStorage.getItem("pos_sod_complete") === "true";
+  });
+  const [sodData, setSodData] = useState<{ trailerId: string | null; eventId: string | null; openingCash: number; notes: string } | null>(() => {
+    const saved = sessionStorage.getItem("pos_sod_data");
+    return saved ? JSON.parse(saved) : null;
+  });
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
