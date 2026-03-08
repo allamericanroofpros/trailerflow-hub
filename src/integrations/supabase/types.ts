@@ -707,6 +707,7 @@ export type Database = {
           surcharge_amount: number | null
           surcharge_label: string | null
           tax: number
+          tax_label: string | null
           tip: number | null
           total: number
           trailer_id: string | null
@@ -727,6 +728,7 @@ export type Database = {
           surcharge_amount?: number | null
           surcharge_label?: string | null
           tax?: number
+          tax_label?: string | null
           tip?: number | null
           total?: number
           trailer_id?: string | null
@@ -747,6 +749,7 @@ export type Database = {
           surcharge_amount?: number | null
           surcharge_label?: string | null
           tax?: number
+          tax_label?: string | null
           tip?: number | null
           total?: number
           trailer_id?: string | null
