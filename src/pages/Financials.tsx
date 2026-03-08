@@ -41,6 +41,7 @@ export default function Financials() {
       event_id: form.event_id || null,
       transaction_date: form.transaction_date,
       created_by: user?.id,
+      org_id: orgId,
     }, {
       onSuccess: () => { resetForm(); toast.success("Transaction added"); },
       onError: (e: any) => toast.error(e.message),

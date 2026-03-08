@@ -51,6 +51,7 @@ export default function Maintenance() {
       status: form.status,
       cost: form.cost ? parseFloat(form.cost) : null,
       completed_date: form.status === "completed" ? new Date().toISOString().split("T")[0] : null,
+      org_id: orgId,
     };
 
     if (editingId) {

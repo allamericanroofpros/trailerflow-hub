@@ -115,6 +115,7 @@ export default function Trailers() {
       avg_food_cost_percent: form.avg_food_cost_percent ? parseFloat(form.avg_food_cost_percent) : 30,
       target_margin: form.target_margin ? parseFloat(form.target_margin) : 70,
       owner_id: user!.id,
+      org_id: orgId,
     };
 
     if (editingId) {
