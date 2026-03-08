@@ -4,6 +4,8 @@ import { useEvents } from "@/hooks/useEvents";
 import { useBookings } from "@/hooks/useBookings";
 import { useOrders } from "@/hooks/useOrders";
 import { useMaintenanceRecords } from "@/hooks/useMaintenanceRecords";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { UpgradeBanner } from "@/components/UpgradeModal";
 import { useMemo } from "react";
 import { Truck, DollarSign, Calendar, Wrench, TrendingUp, Users, BarChart3, Loader2 } from "lucide-react";
 
