@@ -108,6 +108,42 @@ export default function Staff() {
   // Schedule assign form
   const [scheduleForm, setScheduleForm] = useState({ staff_id: "", event_id: "", role: "crew" });
 
+  // Create account form
+  const [showCreateAccount, setShowCreateAccount] = useState(false);
+  const [accountForm, setAccountForm] = useState({ full_name: "", email: "", password: "", role: "staff" });
+  const [creatingAccount, setCreatingAccount] = useState(false);
+
+  const handleCreateAccount = async () => {
+    if (!accountForm.full_name.trim()) return toast.error("Name is required");
+    if (!accountForm.email.trim()) return toast.error("Email is required");
+    if (accountForm.password.length < 6) return toast.error("Password must be at least 6 characters");
+
+    setCreatingAccount(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const res = await supabase.functions.invoke("create-team-member", {
+        body: {
+          full_name: accountForm.full_name.trim(),
+          email: accountForm.email.trim().toLowerCase(),
+          password: accountForm.password,
+          role: accountForm.role,
+        },
+      });
+      if (res.error) throw new Error(res.error.message || "Failed to create account");
+      if (res.data?.error) throw new Error(res.data.error);
+
+      toast.success(`Account created for ${accountForm.full_name}! They can sign in with their email and password.`);
+      setAccountForm({ full_name: "", email: "", password: "", role: "staff" });
+      setShowCreateAccount(false);
+      qc.invalidateQueries({ queryKey: ["team_roles"] });
+      qc.invalidateQueries({ queryKey: ["staff_members"] });
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setCreatingAccount(false);
+    }
+  };
+
   // Build week days for calendar
   const weekDays = useMemo(() => {
     return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
