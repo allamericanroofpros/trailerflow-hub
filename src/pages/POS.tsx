@@ -378,6 +378,8 @@ export default function POS() {
         onComplete={(data) => {
           setSodData(data);
           setSodComplete(true);
+          sessionStorage.setItem("pos_sod_complete", "true");
+          sessionStorage.setItem("pos_sod_data", JSON.stringify(data));
         }}
       />
     );
