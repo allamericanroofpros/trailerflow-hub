@@ -795,23 +795,33 @@ Return ONLY a JSON object with: revenue_forecast_low (number), revenue_forecast_
 
               {/* Revenue Forecast */}
               {(selectedEvent.revenue_forecast_low || selectedEvent.revenue_forecast_high) ? (
-                <div className="rounded-lg bg-success/5 border border-success/20 p-3.5">
+                <div className="rounded-lg bg-success/5 border border-success/20 p-3.5 space-y-2">
                   <p className="text-[11px] font-medium text-success mb-1">Projected Revenue</p>
                   <p className="text-lg font-bold text-card-foreground">
                     {formatRevenue(selectedEvent.revenue_forecast_low, selectedEvent.revenue_forecast_high, selectedEvent.actual_revenue)}
                   </p>
                   {selectedEvent.vendor_fee ? (
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground">
                       After vendor fee (${selectedEvent.vendor_fee.toLocaleString()}): <strong className="text-card-foreground">
                         ${((selectedEvent.revenue_forecast_low || 0) - selectedEvent.vendor_fee).toLocaleString()}–${((selectedEvent.revenue_forecast_high || 0) - selectedEvent.vendor_fee).toLocaleString()}
                       </strong> net
                     </p>
                   ) : null}
                   {selectedEvent.attendance_estimate ? (
-                    <p className="text-xs text-muted-foreground mt-1">
+                    <p className="text-xs text-muted-foreground">
                       ~${((selectedEvent.revenue_forecast_low || 0) / selectedEvent.attendance_estimate).toFixed(2)}-${((selectedEvent.revenue_forecast_high || 0) / selectedEvent.attendance_estimate).toFixed(2)} rev/attendee
                     </p>
                   ) : null}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleAIForecast}
+                    disabled={aiForecastLoading}
+                    className="w-full gap-1.5 mt-2"
+                  >
+                    {aiForecastLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+                    {aiForecastLoading ? "Recalculating..." : "Regenerate Forecast"}
+                  </Button>
                 </div>
               ) : (
                 <div className="rounded-lg bg-background border border-border p-3.5 space-y-3">
@@ -854,6 +864,81 @@ Return ONLY a JSON object with: revenue_forecast_low (number), revenue_forecast_
                 </div>
               )}
 
+              {/* Prep & Ordering Planner */}
+              {(() => {
+                const trailer = trailers?.find(t => t.id === (selectedEvent as any).trailer_id);
+                if (!trailer) return (
+                  <div className="rounded-lg bg-warning/5 border border-warning/20 p-3.5">
+                    <p className="text-xs font-semibold text-warning mb-1">No Trailer Assigned</p>
+                    <p className="text-xs text-muted-foreground">Assign a trailer to get ordering estimates and prep calculations.</p>
+                    <Button variant="outline" size="sm" className="mt-2 w-full" onClick={() => { if (!editing) startEditing(); }}>
+                      <Pencil className="h-3 w-3 mr-1" /> Edit & Assign Trailer
+                    </Button>
+                  </div>
+                );
+
+                const startTime = selectedEvent.start_time ? parseInt(selectedEvent.start_time.split(":")[0]) : null;
+                const endTime = selectedEvent.end_time ? parseInt(selectedEvent.end_time.split(":")[0]) : null;
+                const eventHours = startTime !== null && endTime !== null ? Math.max(endTime - startTime, 1) : 6;
+                const custPerHr = trailer.avg_customers_per_hour || 25;
+                const avgTicket = trailer.avg_ticket || 10;
+                const foodCostPct = (trailer.avg_food_cost_percent || 30) / 100;
+                const staffRequired = trailer.staff_required || 1;
+                const staffRate = trailer.staff_hourly_rate || 15;
+                const setupHrs = trailer.setup_teardown_hours || 2;
+                const fuelCost = trailer.fuel_cost_per_event || 50;
+                const vendorFee = selectedEvent.vendor_fee || 0;
+
+                const estCustomers = custPerHr * eventHours;
+                const estRevenue = estCustomers * avgTicket;
+                const estFoodCost = estRevenue * foodCostPct;
+                const estLabor = staffRequired * staffRate * (eventHours + setupHrs);
+                const estProfit = estRevenue - estFoodCost - estLabor - fuelCost - vendorFee;
+
+                return (
+                  <div className="rounded-lg bg-primary/5 border border-primary/20 p-3.5 space-y-3">
+                    <p className="text-xs font-semibold text-primary">Event P&L Estimate</p>
+                    <p className="text-[11px] text-muted-foreground">Based on {trailer.name} · {eventHours}hr event</p>
+                    <div className="space-y-1.5">
+                      {[
+                        { label: "Est. Customers", value: `~${estCustomers.toLocaleString()}`, sub: `${custPerHr}/hr × ${eventHours}hrs` },
+                        { label: "Est. Gross Revenue", value: `$${estRevenue.toLocaleString()}`, sub: `${estCustomers} × $${avgTicket} avg ticket` },
+                        { label: "Food Cost", value: `-$${estFoodCost.toLocaleString()}`, sub: `${(foodCostPct * 100).toFixed(0)}% of revenue`, negative: true },
+                        { label: "Labor", value: `-$${estLabor.toLocaleString()}`, sub: `${staffRequired} staff × $${staffRate}/hr × ${eventHours + setupHrs}hrs`, negative: true },
+                        { label: "Fuel/Travel", value: `-$${fuelCost.toLocaleString()}`, negative: true },
+                        ...(vendorFee > 0 ? [{ label: "Vendor Fee", value: `-$${vendorFee.toLocaleString()}`, negative: true }] : []),
+                      ].map((row) => (
+                        <div key={row.label} className="flex items-center justify-between">
+                          <div>
+                            <span className="text-xs text-muted-foreground">{row.label}</span>
+                            {row.sub && <span className="text-[10px] text-muted-foreground/60 ml-1">({row.sub})</span>}
+                          </div>
+                          <span className={`text-xs font-bold ${row.negative ? "text-destructive" : "text-card-foreground"}`}>
+                            {row.value}
+                          </span>
+                        </div>
+                      ))}
+                      <div className="border-t border-primary/20 pt-1.5 flex items-center justify-between">
+                        <span className="text-xs font-bold text-card-foreground">Est. Net Profit</span>
+                        <span className={`text-sm font-black ${estProfit >= 0 ? "text-success" : "text-destructive"}`}>
+                          ${estProfit.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="border-t border-primary/10 pt-3">
+                      <p className="text-xs font-semibold text-primary mb-2">Ordering Guide</p>
+                      <div className="space-y-1.5 text-xs text-muted-foreground">
+                        <p>• Prep for <strong className="text-card-foreground">~{estCustomers}</strong> customers over {eventHours} hours</p>
+                        <p>• Budget <strong className="text-card-foreground">~${estFoodCost.toLocaleString()}</strong> in food supplies</p>
+                        <p>• Schedule <strong className="text-card-foreground">{staffRequired} staff</strong> for {eventHours + setupHrs} total hours (incl. setup)</p>
+                        <p>• Target avg ticket: <strong className="text-card-foreground">${avgTicket}</strong> to hit revenue goals</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+
               {/* Event summary */}
               {selectedEvent.event_type && (
                 <div className="rounded-lg bg-background border border-border p-3.5">
@@ -866,19 +951,19 @@ Return ONLY a JSON object with: revenue_forecast_low (number), revenue_forecast_
               )}
 
               {/* Quick Actions */}
-              <div className="rounded-lg gradient-warm p-4">
-                <p className="text-sm font-medium text-primary-foreground">Quick Actions</p>
+              <div className="rounded-lg bg-secondary p-4">
+                <p className="text-sm font-medium text-card-foreground">Quick Actions</p>
                 <div className="mt-3 space-y-2">
                   <button
                     onClick={() => { if (!editing) startEditing(); }}
-                    className="w-full inline-flex items-center gap-1.5 text-xs font-semibold text-primary-foreground underline underline-offset-2"
+                    className="w-full inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <Pencil className="h-3 w-3" /> Edit Event Details
                   </button>
                   <button
                     onClick={handleAISearch}
                     disabled={aiSearching}
-                    className="w-full inline-flex items-center gap-1.5 text-xs font-semibold text-primary-foreground underline underline-offset-2"
+                    className="w-full inline-flex items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <Globe className="h-3 w-3" /> {aiSearching ? "Searching..." : "Search Web for Event Data"}
                   </button>
