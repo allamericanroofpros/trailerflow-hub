@@ -1,8 +1,9 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { ClipboardList, DollarSign, Check, Clock, Plus, Pencil, Trash2, Save, Loader2, X, Link2, Copy } from "lucide-react";
+import { ClipboardList, DollarSign, Check, Clock, Plus, Pencil, Trash2, Save, Loader2, X, Link2, Copy, CalendarRange, ExternalLink } from "lucide-react";
 import { useState } from "react";
 import { useBookings, useCreateBooking, useUpdateBooking } from "@/hooks/useBookings";
 import { useTrailers } from "@/hooks/useTrailers";
+import { useEvents, useCreateEvent } from "@/hooks/useEvents";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,13 +12,17 @@ import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrgId } from "@/hooks/useOrgId";
+import { useNavigate } from "react-router-dom";
 
 export default function Bookings() {
   const orgId = useOrgId();
+  const navigate = useNavigate();
   const { data: bookings, isLoading } = useBookings();
   const { data: trailers } = useTrailers();
+  const { data: events } = useEvents();
   const createBooking = useCreateBooking();
   const updateBooking = useUpdateBooking();
+  const createEvent = useCreateEvent();
   const qc = useQueryClient();
 
   const deleteBooking = useMutation({
@@ -30,11 +35,21 @@ export default function Bookings() {
 
   const [addingNew, setAddingNew] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [convertingId, setConvertingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     client_name: "", client_email: "", client_phone: "", event_name: "", event_date: "",
     location: "", trailer_id: "", service_package: "", total_price: "", deposit_amount: "",
     deposit_paid: false, guest_count: "", notes: "", status: "pending" as const,
   });
+
+  // Build a map of booking_id -> event for quick lookup
+  const bookingEventMap = useMemo(() => {
+    const map: Record<string, any> = {};
+    events?.forEach((e: any) => {
+      if (e.booking_id) map[e.booking_id] = e;
+    });
+    return map;
+  }, [events]);
 
   const resetForm = () => {
     setForm({
@@ -74,7 +89,14 @@ export default function Bookings() {
 
     if (editingId) {
       updateBooking.mutate({ id: editingId, ...payload }, {
-        onSuccess: () => { resetForm(); toast.success("Booking updated"); },
+        onSuccess: (data: any) => {
+          resetForm();
+          toast.success("Booking updated");
+          // Auto-convert on confirm if no event exists yet
+          if (payload.status === "confirmed" && !bookingEventMap[editingId]) {
+            autoConvertBooking({ ...payload, id: editingId });
+          }
+        },
         onError: (e: any) => toast.error(e.message),
       });
     } else {
@@ -83,6 +105,86 @@ export default function Bookings() {
         onError: (e: any) => toast.error(e.message),
       });
     }
+  };
+
+  const autoConvertBooking = (booking: any) => {
+    if (!orgId) return;
+    if (bookingEventMap[booking.id]) return; // Already converted
+
+    createEvent.mutate(
+      {
+        name: booking.event_name || booking.client_name,
+        event_date: booking.event_date,
+        start_time: booking.start_time || null,
+        end_time: booking.end_time || null,
+        location: booking.location || null,
+        trailer_id: booking.trailer_id || null,
+        org_id: orgId,
+        stage: "confirmed",
+        source: "booking",
+        booking_id: booking.id,
+        attendance_estimate: booking.guest_count || null,
+        notes: booking.notes ? `Booking: ${booking.client_name} — ${booking.notes}` : `Booking: ${booking.client_name}`,
+      } as any,
+      {
+        onSuccess: () => {
+          toast.success("Event auto-created from confirmed booking");
+          qc.invalidateQueries({ queryKey: ["events"] });
+        },
+        onError: (e: any) => {
+          // Unique constraint violation = duplicate, which is fine
+          if (e.message?.includes("events_booking_id_unique")) {
+            toast.info("Event already exists for this booking");
+          } else {
+            toast.error(`Auto-convert failed: ${e.message}`);
+          }
+        },
+      }
+    );
+  };
+
+  const handleManualConvert = (booking: any) => {
+    if (!orgId) {
+      toast.error("Organization context missing");
+      return;
+    }
+    if (bookingEventMap[booking.id]) {
+      toast.info("This booking already has a linked event");
+      return;
+    }
+    setConvertingId(booking.id);
+    createEvent.mutate(
+      {
+        name: booking.event_name,
+        event_date: booking.event_date,
+        start_time: booking.start_time || null,
+        end_time: booking.end_time || null,
+        location: booking.location || null,
+        trailer_id: booking.trailer_id || null,
+        org_id: orgId,
+        stage: "confirmed",
+        source: "booking",
+        booking_id: booking.id,
+        attendance_estimate: booking.guest_count || null,
+        notes: booking.notes ? `Booking: ${booking.client_name} — ${booking.notes}` : `Booking: ${booking.client_name}`,
+      } as any,
+      {
+        onSuccess: () => {
+          toast.success(`Event created from "${booking.event_name}"`);
+          qc.invalidateQueries({ queryKey: ["events"] });
+          setConvertingId(null);
+        },
+        onError: (e: any) => {
+          setConvertingId(null);
+          if (e.message?.includes("events_booking_id_unique")) {
+            toast.info("Event already exists for this booking");
+            qc.invalidateQueries({ queryKey: ["events"] });
+          } else {
+            toast.error(e.message);
+          }
+        },
+      }
+    );
   };
 
   const startEdit = (b: any) => {
@@ -258,46 +360,76 @@ export default function Bookings() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border bg-muted/50">
-                    {["Client", "Event", "Date", "Trailer", "Status", "Total", "Balance", "Actions"].map((h) => (
+                    {["Client", "Event", "Date", "Trailer", "Status", "Total", "Balance", "Event Link", "Actions"].map((h) => (
                       <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {bookings.map((b: any) => (
-                    <tr key={b.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
-                      <td className="px-4 py-3">
-                        <p className="font-medium text-card-foreground">{b.client_name}</p>
-                        <p className="text-xs text-muted-foreground">{b.client_email}</p>
-                      </td>
-                      <td className="px-4 py-3 text-muted-foreground">{b.event_name}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{b.event_date}</td>
-                      <td className="px-4 py-3 text-muted-foreground">{b.trailers?.name || "—"}</td>
-                      <td className="px-4 py-3">
-                        <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                          b.status === "confirmed" ? "bg-success/10 text-success"
-                          : b.status === "completed" ? "bg-primary/10 text-primary"
-                          : b.status === "cancelled" ? "bg-destructive/10 text-destructive"
-                          : "bg-warning/10 text-warning"
-                        }`}>{b.status}</span>
-                      </td>
-                      <td className="px-4 py-3 font-medium text-card-foreground">{b.total_price ? `$${b.total_price.toLocaleString()}` : "—"}</td>
-                      <td className="px-4 py-3 font-medium text-card-foreground">{b.balance_due ? `$${b.balance_due.toLocaleString()}` : "—"}</td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-1">
-                          <button onClick={() => startEdit(b)} className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
-                            <Pencil className="h-3.5 w-3.5" />
-                          </button>
-                          <button
-                            onClick={() => { if (confirm(`Delete booking for ${b.client_name}?`)) deleteBooking.mutate(b.id); }}
-                            className="p-1.5 rounded hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                  {bookings.map((b: any) => {
+                    const linkedEvent = bookingEventMap[b.id];
+                    return (
+                      <tr key={b.id} className="border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
+                        <td className="px-4 py-3">
+                          <p className="font-medium text-card-foreground">{b.client_name}</p>
+                          <p className="text-xs text-muted-foreground">{b.client_email}</p>
+                        </td>
+                        <td className="px-4 py-3 text-muted-foreground">{b.event_name}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{b.event_date}</td>
+                        <td className="px-4 py-3 text-muted-foreground">{b.trailers?.name || "—"}</td>
+                        <td className="px-4 py-3">
+                          <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                            b.status === "confirmed" ? "bg-success/10 text-success"
+                            : b.status === "completed" ? "bg-primary/10 text-primary"
+                            : b.status === "cancelled" ? "bg-destructive/10 text-destructive"
+                            : "bg-warning/10 text-warning"
+                          }`}>{b.status}</span>
+                        </td>
+                        <td className="px-4 py-3 font-medium text-card-foreground">{b.total_price ? `$${b.total_price.toLocaleString()}` : "—"}</td>
+                        <td className="px-4 py-3 font-medium text-card-foreground">{b.balance_due ? `$${b.balance_due.toLocaleString()}` : "—"}</td>
+                        <td className="px-4 py-3">
+                          {linkedEvent ? (
+                            <button
+                              onClick={() => navigate("/events")}
+                              className="inline-flex items-center gap-1.5 rounded-full bg-success/10 px-2.5 py-1 text-xs font-medium text-success hover:bg-success/20 transition-colors"
+                            >
+                              <CalendarRange className="h-3 w-3" />
+                              {linkedEvent.stage}
+                              <ExternalLink className="h-3 w-3" />
+                            </button>
+                          ) : (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="gap-1 text-xs h-7"
+                              disabled={convertingId === b.id || createEvent.isPending}
+                              onClick={() => handleManualConvert(b)}
+                            >
+                              {convertingId === b.id ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <CalendarRange className="h-3 w-3" />
+                              )}
+                              Convert to Event
+                            </Button>
+                          )}
+                        </td>
+                        <td className="px-4 py-3">
+                          <div className="flex items-center gap-1">
+                            <button onClick={() => startEdit(b)} className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground">
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                            <button
+                              onClick={() => { if (confirm(`Delete booking for ${b.client_name}?`)) deleteBooking.mutate(b.id); }}
+                              className="p-1.5 rounded hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
