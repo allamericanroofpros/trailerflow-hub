@@ -59,6 +59,7 @@ export default function POS() {
   const [sodComplete, setSodComplete] = useState(false);
   const [sodData, setSodData] = useState<{ trailerId: string | null; eventId: string | null; openingCash: number; notes: string } | null>(null);
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [customerName, setCustomerName] = useState("");
   const [activeCategory, setActiveCategory] = useState<string>("all");
   const [view, setView] = useState<"register" | "orders" | "history" | "sales" | "inventory" | "report">("register");
   const [mobileCartOpen, setMobileCartOpen] = useState(false);
@@ -161,6 +162,7 @@ export default function POS() {
         tip: tipAmount,
         payment_method: data.paymentMethod,
         payment_received: true,
+        notes: customerName.trim() ? `Customer: ${customerName.trim()}` : undefined,
         items: cart.map((c) => {
           const isCustom = c.menu_item_id.startsWith(CUSTOM_ITEM_ID);
           return {
@@ -182,6 +184,7 @@ export default function POS() {
         orderId: (newOrder as any).id,
       });
       setCart([]);
+      setCustomerName("");
       setMobileCartOpen(false);
       setShowCheckout(false);
     } catch (e: any) {
@@ -324,12 +327,29 @@ export default function POS() {
           </div>
         </div>
 
+        {/* Customer Name */}
+        <div>
+          <label className="text-xs font-bold text-muted-foreground uppercase tracking-wide">Customer Name *</label>
+          <Input
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+            placeholder="Enter name for order"
+            className="mt-1 h-12 rounded-xl border-2 text-base font-semibold"
+          />
+        </div>
+
         {cart.length > 0 && (
           <>
             <Button
               size="lg"
               className="w-full h-14 text-base font-black rounded-xl active:scale-95 touch-manipulation"
-              onClick={() => setShowCheckout(true)}
+              onClick={() => {
+                if (!customerName.trim()) {
+                  toast.error("Please enter a customer name before checkout");
+                  return;
+                }
+                setShowCheckout(true);
+              }}
               disabled={createOrder.isPending}
             >
               Charge ${total.toFixed(2)}
@@ -608,7 +628,9 @@ export default function POS() {
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {activeOrders.map((order) => (
+              {activeOrders.map((order) => {
+                const customerNote = order.notes?.startsWith("Customer: ") ? order.notes.replace("Customer: ", "") : null;
+                return (
                 <motion.div
                   key={order.id}
                   layout
@@ -620,9 +642,14 @@ export default function POS() {
                   style={{ borderColor: undefined }}
                 >
                   <div className="flex items-center justify-between">
-                    <span className="text-2xl font-black text-card-foreground">
-                      #{order.order_number}
-                    </span>
+                    <div>
+                      <span className="text-2xl font-black text-card-foreground">
+                        #{order.order_number}
+                      </span>
+                      {customerNote && (
+                        <p className="text-sm font-semibold text-primary mt-0.5">{customerNote}</p>
+                      )}
+                    </div>
                     <span
                       className={`inline-flex items-center gap-2 rounded-xl border-2 px-4 py-2 text-sm font-black ${
                         statusColor[order.status] || "border-border"
@@ -671,7 +698,8 @@ export default function POS() {
                     )}
                   </div>
                 </motion.div>
-              ))}
+                );
+              })}
             </div>
           )}
         </div>

@@ -26,6 +26,7 @@ import NotFound from "./pages/NotFound";
 import ReceiptPage from "./pages/Receipt";
 import PublicBooking from "./pages/PublicBooking";
 import FleetOverview from "./pages/FleetOverview";
+import OrdersQueue from "./pages/OrdersQueue";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="/financials" element={<ProtectedRoute><Financials /></ProtectedRoute>} />
             <Route path="/maintenance" element={<ProtectedRoute><Maintenance /></ProtectedRoute>} />
             <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+            <Route path="/orders-queue" element={<ProtectedRoute><OrdersQueue /></ProtectedRoute>} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

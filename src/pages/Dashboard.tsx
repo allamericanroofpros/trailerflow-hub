@@ -219,19 +219,36 @@ export default function Dashboard() {
           <TrailerPerformanceChart />
         </div>
 
-        {/* Discover CTA */}
-        <button
-          onClick={() => navigate("/discover")}
-          className="w-full rounded-xl border border-border bg-card p-5 shadow-card text-left hover:shadow-card-hover transition-shadow"
-        >
-          <div className="flex items-center gap-2 mb-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <h3 className="text-sm font-semibold text-card-foreground">Discover New Events</h3>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            Use AI-powered search to find festivals, markets, and fairs near you that are perfect for Cone Corral and Sweet Stack Corral.
-          </p>
-        </button>
+        {/* Quick Access Buttons */}
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <button
+            onClick={() => navigate("/orders-queue")}
+            className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-card text-left hover:shadow-card-hover transition-shadow"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <ShoppingCart className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-card-foreground">Orders & Queue</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">View active orders and history — ideal for a second screen</p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto" />
+          </button>
+
+          <button
+            onClick={() => navigate("/discover")}
+            className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-card text-left hover:shadow-card-hover transition-shadow"
+          >
+            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-card-foreground">Discover New Events</h3>
+              <p className="text-xs text-muted-foreground mt-0.5">AI-powered event search for your trailers</p>
+            </div>
+            <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto" />
+          </button>
+        </div>
       </div>
     </AppLayout>
   );
