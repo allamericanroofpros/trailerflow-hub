@@ -620,6 +620,8 @@ export default function POS() {
             </div>
           )}
         </div>
+      ) : view === "history" ? (
+        <POSOrderHistory />
       ) : view === "sales" ? (
         <POSSalesView />
       ) : view === "inventory" ? (
