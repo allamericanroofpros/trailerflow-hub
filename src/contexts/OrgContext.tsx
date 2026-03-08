@@ -53,6 +53,42 @@ export function OrgProvider({ children }: { children: ReactNode }) {
 
   const queryClient = useQueryClient();
 
+  const fetchMemberships = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("organization_members")
+      .select("org_id, role, organization:organizations(*)")
+      .eq("user_id", user.id);
+
+    if (error || !data) {
+      setMemberships([]);
+      setLoading(false);
+      return;
+    }
+
+    const mapped = data.map((m: any) => ({
+      org_id: m.org_id,
+      role: m.role,
+      organization: m.organization,
+    }));
+
+    setMemberships(mapped);
+
+    // Auto-select org
+    if (mapped.length > 0) {
+      const savedId = localStorage.getItem(ORG_KEY);
+      const valid = mapped.find((m) => m.org_id === savedId);
+      if (valid) {
+        setCurrentOrgId(valid.org_id);
+      } else {
+        setCurrentOrgId(mapped[0].org_id);
+        localStorage.setItem(ORG_KEY, mapped[0].org_id);
+      }
+    }
+
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (!user) {
       setMemberships([]);
@@ -60,41 +96,6 @@ export function OrgProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return;
     }
-
-    const fetchMemberships = async () => {
-      const { data, error } = await supabase
-        .from("organization_members")
-        .select("org_id, role, organization:organizations(*)")
-        .eq("user_id", user.id);
-
-      if (error || !data) {
-        setMemberships([]);
-        setLoading(false);
-        return;
-      }
-
-      const mapped = data.map((m: any) => ({
-        org_id: m.org_id,
-        role: m.role,
-        organization: m.organization,
-      }));
-
-      setMemberships(mapped);
-
-      // Auto-select org
-      if (mapped.length > 0) {
-        const savedId = localStorage.getItem(ORG_KEY);
-        const valid = mapped.find((m) => m.org_id === savedId);
-        if (valid) {
-          setCurrentOrgId(valid.org_id);
-        } else {
-          setCurrentOrgId(mapped[0].org_id);
-          localStorage.setItem(ORG_KEY, mapped[0].org_id);
-        }
-      }
-
-      setLoading(false);
-    };
 
     fetchMemberships();
   }, [user]);
