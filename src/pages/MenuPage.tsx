@@ -662,6 +662,15 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                           />
                           Required
                         </label>
+                        <label className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+                          <input
+                            type="checkbox"
+                            checked={mod.multiSelect ?? false}
+                            onChange={(e) => updateModifier(modIdx, "multiSelect", e.target.checked)}
+                            className="rounded"
+                          />
+                          Multi-select
+                        </label>
                         <button onClick={() => removeModifier(modIdx)} className="p-1 text-destructive hover:bg-destructive/10 rounded">
                           <X className="h-3.5 w-3.5" />
                         </button>
