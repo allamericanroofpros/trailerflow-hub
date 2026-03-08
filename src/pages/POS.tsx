@@ -168,7 +168,10 @@ export default function POS() {
         tip: tipAmount,
         payment_method: data.paymentMethod,
         payment_received: true,
-        notes: customerName.trim() ? `Customer: ${customerName.trim()}` : undefined,
+        notes: [
+          customerName.trim() ? `Customer: ${customerName.trim()}` : "",
+          specialInstructions.trim() ? `Instructions: ${specialInstructions.trim()}` : "",
+        ].filter(Boolean).join(" | ") || undefined,
         items: cart.map((c) => {
           const isCustom = c.menu_item_id.startsWith(CUSTOM_ITEM_ID);
           return {
