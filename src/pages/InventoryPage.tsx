@@ -361,6 +361,12 @@ export default function Inventory() {
                                 </span>
                               ) : "—"}
                             </td>
+                            <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">
+                              {(item as any).unit_size ? `${Number((item as any).unit_size)} ${item.unit}` : "—"}
+                            </td>
+                            <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">
+                              {(item as any).serving_size ? `${Number((item as any).serving_size)} ${item.unit}` : "—"}
+                            </td>
                             <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">${Number(item.cost_per_unit).toFixed(2)}</td>
                             <td className="text-right px-4 py-3 text-muted-foreground hidden lg:table-cell">{item.supplier || "—"}</td>
                             <td className="text-right px-4 py-3">
