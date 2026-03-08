@@ -385,7 +385,7 @@ export default function POS() {
             <span className="font-semibold">${subtotal.toFixed(2)}</span>
           </div>
           <div className="flex justify-between text-sm text-muted-foreground">
-            <span>Tax ({(TAX_RATE * 100).toFixed(2)}%)</span>
+            <span>{taxSettings.label}{taxSettings.enabled && taxSettings.percent > 0 ? ` (${taxSettings.percent}%)` : ""}</span>
             <span className="font-semibold">${tax.toFixed(2)}</span>
           </div>
           <div className="flex justify-between font-black text-xl text-card-foreground pt-2 border-t-2 border-border">
