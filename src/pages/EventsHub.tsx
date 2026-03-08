@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { claudeNonStreaming } from "@/hooks/useClaudeAI";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
+import { useOrgId } from "@/hooks/useOrgId";
 
 type EventStage = Database["public"]["Enums"]["event_stage"];
 

@@ -21,6 +21,7 @@ const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart
 export default function Staff() {
   const { user } = useAuth();
   const { isOwner, canManage } = useRoleAccess();
+  const orgId = useOrgId();
   const { data: staff, isLoading } = useStaffMembers();
   const createStaff = useCreateStaffMember();
   const updateStaff = useUpdateStaffMember();
