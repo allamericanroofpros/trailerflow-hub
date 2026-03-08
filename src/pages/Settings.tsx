@@ -262,6 +262,55 @@ export default function SettingsPage() {
           </div>
         )}
 
+        {/* Payments & Fees Section */}
+        {activeSection === "payments" && isOwner && (
+          <div className="rounded-xl border border-border bg-card p-6 shadow-card">
+            <div className="flex items-center gap-2 mb-5">
+              <Receipt className="h-4 w-4 text-primary" />
+              <h3 className="text-sm font-semibold text-card-foreground">Payments & Card Fee Pass-Through</h3>
+            </div>
+            <p className="text-xs text-muted-foreground mb-5 max-w-xl">
+              Optionally pass card processing fees to customers. When enabled, a surcharge line item is added to card payments in POS and booking flows. Cash and digital payments are not affected.
+            </p>
+            <div className="space-y-5 max-w-lg">
+              <label className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-card-foreground">Enable Card Surcharge</p>
+                  <p className="text-xs text-muted-foreground">Add a fee to card transactions</p>
+                </div>
+                <Switch checked={surchargeEnabled} onCheckedChange={setSurchargeEnabled} />
+              </label>
+
+              {surchargeEnabled && (
+                <div className="space-y-4 pl-1 border-l-2 border-primary/20 ml-1">
+                  <div className="pl-4">
+                    <label className="text-xs font-medium text-muted-foreground">Fee Label (shown to customer)</label>
+                    <Input value={surchargeLabel} onChange={(e) => setSurchargeLabel(e.target.value)} className="mt-1" placeholder="Non-Cash Adjustment" />
+                  </div>
+                  <div className="pl-4">
+                    <label className="text-xs font-medium text-muted-foreground">Percentage (%)</label>
+                    <Input type="number" step="0.1" min="0" max="10" value={surchargePercent} onChange={(e) => setSurchargePercent(e.target.value)} className="mt-1" />
+                    <p className="text-[11px] text-muted-foreground mt-1">Most businesses charge 2.5% – 3.5%</p>
+                  </div>
+                  <div className="pl-4">
+                    <label className="text-xs font-medium text-muted-foreground">Flat Fee ($) — optional</label>
+                    <Input type="number" step="0.01" min="0" value={surchargeFlat} onChange={(e) => setSurchargeFlat(e.target.value)} className="mt-1" placeholder="0.00" />
+                  </div>
+                  <div className="pl-4">
+                    <label className="text-xs font-medium text-muted-foreground">Maximum Cap ($) — optional</label>
+                    <Input type="number" step="0.01" min="0" value={surchargeCap} onChange={(e) => setSurchargeCap(e.target.value)} className="mt-1" placeholder="No cap" />
+                    <p className="text-[11px] text-muted-foreground mt-1">If set, surcharge will never exceed this amount</p>
+                  </div>
+                </div>
+              )}
+
+              <Button onClick={() => saveSurcharge.mutate()} disabled={saveSurcharge.isPending}>
+                {saveSurcharge.isPending ? "Saving..." : "Save Payment Settings"}
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Notifications Section */}
         {activeSection === "notifications" && (
           <div className="rounded-xl border border-border bg-card p-6 shadow-card">
