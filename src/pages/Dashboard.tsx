@@ -1,6 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { RevenueByTypeChart, TrailerPerformanceChart } from "@/components/dashboard/Charts";
+import { AdvancedAnalyticsPlaceholder } from "@/components/dashboard/AdvancedAnalyticsGate";
 import { SetupWizard } from "@/components/onboarding/SetupWizard";
 import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
 import { useNavigate } from "react-router-dom";
@@ -226,8 +227,17 @@ export default function Dashboard() {
             </div>
           </button>
 
-          <RevenueByTypeChart />
-          <TrailerPerformanceChart />
+          {ent.advancedAnalytics ? (
+            <>
+              <RevenueByTypeChart />
+              <TrailerPerformanceChart />
+            </>
+          ) : (
+            <>
+              <AdvancedAnalyticsPlaceholder title="Revenue by Event Type" />
+              <AdvancedAnalyticsPlaceholder title="Trailer Performance" />
+            </>
+          )}
         </div>
 
         {/* Quick Access Buttons */}

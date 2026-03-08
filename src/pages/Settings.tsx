@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import { Settings as SettingsIcon, User, Bell, Truck, CreditCard, Shield, Palette, ArrowRight, Users, Loader2, Monitor, Check, ExternalLink, Receipt } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useSubscription } from "@/hooks/useSubscription";
@@ -29,11 +29,14 @@ const baseSections = [
 type SectionId = typeof baseSections[number]["id"];
 
 export default function SettingsPage() {
-  const [activeSection, setActiveSection] = useState<SectionId>("profile");
+  const [searchParams] = useSearchParams();
+  const [activeSection, setActiveSection] = useState<SectionId>(
+    () => (searchParams.get("section") as SectionId) || "profile"
+  );
   const navigate = useNavigate();
   const { user } = useAuth();
   const { isOwner } = useRoleAccess();
-  const { currentOrg } = useOrg();
+  const { currentOrg, refreshOrg } = useOrg();
   const { subscribed, tier, subscriptionEnd, cancelAtPeriodEnd, loading: subLoading, startCheckout, openPortal, checkSubscription } = useSubscription();
   const qc = useQueryClient();
 
@@ -99,6 +102,13 @@ export default function SettingsPage() {
   const [taxLabel, setTaxLabel] = useState("Sales Tax");
   const [taxPercent, setTaxPercent] = useState("0");
   const [taxInclusive, setTaxInclusive] = useState(false);
+
+  // Auto-refresh org data when landing on billing (e.g. returning from Stripe)
+  useEffect(() => {
+    if (activeSection === "billing") {
+      refreshOrg();
+    }
+  }, [activeSection]);
 
   const [paymentSettingsLoaded, setPaymentSettingsLoaded] = useState(false);
 
@@ -484,7 +494,7 @@ export default function SettingsPage() {
                 </div>
 
                 <div className="mt-4 flex justify-center">
-                  <Button variant="ghost" size="sm" onClick={() => { checkSubscription(); toast.success("Subscription status refreshed"); }}>
+                  <Button variant="ghost" size="sm" onClick={() => { checkSubscription(); refreshOrg(); toast.success("Subscription status refreshed"); }}>
                     Refresh Status
                   </Button>
                 </div>

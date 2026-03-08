@@ -27,6 +27,7 @@ interface OrgContextType {
   orgRole: string | null;
   loading: boolean;
   switchOrg: (orgId: string) => void;
+  refreshOrg: () => void;
 }
 
 const OrgContext = createContext<OrgContextType>({
@@ -35,6 +36,7 @@ const OrgContext = createContext<OrgContextType>({
   orgRole: null,
   loading: true,
   switchOrg: () => {},
+  refreshOrg: () => {},
 });
 
 export const useOrg = () => useContext(OrgContext);
@@ -51,6 +53,42 @@ export function OrgProvider({ children }: { children: ReactNode }) {
 
   const queryClient = useQueryClient();
 
+  const fetchMemberships = async () => {
+    if (!user) return;
+    const { data, error } = await supabase
+      .from("organization_members")
+      .select("org_id, role, organization:organizations(*)")
+      .eq("user_id", user.id);
+
+    if (error || !data) {
+      setMemberships([]);
+      setLoading(false);
+      return;
+    }
+
+    const mapped = data.map((m: any) => ({
+      org_id: m.org_id,
+      role: m.role,
+      organization: m.organization,
+    }));
+
+    setMemberships(mapped);
+
+    // Auto-select org
+    if (mapped.length > 0) {
+      const savedId = localStorage.getItem(ORG_KEY);
+      const valid = mapped.find((m) => m.org_id === savedId);
+      if (valid) {
+        setCurrentOrgId(valid.org_id);
+      } else {
+        setCurrentOrgId(mapped[0].org_id);
+        localStorage.setItem(ORG_KEY, mapped[0].org_id);
+      }
+    }
+
+    setLoading(false);
+  };
+
   useEffect(() => {
     if (!user) {
       setMemberships([]);
@@ -58,41 +96,6 @@ export function OrgProvider({ children }: { children: ReactNode }) {
       setLoading(false);
       return;
     }
-
-    const fetchMemberships = async () => {
-      const { data, error } = await supabase
-        .from("organization_members")
-        .select("org_id, role, organization:organizations(*)")
-        .eq("user_id", user.id);
-
-      if (error || !data) {
-        setMemberships([]);
-        setLoading(false);
-        return;
-      }
-
-      const mapped = data.map((m: any) => ({
-        org_id: m.org_id,
-        role: m.role,
-        organization: m.organization,
-      }));
-
-      setMemberships(mapped);
-
-      // Auto-select org
-      if (mapped.length > 0) {
-        const savedId = localStorage.getItem(ORG_KEY);
-        const valid = mapped.find((m) => m.org_id === savedId);
-        if (valid) {
-          setCurrentOrgId(valid.org_id);
-        } else {
-          setCurrentOrgId(mapped[0].org_id);
-          localStorage.setItem(ORG_KEY, mapped[0].org_id);
-        }
-      }
-
-      setLoading(false);
-    };
 
     fetchMemberships();
   }, [user]);
@@ -104,12 +107,18 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     queryClient?.invalidateQueries();
   };
 
+  /** Re-fetch org data (e.g. after billing change) without switching */
+  const refreshOrg = () => {
+    fetchMemberships();
+    queryClient?.invalidateQueries();
+  };
+
   const currentMembership = memberships.find((m) => m.org_id === currentOrgId);
   const currentOrg = currentMembership?.organization ?? null;
   const orgRole = currentMembership?.role ?? null;
 
   return (
-    <OrgContext.Provider value={{ currentOrg, memberships, orgRole, loading, switchOrg }}>
+    <OrgContext.Provider value={{ currentOrg, memberships, orgRole, loading, switchOrg, refreshOrg }}>
       {children}
     </OrgContext.Provider>
   );

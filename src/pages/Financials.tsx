@@ -1,5 +1,5 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { DollarSign, TrendingUp, Truck, Plus, Loader2, ArrowUpRight, ArrowDownRight, Receipt } from "lucide-react";
+import { DollarSign, TrendingUp, Truck, Plus, Loader2, ArrowUpRight, ArrowDownRight, Receipt, Lock, Sparkles, ArrowRight } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, CartesianGrid, Tooltip } from "recharts";
 import { useTransactions, useCreateTransaction } from "@/hooks/useTransactions";
 import { useOrders } from "@/hooks/useOrders";
@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrgId } from "@/hooks/useOrgId";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { useNavigate } from "react-router-dom";
 
 export default function Financials() {
   const { data: transactions, isLoading } = useTransactions();
@@ -21,6 +23,8 @@ export default function Financials() {
   const createTx = useCreateTransaction();
   const { user } = useAuth();
   const orgId = useOrgId();
+  const ent = useEntitlements();
+  const navigate = useNavigate();
 
   const [addingNew, setAddingNew] = useState(false);
   const [form, setForm] = useState({
@@ -160,20 +164,37 @@ export default function Financials() {
           </div>
         )}
 
-        {/* Chart */}
-        {chartData.length > 0 && (
-          <div className="rounded-xl border border-border bg-card p-5 shadow-card">
-            <h3 className="text-sm font-semibold text-card-foreground mb-4">Income vs Expenses</h3>
-            <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={chartData} barSize={24}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
-                <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} />
-                <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} />
-                <Bar dataKey="income" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} name="Income" />
-                <Bar dataKey="expenses" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} name="Expenses" />
-              </BarChart>
-            </ResponsiveContainer>
+        {/* Chart — Advanced Analytics */}
+        {ent.advancedAnalytics ? (
+          chartData.length > 0 && (
+            <div className="rounded-xl border border-border bg-card p-5 shadow-card">
+              <h3 className="text-sm font-semibold text-card-foreground mb-4">Income vs Expenses</h3>
+              <ResponsiveContainer width="100%" height={260}>
+                <BarChart data={chartData} barSize={24}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
+                  <XAxis dataKey="month" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
+                  <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} />
+                  <Tooltip contentStyle={{ backgroundColor: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: "8px", fontSize: "12px" }} />
+                  <Bar dataKey="income" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} name="Income" />
+                  <Bar dataKey="expenses" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} name="Expenses" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          )
+        ) : (
+          <div className="rounded-xl border border-border bg-card p-5 shadow-card relative overflow-hidden">
+            <h3 className="text-sm font-semibold text-card-foreground mb-4">Income vs Expenses Trends</h3>
+            <div className="flex flex-col items-center justify-center h-[220px] text-center gap-3">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                <Lock className="h-6 w-6 text-primary" />
+              </div>
+              <p className="text-sm text-muted-foreground max-w-[240px]">
+                Trend charts and advanced breakdowns require the <span className="font-semibold text-foreground">Pro</span> plan.
+              </p>
+              <Button size="sm" variant="outline" className="gap-1.5 mt-1" onClick={() => navigate("/settings?section=billing")}>
+                <Sparkles className="h-3.5 w-3.5" /> Upgrade <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
           </div>
         )}
 
