@@ -126,7 +126,7 @@ export default function Inventory() {
     if (!newItem.name.trim()) return toast.error("Name is required");
     try {
       const { shelf_life_days, unit_size, serving_size, serving_unit, serving_unit_conversion, ...rest } = newItem;
-      const insertData: any = { ...rest };
+      const insertData: any = { ...rest, org_id: orgId };
       if (shelf_life_days) insertData.shelf_life_days = Number(shelf_life_days);
       if (unit_size) insertData.unit_size = Number(unit_size);
       if (serving_size) insertData.serving_size = Number(serving_size);
