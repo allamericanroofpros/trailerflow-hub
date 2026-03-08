@@ -18,6 +18,7 @@ export default function Discover() {
   const [searchQuery, setSearchQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState<string | undefined>();
   const [locationFilter, setLocationFilter] = useState("");
+  const [radiusMiles, setRadiusMiles] = useState<number>(50);
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const { data: aiEvents, isLoading, isFetching } = useAIDiscovery(submittedQuery);
   const createEvent = useCreateEvent();
@@ -39,9 +40,9 @@ export default function Discover() {
   }, [opportunities, locationFilter]);
 
   const handleSearch = () => {
-    const query = [searchQuery, locationFilter ? `near ${locationFilter}` : ""]
-      .filter(Boolean)
-      .join(" ");
+    const parts = [searchQuery];
+    if (locationFilter) parts.push(`within ${radiusMiles} miles of ${locationFilter}`);
+    const query = parts.filter(Boolean).join(" ");
     setSubmittedQuery(query || undefined);
   };
 
@@ -131,6 +132,22 @@ export default function Discover() {
               )}
             </div>
 
+            {/* Radius selector */}
+            <div className="flex items-center rounded-lg border border-border bg-card overflow-hidden">
+              {[10, 25, 50, 100].map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setRadiusMiles(r)}
+                  className={`px-3 py-2 text-xs font-medium transition-colors border-r border-border last:border-r-0 ${
+                    radiusMiles === r
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-secondary"
+                  }`}
+                >
+                  {r}mi
+                </button>
+              ))}
+            </div>
             <button
               onClick={handleSearch}
               className="inline-flex items-center gap-1.5 rounded-lg bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
