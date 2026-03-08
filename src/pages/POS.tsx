@@ -328,6 +328,7 @@ export default function POS() {
           {[
             { key: "register" as const, label: "Register", icon: null },
             { key: "orders" as const, label: "Orders", icon: null, badge: activeOrders?.length },
+            { key: "history" as const, label: "History", icon: Receipt },
             { key: "sales" as const, label: "Sales", icon: BarChart3 },
             { key: "inventory" as const, label: "Stock", icon: Package },
             { key: "report" as const, label: "Report", icon: FileText },
