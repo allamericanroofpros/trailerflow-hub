@@ -20,7 +20,7 @@ const baseSections = [
   { id: "appearance", title: "Appearance", description: "Customize your dashboard theme and layout.", icon: Palette },
 ] as const;
 
-type SectionId = typeof sections[number]["id"];
+type SectionId = typeof baseSections[number]["id"];
 
 export default function SettingsPage() {
   const [activeSection, setActiveSection] = useState<SectionId>("profile");
