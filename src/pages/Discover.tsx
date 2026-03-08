@@ -10,6 +10,8 @@ import { useBookings } from "@/hooks/useBookings";
 import { toast } from "sonner";
 import { useCreateEvent } from "@/hooks/useEvents";
 import { useOrgId } from "@/hooks/useOrgId";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { UpgradeBanner } from "@/components/UpgradeModal";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
