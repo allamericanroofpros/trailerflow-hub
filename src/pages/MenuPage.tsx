@@ -75,12 +75,16 @@ const emptyForm: FormState = {
 // Compute live cost from ingredients + modifiers using current inventory prices
 function computeLiveCost(item: any, allInventory?: any[]): number {
   // Base recipe cost — prefer fresh inventory data over stale joined data
+  // quantity_used is in SERVING units, cost_per_unit is per STOCK unit
+  // So: cost = quantity_used * (cost_per_unit / serving_unit_conversion)
   let baseCost = 0;
   const ingredients = item.menu_item_ingredients || [];
   for (const ing of ingredients) {
     const freshInv = allInventory?.find((ii: any) => ii.id === ing.inventory_item_id);
+    const inv = freshInv || ing.inventory_items;
     const costPerUnit = Number(freshInv?.cost_per_unit ?? ing.inventory_items?.cost_per_unit) || 0;
-    baseCost += costPerUnit * Number(ing.quantity_used);
+    const conversion = Number(inv?.serving_unit_conversion) || 1;
+    baseCost += (costPerUnit / conversion) * Number(ing.quantity_used);
   }
 
   // Modifier average cost
@@ -91,7 +95,9 @@ function computeLiveCost(item: any, allInventory?: any[]): number {
       const optCosts = (mod.options || []).map((opt: any) => {
         return (opt.inventoryAdjustments || []).reduce((sum: number, adj: any) => {
           const invItem = allInventory.find((ii: any) => ii.id === adj.inventoryItemId);
-          return sum + (Number(invItem?.cost_per_unit) || 0) * (Number(adj.extraQty) || 0);
+          const costPerUnit = Number(invItem?.cost_per_unit) || 0;
+          const conversion = Number(invItem?.serving_unit_conversion) || 1;
+          return sum + (costPerUnit / conversion) * (Number(adj.extraQty) || 0);
         }, 0);
       });
       if (optCosts.length > 0) {
@@ -127,7 +133,8 @@ export default function MenuPage() {
     return form.ingredients.reduce((sum, ing) => {
       const invItem = inventoryItems?.find(ii => ii.id === ing.inventoryItemId);
       const costPerUnit = Number(invItem?.cost_per_unit) || 0;
-      return sum + costPerUnit * ing.quantityUsed;
+      const conversion = Number((invItem as any)?.serving_unit_conversion) || 1;
+      return sum + (costPerUnit / conversion) * ing.quantityUsed;
     }, 0);
   }, [form.ingredients, inventoryItems]);
 
@@ -139,7 +146,9 @@ export default function MenuPage() {
       const optionCosts = mod.options.map(opt => {
         return (opt.inventoryAdjustments || []).reduce((sum, adj) => {
           const invItem = inventoryItems.find(ii => ii.id === adj.inventoryItemId);
-          return sum + (Number(invItem?.cost_per_unit) || 0) * adj.extraQty;
+          const costPerUnit = Number(invItem?.cost_per_unit) || 0;
+          const conversion = Number((invItem as any)?.serving_unit_conversion) || 1;
+          return sum + (costPerUnit / conversion) * adj.extraQty;
         }, 0);
       });
       if (optionCosts.length > 0) {

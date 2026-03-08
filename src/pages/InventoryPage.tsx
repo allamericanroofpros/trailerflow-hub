@@ -272,7 +272,7 @@ export default function Inventory() {
             <Label>Current Stock (# of units ordered)</Label>
             <FieldTip tip="How many units you have on hand. E.g. if you have 2 tubs of 2.5 gal ice cream, enter 2 (total = 5 gal)." />
           </div>
-          <Input type="number" value={item.current_stock} onChange={(e) => setItem({ ...item, current_stock: Number(e.target.value) })} className="h-11" />
+          <Input type="number" value={item.current_stock} onChange={(e) => setItem({ ...item, current_stock: e.target.value })} className="h-11" />
           {unitSize > 0 && stock > 0 && (
             <p className="text-[10px] font-semibold text-primary mt-0.5">
               {stock} × {unitSize} {item.unit} = {totalVolume} {item.unit} total
@@ -349,14 +349,14 @@ export default function Inventory() {
             <Label>Par Level</Label>
             <FieldTip tip="Target amount to have on hand for each event. Used to calculate ordering needs. Counted in # of units ordered." />
           </div>
-          <Input type="number" value={item.par_level} onChange={(e) => setItem({ ...item, par_level: Number(e.target.value) })} className="h-11" />
+          <Input type="number" value={item.par_level} onChange={(e) => setItem({ ...item, par_level: e.target.value })} className="h-11" />
         </div>
         <div>
           <div className="flex items-center gap-1.5">
             <Label>Reorder Point</Label>
             <FieldTip tip="When stock falls to this level, a low-stock alert appears. Set below par to give yourself time to reorder." />
           </div>
-          <Input type="number" value={item.reorder_point} onChange={(e) => setItem({ ...item, reorder_point: Number(e.target.value) })} className="h-11" />
+          <Input type="number" value={item.reorder_point} onChange={(e) => setItem({ ...item, reorder_point: e.target.value })} className="h-11" />
         </div>
       </div>
 
@@ -366,7 +366,7 @@ export default function Inventory() {
             <Label>Cost / Unit ($)</Label>
             <FieldTip tip="How much you pay for ONE unit. E.g. if a 2.5 gal tub costs $18, enter $18. Used to calculate recipe costs and margins." />
           </div>
-          <Input type="number" step="0.01" value={item.cost_per_unit} onChange={(e) => setItem({ ...item, cost_per_unit: Number(e.target.value) })} className="h-11" />
+          <Input type="number" step="0.01" value={item.cost_per_unit} onChange={(e) => setItem({ ...item, cost_per_unit: e.target.value })} className="h-11" />
           {unitSize > 0 && Number(item.cost_per_unit) > 0 && (
             <p className="text-[10px] text-muted-foreground mt-0.5">
               ${(Number(item.cost_per_unit) / unitSize).toFixed(3)} per {item.unit}
