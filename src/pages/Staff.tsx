@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import {
   Users as UsersIcon, AlertTriangle, Clock, Shield, Eye, Plus, Pencil,
-  Trash2, X, Save, Calendar, Loader2, ChevronLeft, ChevronRight, UserPlus,
+  Trash2, X, Save, Calendar, Loader2, ChevronLeft, ChevronRight, UserPlus, CalendarClock, Sparkles,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useStaffMembers, useCreateStaffMember, useUpdateStaffMember, useDeleteStaffMember } from "@/hooks/useStaffMembers";
@@ -13,6 +13,10 @@ import { toast } from "sonner";
 import { format, parseISO, startOfWeek, addDays, isSameDay, addWeeks, subWeeks } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
+
+const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, "0")}:00`);
+
 export default function Staff() {
   const { user } = useAuth();
   const { isOwner, canManage } = useRoleAccess();
