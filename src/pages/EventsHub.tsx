@@ -127,7 +127,7 @@ export default function EventsHub() {
 
   const addToPipeline = (opp: typeof opportunities[0]) => {
     createEvent.mutate(
-      { name: opp.name, event_type: opp.type, location: opp.location, stage: "lead", source: "ai-discovery", confidence: opp.aiRank },
+      { name: opp.name, event_type: opp.type, location: opp.location, stage: "lead", source: "ai-discovery", confidence: opp.aiRank, org_id: orgId },
       { onSuccess: () => { toast.success(`"${opp.name}" added to pipeline`); setMainTab("pipeline"); }, onError: (e) => toast.error(e.message) }
     );
   };
