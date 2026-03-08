@@ -49,7 +49,7 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
   }, []);
 
   const appendDigit = useCallback((d: string) => {
-    setPin_(prev => prev.length < 6 ? prev + d : prev);
+    setPin_(prev => prev.length < 4 ? prev + d : prev);
   }, []);
   const backspace = useCallback(() => setPin_(prev => prev.slice(0, -1)), []);
   const clearPin = () => { setPin_(""); setMatchedStaff(null); setMatchedClock(null); setStep("pin-entry"); };
