@@ -45,6 +45,9 @@ export function AppSidebar() {
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
+  const { role, canView } = useRoleAccess();
+
+  const visibleItems = navItems.filter((item) => canView(item.viewKey));
 
   return (
     <aside
@@ -60,15 +63,23 @@ export function AppSidebar() {
           <Truck className="h-4 w-4 text-primary-foreground" />
         </div>
         {!collapsed && (
-          <span className="text-lg font-bold text-sidebar-accent-foreground tracking-tight">
-            TrailerOS
-          </span>
+          <div className="flex flex-col">
+            <span className="text-lg font-bold text-sidebar-accent-foreground tracking-tight leading-tight">
+              TrailerOS
+            </span>
+            {role && (
+              <span className="text-[10px] font-medium text-sidebar-muted uppercase tracking-wider flex items-center gap-1">
+                <Shield className="h-2.5 w-2.5" />
+                {role}
+              </span>
+            )}
+          </div>
         )}
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 space-y-1 px-3 py-4">
-        {navItems.map((item) => {
+        {visibleItems.map((item) => {
           const isActive =
             item.url === "/"
               ? location.pathname === "/"
