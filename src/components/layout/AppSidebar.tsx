@@ -18,12 +18,14 @@ import {
   Shield,
   Briefcase,
   Clock,
+  Compass,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
+import { useEntitlements } from "@/hooks/useEntitlements";
 import { OrgSwitcher } from "./OrgSwitcher";
 
 type NavItem = {
@@ -31,6 +33,8 @@ type NavItem = {
   url: string;
   icon: any;
   viewKey: string;
+  /** If set, item is only shown when this entitlement is true */
+  entitlementKey?: string;
 };
 
 type NavGroup = {
@@ -57,9 +61,10 @@ const sidebarEntries: SidebarEntry[] = [
     viewKey: "management",
     children: [
       { title: "Events", url: "/events", icon: CalendarRange, viewKey: "events" },
+      { title: "Discover", url: "/discover", icon: Compass, viewKey: "discover", entitlementKey: "aiDiscovery" },
       { title: "Calendar", url: "/calendar", icon: Calendar, viewKey: "calendar" },
       { title: "Financials", url: "/financials", icon: DollarSign, viewKey: "financials" },
-      { title: "Fleet", url: "/fleet", icon: BarChart3, viewKey: "fleet" },
+      { title: "Fleet", url: "/fleet", icon: BarChart3, viewKey: "fleet", entitlementKey: "fleetOverview" },
       { title: "Maintenance", url: "/maintenance", icon: Wrench, viewKey: "maintenance" },
       { title: "Time Clock", url: "/time-clock", icon: Clock, viewKey: "timeclock" },
     ],
@@ -73,6 +78,14 @@ export function AppSidebar() {
   const location = useLocation();
   const { signOut } = useAuth();
   const { role, canView } = useRoleAccess();
+  const ent = useEntitlements();
+
+  // Check if an item passes both role and entitlement checks
+  const isItemVisible = (item: NavItem): boolean => {
+    if (!canView(item.viewKey)) return false;
+    if (item.entitlementKey && !(ent as any)[item.entitlementKey]) return false;
+    return true;
+  };
 
   // Auto-open management group if current route is inside it
   const mgmtGroup = sidebarEntries.find(e => isGroup(e)) as NavGroup | undefined;
@@ -115,8 +128,7 @@ export function AppSidebar() {
       <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
         {sidebarEntries.map((entry) => {
           if (isGroup(entry)) {
-            // Check if any child is visible
-            const visibleChildren = entry.children.filter(c => canView(c.viewKey));
+            const visibleChildren = entry.children.filter(c => isItemVisible(c));
             if (visibleChildren.length === 0) return null;
             
             const groupOpen = mgmtOpen || isMgmtActive;
@@ -170,7 +182,7 @@ export function AppSidebar() {
           }
 
           // Regular nav item
-          if (!canView(entry.viewKey)) return null;
+          if (!isItemVisible(entry as NavItem)) return null;
           const isActive =
             entry.url === "/"
               ? location.pathname === "/"

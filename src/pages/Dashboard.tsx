@@ -27,11 +27,13 @@ import {
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
+import { useEntitlements } from "@/hooks/useEntitlements";
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { canView } = useRoleAccess();
+  const ent = useEntitlements();
   const { completedSteps, isComplete } = useOnboardingStatus();
   const [wizardDismissed, setWizardDismissed] = useState(false);
   const { data: grouped, isLoading: eventsLoading } = useEventsByStage();
@@ -244,19 +246,21 @@ export default function Dashboard() {
             <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto" />
           </button>
 
-          <button
-            onClick={() => navigate("/discover")}
-            className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-card text-left hover:shadow-card-hover transition-shadow"
-          >
-            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-              <Sparkles className="h-6 w-6" />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-card-foreground">Discover New Events</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">AI-powered event search for your trailers</p>
-            </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto" />
-          </button>
+          {ent.aiDiscovery && (
+            <button
+              onClick={() => navigate("/discover")}
+              className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-card text-left hover:shadow-card-hover transition-shadow"
+            >
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                <Sparkles className="h-6 w-6" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-card-foreground">Discover New Events</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">AI-powered event search for your trailers</p>
+              </div>
+              <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto" />
+            </button>
+          )}
         </div>
       </div>
     </AppLayout>

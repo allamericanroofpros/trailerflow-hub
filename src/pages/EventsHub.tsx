@@ -24,6 +24,8 @@ import { claudeNonStreaming } from "@/hooks/useClaudeAI";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
 import { useOrgId } from "@/hooks/useOrgId";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { UpgradeBanner } from "@/components/UpgradeModal";
 
 type EventStage = Database["public"]["Enums"]["event_stage"];
 
@@ -61,6 +63,7 @@ function formatDate(date?: string | null, endDate?: string | null): string {
 export default function EventsHub() {
   const { selectedTrailerId } = useSelectedTrailer();
   const orgId = useOrgId();
+  const ent = useEntitlements();
   const { data: grouped, isLoading } = useEventsByStage(selectedTrailerId);
   const { data: allEvents } = useEvents(undefined, selectedTrailerId);
   const { data: existingBookings } = useBookings();
@@ -136,6 +139,10 @@ export default function EventsHub() {
   // AI Forecast for a single event
   const handleAIForecast = async () => {
     if (!selectedEvent) return;
+    if (!ent.aiForecasting) {
+      toast.error("AI Forecasting requires a Pro plan or above.");
+      return;
+    }
     setAiForecastLoading(true);
     try {
       const trailerData = trailers?.find(t => t.id === (selectedEvent as any).trailer_id);
@@ -325,14 +332,16 @@ Return ONLY a JSON object with: revenue_forecast_low (number), revenue_forecast_
               >
                 <Calendar className="h-3 w-3" /> Pipeline
               </button>
-              <button
-                onClick={() => setMainTab("discover")}
-                className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
-                  mainTab === "discover" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                <Compass className="h-3 w-3" /> Discover
-              </button>
+              {ent.aiDiscovery && (
+                <button
+                  onClick={() => setMainTab("discover")}
+                  className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition-colors ${
+                    mainTab === "discover" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  <Compass className="h-3 w-3" /> Discover
+                </button>
+              )}
             </div>
             {mainTab === "pipeline" && (
               showAddForm ? (

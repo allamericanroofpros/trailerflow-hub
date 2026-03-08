@@ -39,6 +39,14 @@ export function UpgradeModal({ open, onOpenChange, feature, currentPlan, require
             <span className="text-sm font-semibold text-foreground">{required.label} Plan includes:</span>
           </div>
           <ul className="space-y-1.5 text-sm text-muted-foreground">
+            {requiredPlan === "starter" && (
+              <>
+                <li>✓ 5 staff accounts</li>
+                <li>✓ AI chat assistant</li>
+                <li>✓ Full POS & booking system</li>
+                <li>✓ Basic reports</li>
+              </>
+            )}
             {requiredPlan === "pro" && (
               <>
                 <li>✓ Unlimited trailers & staff</li>
