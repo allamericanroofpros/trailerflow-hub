@@ -209,6 +209,7 @@ export type Database = {
           actual_revenue: number | null
           address: string | null
           attendance_estimate: number | null
+          booking_id: string | null
           confidence: number | null
           created_at: string
           created_by: string | null
@@ -238,6 +239,7 @@ export type Database = {
           actual_revenue?: number | null
           address?: string | null
           attendance_estimate?: number | null
+          booking_id?: string | null
           confidence?: number | null
           created_at?: string
           created_by?: string | null
@@ -267,6 +269,7 @@ export type Database = {
           actual_revenue?: number | null
           address?: string | null
           attendance_estimate?: number | null
+          booking_id?: string | null
           confidence?: number | null
           created_at?: string
           created_by?: string | null
@@ -293,6 +296,13 @@ export type Database = {
           vendor_fee?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "events_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "events_org_id_fkey"
             columns: ["org_id"]
