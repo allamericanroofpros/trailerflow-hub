@@ -180,6 +180,7 @@ export default function MenuPage() {
         is_active: form.is_active,
         modifiers: cleanModifiers,
         trailer_id: form.trailer_id || null,
+        org_id: orgId,
       };
 
       let itemId = editId;
