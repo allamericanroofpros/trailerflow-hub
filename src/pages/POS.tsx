@@ -117,11 +117,15 @@ export default function POS() {
         tip: tipAmount,
         payment_method: data.paymentMethod,
         payment_received: true,
-        items: cart.map((c) => ({
-          menu_item_id: c.menu_item_id,
-          quantity: c.quantity,
-          unit_price: c.price,
-        })),
+        items: cart.map((c) => {
+          const isCustom = c.menu_item_id.startsWith(CUSTOM_ITEM_ID);
+          return {
+            menu_item_id: isCustom ? CUSTOM_ITEM_ID : c.menu_item_id,
+            quantity: c.quantity,
+            unit_price: c.price,
+            notes: isCustom ? `Custom: ${c.name}` : undefined,
+          };
+        }),
       });
       const changeDue = data.cashTendered ? data.cashTendered - grandTotal : undefined;
       setConfirmation({
