@@ -1,18 +1,21 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { useOrgId } from "./useOrgId";
 
-type Booking = Database["public"]["Tables"]["bookings"]["Row"];
 type BookingInsert = Database["public"]["Tables"]["bookings"]["Insert"];
 type BookingUpdate = Database["public"]["Tables"]["bookings"]["Update"];
 
 export function useBookings() {
+  const orgId = useOrgId();
   return useQuery({
-    queryKey: ["bookings"],
+    queryKey: ["bookings", orgId],
+    enabled: !!orgId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("bookings")
         .select("*, trailers(name)")
+        .eq("org_id", orgId!)
         .order("event_date", { ascending: true });
       if (error) throw error;
       return data;

@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useTrailerValidation } from "@/hooks/useTrailerValidation";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrgId } from "@/hooks/useOrgId";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -76,6 +77,7 @@ export default function Trailers() {
   const updateTrailer = useUpdateTrailer();
   const deleteTrailer = useDeleteTrailer();
   const { user } = useAuth();
+  const orgId = useOrgId();
 
   const [addingNew, setAddingNew] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -113,6 +115,7 @@ export default function Trailers() {
       avg_food_cost_percent: form.avg_food_cost_percent ? parseFloat(form.avg_food_cost_percent) : 30,
       target_margin: form.target_margin ? parseFloat(form.target_margin) : 70,
       owner_id: user!.id,
+      org_id: orgId,
     };
 
     if (editingId) {

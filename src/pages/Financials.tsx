@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { useMemo, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOrgId } from "@/hooks/useOrgId";
 
 export default function Financials() {
   const { data: transactions, isLoading } = useTransactions();
@@ -17,6 +18,7 @@ export default function Financials() {
   const { data: events } = useEvents();
   const createTx = useCreateTransaction();
   const { user } = useAuth();
+  const orgId = useOrgId();
 
   const [addingNew, setAddingNew] = useState(false);
   const [form, setForm] = useState({
@@ -39,6 +41,7 @@ export default function Financials() {
       event_id: form.event_id || null,
       transaction_date: form.transaction_date,
       created_by: user?.id,
+      org_id: orgId,
     }, {
       onSuccess: () => { resetForm(); toast.success("Transaction added"); },
       onError: (e: any) => toast.error(e.message),

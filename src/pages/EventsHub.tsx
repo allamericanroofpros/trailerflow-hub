@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { claudeNonStreaming } from "@/hooks/useClaudeAI";
 import { cn } from "@/lib/utils";
 import type { Database } from "@/integrations/supabase/types";
+import { useOrgId } from "@/hooks/useOrgId";
 
 type EventStage = Database["public"]["Enums"]["event_stage"];
 
@@ -59,6 +60,7 @@ function formatDate(date?: string | null, endDate?: string | null): string {
 
 export default function EventsHub() {
   const { selectedTrailerId } = useSelectedTrailer();
+  const orgId = useOrgId();
   const { data: grouped, isLoading } = useEventsByStage(selectedTrailerId);
   const { data: allEvents } = useEvents(undefined, selectedTrailerId);
   const { data: existingBookings } = useBookings();
@@ -126,7 +128,7 @@ export default function EventsHub() {
 
   const addToPipeline = (opp: typeof opportunities[0]) => {
     createEvent.mutate(
-      { name: opp.name, event_type: opp.type, location: opp.location, stage: "lead", source: "ai-discovery", confidence: opp.aiRank },
+      { name: opp.name, event_type: opp.type, location: opp.location, stage: "lead", source: "ai-discovery", confidence: opp.aiRank, org_id: orgId },
       { onSuccess: () => { toast.success(`"${opp.name}" added to pipeline`); setMainTab("pipeline"); }, onError: (e) => toast.error(e.message) }
     );
   };

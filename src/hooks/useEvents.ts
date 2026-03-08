@@ -1,17 +1,19 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { useOrgId } from "./useOrgId";
 
-type Event = Database["public"]["Tables"]["events"]["Row"];
 type EventInsert = Database["public"]["Tables"]["events"]["Insert"];
 type EventUpdate = Database["public"]["Tables"]["events"]["Update"];
 type EventStage = Database["public"]["Enums"]["event_stage"];
 
 export function useEvents(stage?: EventStage, trailerId?: string | null) {
+  const orgId = useOrgId();
   return useQuery({
-    queryKey: ["events", stage, trailerId],
+    queryKey: ["events", orgId, stage, trailerId],
+    enabled: !!orgId,
     queryFn: async () => {
-      let query = supabase.from("events").select("*, trailers(name)").order("event_date", { ascending: true });
+      let query = supabase.from("events").select("*, trailers(name)").eq("org_id", orgId!).order("event_date", { ascending: true });
       if (stage) query = query.eq("stage", stage);
       if (trailerId) query = query.eq("trailer_id", trailerId);
       const { data, error } = await query;
@@ -73,12 +75,15 @@ export function useDeleteEvent() {
 }
 
 export function useEventsByStage(trailerId?: string | null) {
+  const orgId = useOrgId();
   return useQuery({
-    queryKey: ["events", "by-stage", trailerId],
+    queryKey: ["events", "by-stage", orgId, trailerId],
+    enabled: !!orgId,
     queryFn: async () => {
       let query = supabase
         .from("events")
         .select("*, trailers(name)")
+        .eq("org_id", orgId!)
         .order("event_date", { ascending: true });
       if (trailerId) query = query.eq("trailer_id", trailerId);
       const { data, error } = await query;

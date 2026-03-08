@@ -9,6 +9,7 @@ import { useEvents } from "@/hooks/useEvents";
 import { useBookings } from "@/hooks/useBookings";
 import { toast } from "sonner";
 import { useCreateEvent } from "@/hooks/useEvents";
+import { useOrgId } from "@/hooks/useOrgId";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";

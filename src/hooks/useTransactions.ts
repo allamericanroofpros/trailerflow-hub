@@ -1,15 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { useOrgId } from "./useOrgId";
 
-type Transaction = Database["public"]["Tables"]["transactions"]["Row"];
 type TransactionInsert = Database["public"]["Tables"]["transactions"]["Insert"];
 
 export function useTransactions(filters?: { trailer_id?: string; event_id?: string }) {
+  const orgId = useOrgId();
   return useQuery({
-    queryKey: ["transactions", filters],
+    queryKey: ["transactions", orgId, filters],
+    enabled: !!orgId,
     queryFn: async () => {
-      let query = supabase.from("transactions").select("*, events(name), trailers(name)").order("transaction_date", { ascending: false });
+      let query = supabase.from("transactions").select("*, events(name), trailers(name)").eq("org_id", orgId!).order("transaction_date", { ascending: false });
       if (filters?.trailer_id) query = query.eq("trailer_id", filters.trailer_id);
       if (filters?.event_id) query = query.eq("event_id", filters.event_id);
       const { data, error } = await query;

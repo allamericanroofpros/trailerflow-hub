@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "./AuthContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Organization {
   id: string;
@@ -47,6 +48,8 @@ export function OrgProvider({ children }: { children: ReactNode }) {
     () => localStorage.getItem(ORG_KEY)
   );
   const [loading, setLoading] = useState(true);
+
+  const queryClient = useQueryClient();
 
   useEffect(() => {
     if (!user) {
@@ -97,6 +100,8 @@ export function OrgProvider({ children }: { children: ReactNode }) {
   const switchOrg = (orgId: string) => {
     setCurrentOrgId(orgId);
     localStorage.setItem(ORG_KEY, orgId);
+    // Invalidate ALL data caches so queries re-fetch with new org scope
+    queryClient?.invalidateQueries();
   };
 
   const currentMembership = memberships.find((m) => m.org_id === currentOrgId);

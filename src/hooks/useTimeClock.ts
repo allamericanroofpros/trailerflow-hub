@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useOrgId } from "./useOrgId";
 
 export type ClockEntry = {
   id: string;
@@ -17,12 +18,15 @@ export type ClockEntry = {
 };
 
 export function useClockEntries(date?: string) {
+  const orgId = useOrgId();
   return useQuery({
-    queryKey: ["clock-entries", date],
+    queryKey: ["clock-entries", orgId, date],
+    enabled: !!orgId,
     queryFn: async () => {
       let query = supabase
         .from("staff_clock_entries" as any)
         .select("*, staff_members(id, name, hourly_rate)")
+        .eq("org_id", orgId!)
         .order("clock_in", { ascending: false })
         .limit(200);
 
@@ -39,12 +43,15 @@ export function useClockEntries(date?: string) {
 }
 
 export function useActiveClocks() {
+  const orgId = useOrgId();
   return useQuery({
-    queryKey: ["clock-entries", "active"],
+    queryKey: ["clock-entries", "active", orgId],
+    enabled: !!orgId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("staff_clock_entries" as any)
         .select("*, staff_members(id, name, hourly_rate)")
+        .eq("org_id", orgId!)
         .is("clock_out", null)
         .order("clock_in", { ascending: true });
       if (error) throw error;
@@ -108,14 +115,16 @@ export function useClockOut() {
 }
 
 export function useStaffByPin() {
+  const orgId = useOrgId();
   return useMutation({
     mutationFn: async (pin: string) => {
-      const { data, error } = await (supabase
+      let query = (supabase
         .from("staff_members")
         .select("*") as any)
         .eq("pin", pin)
-        .eq("status", "active")
-        .single();
+        .eq("status", "active");
+      if (orgId) query = query.eq("org_id", orgId);
+      const { data, error } = await query.single();
       if (error) throw error;
       return data as any;
     },
@@ -126,7 +135,6 @@ export function useSetStaffPin() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ staffId, pin }: { staffId: string; pin: string }) => {
-      // Check PIN is unique
       const { data: existing } = await (supabase
         .from("staff_members")
         .select("id") as any)

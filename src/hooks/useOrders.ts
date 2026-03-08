@@ -1,13 +1,17 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useOrgId } from "./useOrgId";
 
 export function useOrders(filters?: { eventId?: string; trailerId?: string }) {
+  const orgId = useOrgId();
   return useQuery({
-    queryKey: ["orders", filters],
+    queryKey: ["orders", orgId, filters],
+    enabled: !!orgId,
     queryFn: async () => {
       let query = supabase
         .from("orders")
         .select("*, order_items(*, menu_items(name, price))")
+        .eq("org_id", orgId!)
         .order("created_at", { ascending: false });
       if (filters?.eventId) query = query.eq("event_id", filters.eventId);
       if (filters?.trailerId) query = query.eq("trailer_id", filters.trailerId);
@@ -19,18 +23,21 @@ export function useOrders(filters?: { eventId?: string; trailerId?: string }) {
 }
 
 export function useActiveOrders() {
+  const orgId = useOrgId();
   return useQuery({
-    queryKey: ["orders", "active"],
+    queryKey: ["orders", "active", orgId],
+    enabled: !!orgId,
     queryFn: async () => {
       const { data, error } = await supabase
         .from("orders")
         .select("*, order_items(*, menu_items(name, price))")
+        .eq("org_id", orgId!)
         .in("status", ["pending", "preparing", "ready"])
         .order("created_at", { ascending: true });
       if (error) throw error;
       return data;
     },
-    refetchInterval: 5000, // Auto-refresh every 5s
+    refetchInterval: 5000,
   });
 }
 
@@ -47,7 +54,8 @@ export function useCreateOrder() {
       event_id?: string;
       trailer_id?: string;
       notes?: string;
-      items: { menu_item_id: string; quantity: number; unit_price: number; modifiers?: any; notes?: string }[];
+      org_id?: string;
+      items: { menu_item_id: string; quantity: number; unit_price: number; modifiers?: any; notes?: string; org_id?: string }[];
     }) => {
       const { items, ...orderData } = order;
       const { data: newOrder, error: orderError } = await supabase

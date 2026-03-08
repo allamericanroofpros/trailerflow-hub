@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useOrgId } from "@/hooks/useOrgId";
 import { useInventoryItems, useLowStockItems, useCreateInventoryItem, useUpdateInventoryItem, useCreateInventoryLog, useInventoryLogs } from "@/hooks/useInventory";
 import { useEvents } from "@/hooks/useEvents";
 import { useTrailers } from "@/hooks/useTrailers";
@@ -27,6 +28,7 @@ type SortField = "name" | "current_stock" | "cost_per_unit" | "par_level";
 type SortDir = "asc" | "desc";
 
 export default function Inventory() {
+  const orgId = useOrgId();
   const { data: items, isLoading } = useInventoryItems();
   const { data: lowStock } = useLowStockItems();
   const { data: logs } = useInventoryLogs();
@@ -124,7 +126,7 @@ export default function Inventory() {
     if (!newItem.name.trim()) return toast.error("Name is required");
     try {
       const { shelf_life_days, unit_size, serving_size, serving_unit, serving_unit_conversion, ...rest } = newItem;
-      const insertData: any = { ...rest };
+      const insertData: any = { ...rest, org_id: orgId };
       if (shelf_life_days) insertData.shelf_life_days = Number(shelf_life_days);
       if (unit_size) insertData.unit_size = Number(unit_size);
       if (serving_size) insertData.serving_size = Number(serving_size);

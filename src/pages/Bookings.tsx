@@ -10,8 +10,10 @@ import { toast } from "sonner";
 import { useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useOrgId } from "@/hooks/useOrgId";
 
 export default function Bookings() {
+  const orgId = useOrgId();
   const { data: bookings, isLoading } = useBookings();
   const { data: trailers } = useTrailers();
   const createBooking = useCreateBooking();
@@ -64,6 +66,7 @@ export default function Bookings() {
       guest_count: form.guest_count ? parseInt(form.guest_count) : null,
       notes: form.notes || null,
       status: form.status,
+      org_id: orgId,
       balance_due: form.total_price
         ? parseFloat(form.total_price) - (form.deposit_paid && form.deposit_amount ? parseFloat(form.deposit_amount) : 0)
         : null,

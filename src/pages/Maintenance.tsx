@@ -9,8 +9,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useOrgId } from "@/hooks/useOrgId";
 
 export default function Maintenance() {
+  const orgId = useOrgId();
   const { data: records, isLoading } = useMaintenanceRecords();
   const { data: trailers } = useTrailers();
   const createRecord = useCreateMaintenanceRecord();
@@ -49,6 +51,7 @@ export default function Maintenance() {
       status: form.status,
       cost: form.cost ? parseFloat(form.cost) : null,
       completed_date: form.status === "completed" ? new Date().toISOString().split("T")[0] : null,
+      org_id: orgId,
     };
 
     if (editingId) {

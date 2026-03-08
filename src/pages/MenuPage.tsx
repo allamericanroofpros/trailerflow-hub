@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useOrgId } from "@/hooks/useOrgId";
 import { useAllMenuItems, useCreateMenuItem, useUpdateMenuItem, useDeleteMenuItem } from "@/hooks/useMenuItems";
 import { useInventoryItems } from "@/hooks/useInventory";
 import { useTrailers } from "@/hooks/useTrailers";
@@ -106,6 +107,7 @@ export default function MenuPage() {
   const { data: menuItems, isLoading } = useAllMenuItems();
   const { data: inventoryItems } = useInventoryItems();
   const { data: trailers } = useTrailers();
+  const orgId = useOrgId();
   const createItem = useCreateMenuItem();
   const updateItem = useUpdateMenuItem();
   const deleteItem = useDeleteMenuItem();
@@ -178,6 +180,7 @@ export default function MenuPage() {
         is_active: form.is_active,
         modifiers: cleanModifiers,
         trailer_id: form.trailer_id || null,
+        org_id: orgId,
       };
 
       let itemId = editId;
@@ -197,6 +200,7 @@ export default function MenuPage() {
             menu_item_id: itemId!,
             inventory_item_id: ing.inventoryItemId,
             quantity_used: ing.quantityUsed,
+            org_id: orgId,
           }));
           const { error } = await supabase.from("menu_item_ingredients").insert(ingredientRows);
           if (error) console.error("Failed to save ingredients:", error);
