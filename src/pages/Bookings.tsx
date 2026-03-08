@@ -13,6 +13,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrgId } from "@/hooks/useOrgId";
 
 export default function Bookings() {
+  const orgId = useOrgId();
   const { data: bookings, isLoading } = useBookings();
   const { data: trailers } = useTrailers();
   const createBooking = useCreateBooking();
