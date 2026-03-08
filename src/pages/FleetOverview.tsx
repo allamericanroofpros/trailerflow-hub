@@ -4,15 +4,26 @@ import { useEvents } from "@/hooks/useEvents";
 import { useBookings } from "@/hooks/useBookings";
 import { useOrders } from "@/hooks/useOrders";
 import { useMaintenanceRecords } from "@/hooks/useMaintenanceRecords";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { UpgradeBanner } from "@/components/UpgradeModal";
 import { useMemo } from "react";
 import { Truck, DollarSign, Calendar, Wrench, TrendingUp, Users, BarChart3, Loader2 } from "lucide-react";
 
 export default function FleetOverview() {
+  const ent = useEntitlements();
   const { data: trailers, isLoading } = useTrailers();
   const { data: events } = useEvents();
   const { data: bookings } = useBookings();
   const { data: orders } = useOrders();
   const { data: maintenance } = useMaintenanceRecords();
+
+  if (!ent.fleetOverview) {
+    return (
+      <AppLayout>
+        <UpgradeBanner feature="Fleet Overview" currentPlan={ent.currentPlan} requiredPlan="pro" />
+      </AppLayout>
+    );
+  }
 
   const now = new Date();
   const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);

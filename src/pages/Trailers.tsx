@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import {
   Truck, Plus, Pencil, Trash2, Save, Loader2, X, DollarSign,
-  Users, Clock, Fuel, ChefHat, Info, Sparkles, CheckCircle, AlertTriangle, XCircle, Copy,
+  Users, Clock, Fuel, ChefHat, Info, Sparkles, CheckCircle, AlertTriangle, XCircle, Copy, Lock,
 } from "lucide-react";
 import { useState } from "react";
 import {
@@ -11,6 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useTrailerValidation } from "@/hooks/useTrailerValidation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOrgId } from "@/hooks/useOrgId";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { UpgradeModal } from "@/components/UpgradeModal";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -78,6 +80,8 @@ export default function Trailers() {
   const deleteTrailer = useDeleteTrailer();
   const { user } = useAuth();
   const orgId = useOrgId();
+  const ent = useEntitlements();
+  const [showUpgrade, setShowUpgrade] = useState(false);
 
   const [addingNew, setAddingNew] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -161,6 +165,10 @@ export default function Trailers() {
   const activeCount = trailers?.filter((t) => t.status === "active").length || 0;
 
   const handleCopyTrailer = async (source: any) => {
+    if (!ent.canAddTrailer) {
+      setShowUpgrade(true);
+      return;
+    }
     try {
       const payload: any = {
         name: `${source.name} (Copy)`,
@@ -248,11 +256,27 @@ export default function Trailers() {
           </div>
           <Button
             size="sm"
-            onClick={() => { resetForm(); setAddingNew(true); }}
+            onClick={() => {
+              if (!ent.canAddTrailer) {
+                setShowUpgrade(true);
+                return;
+              }
+              resetForm(); setAddingNew(true);
+            }}
             className="gap-1.5"
+            variant={ent.canAddTrailer ? "default" : "outline"}
           >
-            <Plus className="h-3.5 w-3.5" /> Add Trailer
+            {ent.canAddTrailer ? <Plus className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+            Add Trailer
+            {!ent.canAddTrailer && <span className="text-xs text-muted-foreground ml-1">({ent.trailerCount}/{ent.maxTrailers})</span>}
           </Button>
+          <UpgradeModal
+            open={showUpgrade}
+            onOpenChange={setShowUpgrade}
+            feature="More Trailers"
+            currentPlan={ent.currentPlan}
+            requiredPlan={ent.suggestedUpgrade || "pro"}
+          />
         </div>
 
         {/* Stats */}

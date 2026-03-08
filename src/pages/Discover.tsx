@@ -10,12 +10,15 @@ import { useBookings } from "@/hooks/useBookings";
 import { toast } from "sonner";
 import { useCreateEvent } from "@/hooks/useEvents";
 import { useOrgId } from "@/hooks/useOrgId";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { UpgradeBanner } from "@/components/UpgradeModal";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
 
 export default function Discover() {
+  const ent = useEntitlements();
   const [searchQuery, setSearchQuery] = useState("");
   const [submittedQuery, setSubmittedQuery] = useState<string | undefined>();
   const [locationFilter, setLocationFilter] = useState("");
@@ -26,6 +29,9 @@ export default function Discover() {
   const { data: existingEvents } = useEvents();
   const { data: existingBookings } = useBookings();
   const createEvent = useCreateEvent();
+
+  
+
 
   const opportunities = aiEvents || [];
 
@@ -90,6 +96,14 @@ export default function Discover() {
       o.location.toLowerCase().includes(locationFilter.toLowerCase())
     );
   }, [opportunities, locationFilter]);
+
+  if (!ent.aiDiscovery) {
+    return (
+      <AppLayout>
+        <UpgradeBanner feature="AI Event Discovery" currentPlan={ent.currentPlan} requiredPlan="pro" />
+      </AppLayout>
+    );
+  }
 
   const handleSearch = () => {
     const parts: string[] = [];

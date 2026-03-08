@@ -1,7 +1,7 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import {
   Users as UsersIcon, AlertTriangle, Clock, Shield, Eye, Plus, Pencil,
-  Trash2, X, Save, Calendar, Loader2, ChevronLeft, ChevronRight, UserPlus, CalendarClock, Sparkles,
+  Trash2, X, Save, Calendar, Loader2, ChevronLeft, ChevronRight, UserPlus, CalendarClock, Sparkles, Lock,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useStaffMembers, useCreateStaffMember, useUpdateStaffMember, useDeleteStaffMember } from "@/hooks/useStaffMembers";
@@ -14,6 +14,8 @@ import { format, parseISO, startOfWeek, addDays, isSameDay, addWeeks, subWeeks }
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useOrgId } from "@/hooks/useOrgId";
+import { useEntitlements } from "@/hooks/useEntitlements";
+import { UpgradeModal } from "@/components/UpgradeModal";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, "0")}:00`);
@@ -22,6 +24,8 @@ export default function Staff() {
   const { user } = useAuth();
   const { isOwner, canManage } = useRoleAccess();
   const orgId = useOrgId();
+  const ent = useEntitlements();
+  const [showUpgrade, setShowUpgrade] = useState(false);
   const { data: staff, isLoading } = useStaffMembers();
   const createStaff = useCreateStaffMember();
   const updateStaff = useUpdateStaffMember();
@@ -260,9 +264,31 @@ export default function Staff() {
               ))}
             </div>
             {tab === "roster" && canManage("staff") && (
-              <Button size="sm" onClick={() => { resetForm(); setAddingNew(true); }} className="gap-1.5">
-                <Plus className="h-3.5 w-3.5" /> Add Staff
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  onClick={() => {
+                    if (!ent.canAddStaff) {
+                      setShowUpgrade(true);
+                      return;
+                    }
+                    resetForm(); setAddingNew(true);
+                  }}
+                  className="gap-1.5"
+                  variant={ent.canAddStaff ? "default" : "outline"}
+                >
+                  {ent.canAddStaff ? <Plus className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+                  Add Staff
+                  {!ent.canAddStaff && <span className="text-xs text-muted-foreground ml-1">({ent.staffCount}/{ent.maxStaff})</span>}
+                </Button>
+                <UpgradeModal
+                  open={showUpgrade}
+                  onOpenChange={setShowUpgrade}
+                  feature="More Staff Members"
+                  currentPlan={ent.currentPlan}
+                  requiredPlan={ent.suggestedUpgrade || "pro"}
+                />
+              </>
             )}
           </div>
         </div>
