@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import { AppLayout } from "@/components/layout/AppLayout";
+import { useOrgId } from "@/hooks/useOrgId";
 import { useInventoryItems, useLowStockItems, useCreateInventoryItem, useUpdateInventoryItem, useCreateInventoryLog, useInventoryLogs } from "@/hooks/useInventory";
 import { useEvents } from "@/hooks/useEvents";
 import { useTrailers } from "@/hooks/useTrailers";

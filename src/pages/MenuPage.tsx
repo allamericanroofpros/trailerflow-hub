@@ -200,6 +200,7 @@ export default function MenuPage() {
             menu_item_id: itemId!,
             inventory_item_id: ing.inventoryItemId,
             quantity_used: ing.quantityUsed,
+            org_id: orgId,
           }));
           const { error } = await supabase.from("menu_item_ingredients").insert(ingredientRows);
           if (error) console.error("Failed to save ingredients:", error);
