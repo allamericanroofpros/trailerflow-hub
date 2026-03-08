@@ -99,7 +99,12 @@ export default function POSCheckoutFlow({
 
   const handleTipComplete = async () => {
     setStep("processing");
-    await onComplete({ paymentMethod: "card", tip: tipAmount });
+    await onComplete({
+      paymentMethod: "card",
+      tip: tipAmount,
+      surchargeAmount: surchargeAmount > 0 ? surchargeAmount : undefined,
+      surchargeLabel: surchargeAmount > 0 ? surchargeSettings?.label : undefined,
+    });
   };
 
   const handleCashComplete = async () => {
