@@ -306,6 +306,7 @@ export default function POS() {
               ) : null}
             </button>
           ))}
+        </div>
 
         <p className="text-sm text-muted-foreground hidden md:block font-medium">
           {new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}
