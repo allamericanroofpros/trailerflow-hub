@@ -538,12 +538,21 @@ export default function Inventory() {
                                 {isLow && <AlertTriangle className="h-3.5 w-3.5 text-destructive shrink-0" />}
                                 <div>
                                   <p className="font-medium text-card-foreground">{item.name}</p>
-                                  <p className="text-xs text-muted-foreground">{item.unit}</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    {item.unit}
+                                    {(item as any).unit_size ? ` · ${(item as any).unit_size} ${item.unit}/unit` : ""}
+                                    {(item as any).serving_unit ? ` · recipes in ${(item as any).serving_unit}` : ""}
+                                  </p>
                                 </div>
                               </div>
                             </td>
                             <td className={`text-right px-4 py-3 font-semibold ${isLow ? "text-destructive" : "text-card-foreground"}`}>
                               {Number(item.current_stock).toFixed(1)}
+                              {(item as any).unit_size && Number((item as any).unit_size) > 0 && (
+                                <span className="block text-[10px] font-normal text-muted-foreground">
+                                  = {(Number(item.current_stock) * Number((item as any).unit_size)).toFixed(1)} {item.unit}
+                                </span>
+                              )}
                             </td>
                             <td className="text-right px-4 py-3 text-muted-foreground">{Number(item.par_level).toFixed(1)}</td>
                             <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">
