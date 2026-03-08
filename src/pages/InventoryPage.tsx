@@ -328,6 +328,8 @@ export default function Inventory() {
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground">Stock</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground">Par</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Shelf Life</th>
+                        <th className="text-right px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Unit Size</th>
+                        <th className="text-right px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Serving</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground hidden md:table-cell">Cost/Unit</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground hidden lg:table-cell">Supplier</th>
                         <th className="text-right px-4 py-3 font-medium text-muted-foreground">Actions</th>
