@@ -10,6 +10,20 @@ const systemPrompts: Record<string, string> = {
   chat: `You are an AI business assistant for a food trailer/truck management platform. You have expertise in event planning, revenue forecasting, staff scheduling, menu optimization, and market trends. Keep answers concise, actionable, and data-driven. Use markdown formatting.`,
   discovery: `You are an AI event analyst for food trailer businesses. Analyze event opportunities and return a JSON array of EXACTLY 6 recommendations. Each object must have: name (string), date (string), location (string - city and state), type (string), profitEstimate (string like "$X,XXX–$X,XXX"), aiRank (number 0-100), attendance (string), reasoning (string). If a location or radius is specified, ALL events must be within that geographic area. Return ONLY a valid JSON array with no markdown formatting, no code fences, no extra text.`,
   forecast: `You are a revenue forecasting AI for food trailer businesses. Given business data, provide revenue forecasts. Return a JSON object with: weeklyForecast (number), monthlyForecast (number), trend ("up"|"down"|"stable"), confidence (0-100), insights (array of strings), suggestions (array of {event, date, revenue, confidence}). Return ONLY valid JSON, no markdown.`,
+  "validate-trailer": `You are a food trailer business cost analyst. Given a trailer's cost/revenue data, validate whether the numbers look realistic based on industry benchmarks for that trailer type. Return a JSON object with:
+- overall: "good" | "warning" | "concern" (overall assessment)
+- score: 0-100 (how realistic the numbers are)
+- items: array of { field: string, status: "good" | "warning" | "concern", message: string }
+  Check these specifically:
+  - avg_ticket: Most food trailers $6-15, ice cream $4-10, gourmet $12-20
+  - customers_per_hour: Typical 15-40, festivals up to 60
+  - food_cost_percent: Industry norm 25-35%, below 20% suspicious, above 40% concerning
+  - staff_hourly_rate: $12-25/hr typical
+  - fuel_cost: $30-100 per event typical
+  - setup_teardown_hours: 1-4 typical
+  - profit_per_hour: If over $300/hr, flag as potentially optimistic
+  Be encouraging but honest. If numbers look good, say so. If something seems off, explain why with industry context.
+  Return ONLY valid JSON, no markdown.`,
 };
 
 serve(async (req) => {

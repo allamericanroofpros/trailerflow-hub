@@ -1,12 +1,13 @@
 import { AppLayout } from "@/components/layout/AppLayout";
 import {
   Truck, Plus, Pencil, Trash2, Save, Loader2, X, DollarSign,
-  Users, Clock, Fuel, ChefHat, Info,
+  Users, Clock, Fuel, ChefHat, Info, Sparkles, CheckCircle, AlertTriangle, XCircle,
 } from "lucide-react";
 import { useState } from "react";
 import {
   useTrailers, useCreateTrailer, useUpdateTrailer, useDeleteTrailer,
 } from "@/hooks/useTrailers";
+import { useTrailerValidation } from "@/hooks/useTrailerValidation";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -77,12 +78,14 @@ export default function Trailers() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState<TrailerForm>({ ...defaultForm });
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const { result: validation, isValidating, validate: runValidation, clear: clearValidation } = useTrailerValidation();
 
   const resetForm = () => {
     setForm({ ...defaultForm });
     setAddingNew(false);
     setEditingId(null);
     setShowAdvanced(false);
+    clearValidation();
   };
 
   const handleSave = async () => {
@@ -435,8 +438,63 @@ export default function Trailers() {
                         </span>
                       </div>
                     </div>
+              </div>
+            )}
+
+            {/* AI Validation */}
+            {showAdvanced && (
+              <div className="mt-4 space-y-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => runValidation(form)}
+                  disabled={isValidating || (!form.avg_ticket && !form.avg_customers_per_hour)}
+                  className="gap-1.5"
+                >
+                  {isValidating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5 text-primary" />}
+                  {isValidating ? "Analyzing..." : "AI: Check My Numbers"}
+                </Button>
+
+                {validation && (
+                  <div className={`rounded-lg border p-4 space-y-3 ${
+                    validation.overall === "good" ? "border-success/30 bg-success/5"
+                    : validation.overall === "warning" ? "border-warning/30 bg-warning/5"
+                    : "border-destructive/30 bg-destructive/5"
+                  }`}>
+                    <div className="flex items-center gap-2">
+                      {validation.overall === "good" ? (
+                        <CheckCircle className="h-4 w-4 text-success" />
+                      ) : validation.overall === "warning" ? (
+                        <AlertTriangle className="h-4 w-4 text-warning" />
+                      ) : (
+                        <XCircle className="h-4 w-4 text-destructive" />
+                      )}
+                      <span className="text-sm font-bold text-foreground">
+                        {validation.overall === "good" ? "Numbers look solid!" : validation.overall === "warning" ? "Some things to double-check" : "Numbers may need adjustment"}
+                      </span>
+                      <span className="ml-auto text-xs font-medium text-muted-foreground">Score: {validation.score}/100</span>
+                    </div>
+                    <div className="space-y-2">
+                      {validation.items?.map((item, i) => (
+                        <div key={i} className="flex items-start gap-2">
+                          {item.status === "good" ? (
+                            <CheckCircle className="h-3.5 w-3.5 text-success mt-0.5 shrink-0" />
+                          ) : item.status === "warning" ? (
+                            <AlertTriangle className="h-3.5 w-3.5 text-warning mt-0.5 shrink-0" />
+                          ) : (
+                            <XCircle className="h-3.5 w-3.5 text-destructive mt-0.5 shrink-0" />
+                          )}
+                          <div>
+                            <span className="text-xs font-semibold text-foreground">{item.field}: </span>
+                            <span className="text-xs text-muted-foreground">{item.message}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
+              </div>
+            )}
               </div>
             )}
 
