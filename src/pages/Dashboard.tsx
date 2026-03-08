@@ -130,9 +130,20 @@ export default function Dashboard() {
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-          <p className="text-sm text-muted-foreground mt-1">Welcome back, {firstName}. Here's your business at a glance.</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
+            <p className="text-sm text-muted-foreground mt-1">Welcome back, {firstName}. Here's your business at a glance.</p>
+          </div>
+          {canView("pos") && (
+            <button
+              onClick={() => navigate("/pos")}
+              className="flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-primary-foreground shadow-lg hover:bg-primary/90 active:scale-95 transition-all touch-manipulation group"
+            >
+              <ShoppingCart className="h-6 w-6 group-hover:scale-110 transition-transform" />
+              <span className="text-lg font-black tracking-tight">Open for Business</span>
+            </button>
+          )}
         </div>
 
         {/* Key Metrics */}
