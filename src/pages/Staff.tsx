@@ -16,10 +16,39 @@ import { useRoleAccess } from "@/hooks/useRoleAccess";
 export default function Staff() {
   const { user } = useAuth();
   const { isOwner, canManage } = useRoleAccess();
+  const { data: staff, isLoading } = useStaffMembers();
   const createStaff = useCreateStaffMember();
   const updateStaff = useUpdateStaffMember();
   const deleteStaff = useDeleteStaffMember();
   const qc = useQueryClient();
+
+  // Team roles data (owner/manager only)
+  const { data: teamMembers, isLoading: teamLoading } = useQuery({
+    queryKey: ["team_roles"],
+    enabled: isOwner,
+    queryFn: async () => {
+      const { data: roles } = await supabase.from("user_roles").select("*");
+      if (!roles) return [];
+      const userIds = roles.map((r) => r.user_id);
+      const { data: profiles } = await supabase.from("profiles").select("*").in("user_id", userIds);
+      return roles.map((r) => ({
+        ...r,
+        profile: profiles?.find((p) => p.user_id === r.user_id),
+      }));
+    },
+  });
+
+  const updateRole = useMutation({
+    mutationFn: async ({ id, role }: { id: string; role: "owner" | "manager" | "staff" }) => {
+      const { error } = await supabase.from("user_roles").update({ role }).eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["team_roles"] });
+      toast.success("Role updated");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
 
   // Events for scheduling
   const { data: events } = useQuery({
