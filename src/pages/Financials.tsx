@@ -92,6 +92,7 @@ export default function Financials() {
             { label: "Total Income", value: `$${stats.totalIncome.toLocaleString()}`, icon: ArrowUpRight, color: "text-success" },
             { label: "Total Expenses", value: `$${stats.totalExpenses.toLocaleString()}`, icon: ArrowDownRight, color: "text-destructive" },
             { label: "Net Profit", value: `$${stats.profit.toLocaleString()}`, icon: TrendingUp, color: "text-primary" },
+            { label: "Surcharge Revenue", value: `$${stats.surchargeRevenue.toFixed(2)}`, icon: Receipt, color: "text-amber-600" },
             { label: "Transactions", value: stats.count.toString(), icon: DollarSign, color: "text-info" },
           ].map((s) => (
             <div key={s.label} className="rounded-xl border border-border bg-card p-4 shadow-card">
