@@ -307,7 +307,23 @@ export default function EventsHub() {
                     ? `Deploy ${trailers[0]?.name} + ${trailers[1]?.name} for maximum revenue coverage.`
                     : "Add trailers to your fleet to get deployment suggestions."}
                 </p>
-                <button className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary-foreground underline underline-offset-2">
+                <button
+                  onClick={() => {
+                    if (selectedEvent && trailers && trailers.length > 0) {
+                      const trailerId = trailers[0].id;
+                      updateEvent.mutate(
+                        { id: selectedEvent.id, trailer_id: trailerId },
+                        {
+                          onSuccess: () => toast.success(`Assigned ${trailers[0].name} to ${selectedEvent.name}`),
+                          onError: () => toast.error("Failed to apply suggestion"),
+                        }
+                      );
+                    } else {
+                      toast.info("No trailers available to assign");
+                    }
+                  }}
+                  className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-primary-foreground underline underline-offset-2"
+                >
                   Apply Suggestion <ChevronRight className="h-3 w-3" />
                 </button>
               </div>
