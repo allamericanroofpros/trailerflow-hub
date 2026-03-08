@@ -1,0 +1,77 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+
+export function useMenuItems(trailerId?: string) {
+  return useQuery({
+    queryKey: ["menu-items", trailerId],
+    queryFn: async () => {
+      let query = supabase
+        .from("menu_items")
+        .select("*")
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true });
+      if (trailerId) query = query.eq("trailer_id", trailerId);
+      const { data, error } = await query;
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useAllMenuItems() {
+  return useQuery({
+    queryKey: ["menu-items", "all"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("menu_items")
+        .select("*, menu_item_ingredients(*, inventory_items(name, unit, cost_per_unit))")
+        .order("sort_order", { ascending: true });
+      if (error) throw error;
+      return data;
+    },
+  });
+}
+
+export function useCreateMenuItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (item: {
+      name: string;
+      description?: string;
+      category?: string;
+      price: number;
+      cost?: number;
+      image_url?: string;
+      modifiers?: any;
+      trailer_id?: string;
+    }) => {
+      const { data, error } = await supabase.from("menu_items").insert(item as any).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["menu-items"] }),
+  });
+}
+
+export function useUpdateMenuItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string; [key: string]: any }) => {
+      const { data, error } = await supabase.from("menu_items").update(updates as any).eq("id", id).select().single();
+      if (error) throw error;
+      return data;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["menu-items"] }),
+  });
+}
+
+export function useDeleteMenuItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from("menu_items").delete().eq("id", id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["menu-items"] }),
+  });
+}
