@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.get-receipt]
 verify_jwt = false
+
+[functions.search-event]
+verify_jwt = false
