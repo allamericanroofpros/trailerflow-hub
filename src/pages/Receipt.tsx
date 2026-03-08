@@ -9,12 +9,6 @@ export default function ReceiptPage() {
   const { data: order, isLoading, error } = useQuery({
     queryKey: ["receipt", orderId],
     queryFn: async () => {
-      const { data, error } = await supabase.functions.invoke("get-receipt", {
-        body: null,
-        method: "GET",
-      });
-      // supabase.functions.invoke doesn't support query params natively,
-      // so we use a direct fetch instead
       const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
       const res = await fetch(
         `https://${projectId}.supabase.co/functions/v1/get-receipt?order_id=${orderId}`,
