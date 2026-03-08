@@ -356,7 +356,7 @@ export default function Inventory() {
             <Label>Reorder Point</Label>
             <FieldTip tip="When stock falls to this level, a low-stock alert appears. Set below par to give yourself time to reorder." />
           </div>
-          <Input type="number" value={item.reorder_point} onChange={(e) => setItem({ ...item, reorder_point: Number(e.target.value) })} className="h-11" />
+          <Input type="number" value={item.reorder_point} onChange={(e) => setItem({ ...item, reorder_point: e.target.value })} className="h-11" />
         </div>
       </div>
 
