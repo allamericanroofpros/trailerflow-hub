@@ -345,8 +345,8 @@ export default function POS() {
     );
   };
 
-  // Cart content (shared between sidebar and bottom sheet)
-  const CartContent = () => (
+  // Cart content JSX (not a component — avoids remounting inputs on every render)
+  const cartContent = (
     <>
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-2.5">
         {cart.length === 0 ? (
@@ -580,7 +580,7 @@ export default function POS() {
                   </Badge>
                 )}
               </div>
-              <CartContent />
+              {cartContent}
             </div>
           )}
 
@@ -662,7 +662,7 @@ export default function POS() {
                           <X className="h-5 w-5" />
                         </button>
                       </div>
-                      <CartContent />
+                      {cartContent}
                     </motion.div>
                   </>
                 )}
