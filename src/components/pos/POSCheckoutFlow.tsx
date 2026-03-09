@@ -151,7 +151,7 @@ export default function POSCheckoutFlow({
           </button>
           <div className="text-right">
             <p className="text-xs text-muted-foreground font-semibold">Total</p>
-            <p className="text-xl font-black text-card-foreground">${currentTotal.toFixed(2)}</p>
+            <p className="text-xl font-black text-card-foreground">${currentTotal.toFixed(1)}</p>
           </div>
         </div>
 
