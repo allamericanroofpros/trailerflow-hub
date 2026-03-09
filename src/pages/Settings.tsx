@@ -419,6 +419,77 @@ export default function SettingsPage() {
                     </div>
                   )}
 
+                  {/* Bookings */}
+                  {s.id === "bookings" && (
+                    <div className="space-y-5 max-w-lg">
+                      <label className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-medium text-card-foreground">Enable Public Bookings</p>
+                          <p className="text-xs text-muted-foreground">Allow clients to request bookings through your public page</p>
+                        </div>
+                        <Switch checked={bookingsEnabled} onCheckedChange={setBookingsEnabled} />
+                      </label>
+
+                      {bookingsEnabled && (
+                        <div className="space-y-5 pl-1 border-l-2 border-primary/20 ml-1">
+                          <div className="pl-4">
+                            <label className="text-xs font-medium text-muted-foreground">Minimum Notice (days)</label>
+                            <Input type="number" min="0" max="90" value={bookingMinNoticeDays} onChange={(e) => setBookingMinNoticeDays(e.target.value)} className="mt-1" />
+                            <p className="text-[11px] text-muted-foreground mt-1">How far in advance clients must book</p>
+                          </div>
+                          <div className="pl-4">
+                            <label className="text-xs font-medium text-muted-foreground">Default Deposit (%)</label>
+                            <Input type="number" min="0" max="100" step="5" value={bookingDepositPercent} onChange={(e) => setBookingDepositPercent(e.target.value)} className="mt-1" />
+                            <p className="text-[11px] text-muted-foreground mt-1">Percentage of total price collected as deposit</p>
+                          </div>
+                          <div className="pl-4">
+                            <label className="text-xs font-medium text-muted-foreground">Service Packages</label>
+                            <p className="text-[11px] text-muted-foreground mb-2">Add offerings clients can choose from (e.g. "Basic Taco Bar", "Premium Sundae Bar")</p>
+                            <div className="space-y-1.5">
+                              {bookingPackages.map((pkg, i) => (
+                                <div key={i} className="flex items-center gap-2">
+                                  <span className="flex-1 text-sm text-card-foreground bg-secondary rounded-lg px-3 py-2">{pkg}</span>
+                                  <button onClick={() => setBookingPackages(prev => prev.filter((_, idx) => idx !== i))} className="text-destructive hover:text-destructive/80 p-1 touch-manipulation">
+                                    <X className="h-3.5 w-3.5" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                            <div className="flex items-center gap-2 mt-2">
+                              <Input
+                                value={newPackage}
+                                onChange={(e) => setNewPackage(e.target.value)}
+                                placeholder="e.g. Deluxe BBQ Spread"
+                                className="flex-1"
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" && newPackage.trim()) {
+                                    setBookingPackages(prev => [...prev, newPackage.trim()]);
+                                    setNewPackage("");
+                                  }
+                                }}
+                              />
+                              <Button variant="outline" size="sm" onClick={() => { if (newPackage.trim()) { setBookingPackages(prev => [...prev, newPackage.trim()]); setNewPackage(""); } }}>Add</Button>
+                            </div>
+                          </div>
+                          <div className="pl-4">
+                            <p className="text-xs text-muted-foreground">
+                              Your public booking page: <button onClick={() => { navigator.clipboard.writeText(`${window.location.origin}/book`); toast.success("Booking link copied!"); }} className="text-primary font-medium hover:underline">{window.location.origin}/book</button>
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {!bookingsEnabled && (
+                        <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4 text-center">
+                          <p className="text-xs text-muted-foreground">Bookings are currently disabled. Clients won't be able to submit booking requests through your public page.</p>
+                        </div>
+                      )}
+
+                      <Button onClick={() => saveBookingSettings.mutate()} disabled={saveBookingSettings.isPending}>
+                        {saveBookingSettings.isPending ? "Saving..." : "Save Booking Settings"}
+                      </Button>
+                    </div>
+                  )}
                   {/* Notifications */}
                   {s.id === "notifications" && (
                     <div className="space-y-4 max-w-lg">
