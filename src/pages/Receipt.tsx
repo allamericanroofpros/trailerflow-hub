@@ -100,7 +100,7 @@ export default function ReceiptPage() {
             ) : (
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>{order.tax_label || "Tax"}</span>
-                <span className="font-semibold">${Number(order.tax).toFixed(2)}</span>
+                <span className="font-semibold">${Number(order.tax).toFixed(1)}</span>
               </div>
             )}
             {Number(order.tip) > 0 && (
