@@ -667,7 +667,7 @@ export default function Inventory() {
                   <tfoot>
                     <tr className="border-t-2 border-border bg-secondary/50">
                       <td colSpan={4} className="px-4 py-2.5 font-bold text-card-foreground text-right">Total</td>
-                      <td className="text-right px-4 py-2.5 font-black text-primary text-base">${totalOrderCost.toFixed(2)}</td>
+                      <td className="text-right px-4 py-2.5 font-black text-primary text-base">${totalOrderCost.toFixed(1)}</td>
                     </tr>
                   </tfoot>
                 </table>
