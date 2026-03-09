@@ -290,7 +290,7 @@ export default function POSCheckoutFlow({
                 onClick={handleTipComplete}
                 disabled={isPending}
               >
-                {tipAmount > 0 ? `Add Tip · $${tipAmount.toFixed(2)}` : `No Tip · Done`}
+                {tipAmount > 0 ? `Add Tip · $${tipAmount.toFixed(1)}` : `No Tip · Done`}
               </Button>
             </motion.div>
           )}
