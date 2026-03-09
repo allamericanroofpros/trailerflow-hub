@@ -915,7 +915,7 @@ export default function POS() {
         onClick={() => setShowEOD(true)}
         className="fixed bottom-6 left-6 z-[55] flex items-center gap-2 rounded-2xl bg-card border-2 border-border px-4 py-3 text-sm font-bold text-muted-foreground hover:text-foreground hover:border-primary/30 shadow-lg transition-all touch-manipulation"
       >
-        <Moon className="h-4 w-4" /> End of Day
+        <Clock className="h-4 w-4" /> End of Day
       </button>
 
       {/* Admin PIN Exit Gate */}
