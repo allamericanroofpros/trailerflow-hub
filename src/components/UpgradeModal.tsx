@@ -14,7 +14,7 @@ interface UpgradeModalProps {
 
 export function UpgradeModal({ open, onOpenChange, feature, currentPlan, requiredPlan }: UpgradeModalProps) {
   const navigate = useNavigate();
-  const current = PLAN_ENTITLEMENTS[currentPlan] ?? PLAN_ENTITLEMENTS.free;
+  const current = PLAN_ENTITLEMENTS[currentPlan] ?? PLAN_ENTITLEMENTS.pro;
   const required = PLAN_ENTITLEMENTS[requiredPlan] ?? PLAN_ENTITLEMENTS.pro;
 
   return (
@@ -39,14 +39,6 @@ export function UpgradeModal({ open, onOpenChange, feature, currentPlan, require
             <span className="text-sm font-semibold text-foreground">{required.label} Plan includes:</span>
           </div>
           <ul className="space-y-1.5 text-sm text-muted-foreground">
-            {requiredPlan === "starter" && (
-              <>
-                <li>✓ 5 staff accounts</li>
-                <li>✓ AI chat assistant</li>
-                <li>✓ Full POS & booking system</li>
-                <li>✓ Basic reports</li>
-              </>
-            )}
             {requiredPlan === "pro" && (
               <>
                 <li>✓ Unlimited trailers & staff</li>
@@ -56,7 +48,7 @@ export function UpgradeModal({ open, onOpenChange, feature, currentPlan, require
                 <li>✓ Priority support</li>
               </>
             )}
-            {requiredPlan === "enterprise" && (
+            {(requiredPlan === "enterprise" || requiredPlan === "founders") && (
               <>
                 <li>✓ Everything in Pro</li>
                 <li>✓ Multi-org management</li>
