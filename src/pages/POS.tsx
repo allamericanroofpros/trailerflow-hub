@@ -9,9 +9,9 @@ import { useTaxSettings, calcTax, calcTotalWithTax } from "@/hooks/useTaxSetting
 import { toast } from "sonner";
 import { motion, AnimatePresence, useMotionValue, useTransform, PanInfo } from "framer-motion";
 import {
-  ShoppingCart, Plus, Minus, Trash2, CreditCard, Banknote,
-  Smartphone, ChefHat, Clock, CheckCircle, Loader2, ArrowLeft,
-  Truck, X, BarChart3, Package, FileText, Receipt, Moon,
+  ShoppingCart, Plus, Minus, Trash2,
+  ChefHat, Clock, CheckCircle, Loader2, ArrowLeft,
+  Truck, X, Receipt, Star,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
