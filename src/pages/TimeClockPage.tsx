@@ -142,9 +142,9 @@ export default function TimeClockPage() {
                           {new Date(e.clock_out!).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                         </td>
                         <td className="px-4 py-3 text-right font-medium">{hrs.toFixed(1)}h</td>
-                        <td className="px-4 py-3 text-right text-muted-foreground">${Number(e.hourly_rate).toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right font-semibold">${cost.toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right text-muted-foreground">${Number(e.tips_earned || 0).toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right text-muted-foreground">${Number(e.hourly_rate).toFixed(1)}</td>
+                        <td className="px-4 py-3 text-right font-semibold">${cost.toFixed(1)}</td>
+                        <td className="px-4 py-3 text-right text-muted-foreground">${Number(e.tips_earned || 0).toFixed(1)}</td>
                         <td className="px-4 py-3 text-muted-foreground truncate max-w-[150px]">{e.notes || "—"}</td>
                       </tr>
                     );

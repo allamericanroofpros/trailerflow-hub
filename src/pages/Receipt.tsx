@@ -117,7 +117,7 @@ export default function ReceiptPage() {
             )}
             <div className="flex justify-between text-lg font-black text-card-foreground pt-2 border-t border-border">
               <span>Total</span>
-              <span>${Number(order.total).toFixed(2)}</span>
+              <span>${Number(order.total).toFixed(1)}</span>
             </div>
           </div>
 

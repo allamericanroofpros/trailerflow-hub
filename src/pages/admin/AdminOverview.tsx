@@ -65,7 +65,7 @@ export default function AdminOverview() {
         id: `order-${o.id}`,
         type: "order_placed",
         title: `Order #${o.order_number}`,
-        detail: `$${Number(o.total).toFixed(2)}`,
+        detail: `$${Number(o.total).toFixed(1)}`,
         time: o.created_at,
         icon: ShoppingCart,
         color: "text-emerald-600 bg-emerald-100",

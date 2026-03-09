@@ -670,15 +670,15 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                     <span>Margin: <strong className={`${((1 - ingredientCost / form.price) * 100) >= targetMargin ? "text-success" : "text-warning"}`}>
                       {((1 - ingredientCost / form.price) * 100).toFixed(1)}%
                     </strong></span>
-                    <span>Profit: <strong className="text-foreground">${(form.price - ingredientCost).toFixed(2)}</strong></span>
+                    <span>Profit: <strong className="text-foreground">${(form.price - ingredientCost).toFixed(1)}</strong></span>
                   </div>
                   {modifierCostRange.max > 0 && (
                     <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                      <span>Base cost: <strong className="text-foreground">${baseIngredientCost.toFixed(2)}</strong></span>
+                      <span>Base cost: <strong className="text-foreground">${baseIngredientCost.toFixed(1)}</strong></span>
                       <span>+ Modifier cost: <strong className="text-foreground">
                         {modifierCostRange.min === modifierCostRange.max 
-                          ? `$${modifierCostRange.min.toFixed(2)}`
-                          : `$${modifierCostRange.min.toFixed(2)}–$${modifierCostRange.max.toFixed(2)}`}
+                          ? `$${modifierCostRange.min.toFixed(1)}`
+                          : `$${modifierCostRange.min.toFixed(1)}–$${modifierCostRange.max.toFixed(1)}`}
                       </strong></span>
                     </div>
                   )}
