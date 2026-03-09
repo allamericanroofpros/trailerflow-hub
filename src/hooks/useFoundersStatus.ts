@@ -29,10 +29,10 @@ export function useFoundersStatus(): FoundersStatus {
   const { data: founderCount, isLoading: countLoading } = useQuery({
     queryKey: ["founders_count"],
     queryFn: async () => {
-      const { count, error } = await supabase
+      const { count, error } = await (supabase as any)
         .from("organizations")
         .select("id", { count: "exact", head: true })
-        .eq("is_founder" as any, true);
+        .eq("is_founder", true);
       if (error) throw error;
       return count ?? 0;
     },
