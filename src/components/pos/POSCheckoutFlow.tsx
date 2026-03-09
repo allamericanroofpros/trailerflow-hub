@@ -278,8 +278,8 @@ export default function POSCheckoutFlow({
               {(tipAmount > 0 || surchargeAmount > 0) && (
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">
-                    {tipAmount > 0 && <>Tip: <span className="font-black text-success">${tipAmount.toFixed(2)}</span>{" · "}</>}
-                    New total: <span className="font-black text-card-foreground">${(total + surchargeAmount + tipAmount).toFixed(2)}</span>
+                    {tipAmount > 0 && <>Tip: <span className="font-black text-success">${tipAmount.toFixed(1)}</span>{" · "}</>}
+                    New total: <span className="font-black text-card-foreground">${(total + surchargeAmount + tipAmount).toFixed(1)}</span>
                   </p>
                 </div>
               )}
