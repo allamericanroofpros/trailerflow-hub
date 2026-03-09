@@ -291,7 +291,7 @@ export default function POSOrderHistory() {
                     Number(selectedOrder.tax) > 0 && (
                       <div className="flex justify-between text-xs text-muted-foreground/70 italic">
                         <span>Includes {selectedOrder.tax_label || "Tax"}</span>
-                        <span>${Number(selectedOrder.tax).toFixed(2)}</span>
+                         <span>${Number(selectedOrder.tax).toFixed(1)}</span>
                       </div>
                     )
                   ) : (
