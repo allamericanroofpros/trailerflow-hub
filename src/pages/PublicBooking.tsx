@@ -353,9 +353,25 @@ export default function PublicBooking() {
                     <label className="text-xs font-medium text-muted-foreground">Location</label>
                     <Input value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="123 Main St, Anytown OH" className="mt-1" />
                   </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">Estimated Guests</label>
+                   <div>
+                    <label className="text-xs font-medium text-muted-foreground">Estimated Guests *</label>
                     <Input type="number" value={form.guest_count} onChange={e => setForm({ ...form, guest_count: e.target.value })} placeholder="50" className="mt-1" />
+                    <p className="text-[10px] text-muted-foreground mt-1">Used to calculate your pricing estimate</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Event Type</label>
+                    <select value={form.event_type} onChange={e => setForm({ ...form, event_type: e.target.value })}
+                      className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none">
+                      <option value="">Select type...</option>
+                      <option value="birthday">Birthday Party</option>
+                      <option value="wedding">Wedding / Reception</option>
+                      <option value="corporate">Corporate Event</option>
+                      <option value="festival">Festival / Fair</option>
+                      <option value="school">School / Church Event</option>
+                      <option value="fundraiser">Fundraiser</option>
+                      <option value="neighborhood">Block Party / Neighborhood</option>
+                      <option value="other">Other</option>
+                    </select>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Start Time</label>
@@ -364,6 +380,19 @@ export default function PublicBooking() {
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">End Time</label>
                     <Input type="time" value={form.end_time} onChange={e => setForm({ ...form, end_time: e.target.value })} className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Budget Range</label>
+                    <select value={form.budget_range} onChange={e => setForm({ ...form, budget_range: e.target.value })}
+                      className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none">
+                      <option value="">Select range...</option>
+                      <option value="under_500">Under $500</option>
+                      <option value="500_1000">$500 – $1,000</option>
+                      <option value="1000_2000">$1,000 – $2,000</option>
+                      <option value="2000_5000">$2,000 – $5,000</option>
+                      <option value="5000_plus">$5,000+</option>
+                      <option value="flexible">Flexible / Not Sure</option>
+                    </select>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Package</label>
