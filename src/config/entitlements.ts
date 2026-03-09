@@ -106,6 +106,8 @@ export function suggestedUpgrade(plan: string | null | undefined): PlanKey | nul
       return "pro";
     case "pro":
       return "enterprise";
+    case "enterprise":
+      return null;
     default:
       return "starter";
   }

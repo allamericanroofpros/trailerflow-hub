@@ -84,11 +84,17 @@ Deno.serve(async (req) => {
         .eq("user_id", userId);
     }
 
+    // Add user to the organization
+    await adminClient
+      .from("organization_members")
+      .upsert({ org_id: organization_id, user_id: userId, role }, { onConflict: "org_id,user_id" });
+
     // Auto-link: if a staff_members entry has matching email, set user_id
     await adminClient
       .from("staff_members")
       .update({ user_id: userId })
       .eq("email", email)
+      .eq("org_id", organization_id)
       .is("user_id", null);
 
     return new Response(
