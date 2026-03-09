@@ -94,7 +94,7 @@ export function AppSidebar() {
   return (
     <aside
       className={cn(
-        "flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out",
+        "sticky top-0 h-screen flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out",
         collapsed ? "w-[68px]" : "w-[240px]"
       )}
       style={{ background: "var(--gradient-sidebar)" }}

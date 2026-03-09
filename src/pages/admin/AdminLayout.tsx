@@ -107,7 +107,7 @@ export function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="flex min-h-screen w-full bg-background">
       {/* Desktop sidebar */}
-      <aside className="hidden lg:flex w-[240px] flex-col border-r border-border bg-card">
+      <aside className="hidden lg:flex sticky top-0 h-screen w-[240px] flex-col border-r border-border bg-card">
         <NavContent />
       </aside>
 
