@@ -297,7 +297,7 @@ export default function POSOrderHistory() {
                   ) : (
                     <div className="flex justify-between text-sm text-muted-foreground">
                       <span>{selectedOrder.tax_label || "Tax"}</span>
-                      <span>${Number(selectedOrder.tax).toFixed(2)}</span>
+                      <span>${Number(selectedOrder.tax).toFixed(1)}</span>
                     </div>
                   )}
                   {Number(selectedOrder.tip) > 0 && (
