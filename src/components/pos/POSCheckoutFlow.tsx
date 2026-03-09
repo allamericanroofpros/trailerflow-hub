@@ -250,7 +250,7 @@ export default function POSCheckoutFlow({
                     >
                       <p className="text-lg">{pct}%</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        ${(subtotal * pct / 100).toFixed(2)}
+                        ${(subtotal * pct / 100).toFixed(1)}
                       </p>
                     </button>
                   ))}
