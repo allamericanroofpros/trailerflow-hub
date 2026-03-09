@@ -542,50 +542,18 @@ export default function SettingsPage() {
 
                   {/* Billing */}
                   {s.id === "billing" && (
-                    <div>
-                      {subLoading ? (
-                        <div className="flex items-center gap-2 py-8 justify-center text-muted-foreground">
-                          <Loader2 className="h-4 w-4 animate-spin" /> Checking subscription...
-                        </div>
-                      ) : (
-                        <>
-                          {subscribed && subscriptionEnd && (
-                            <div className={`rounded-lg border p-3 mb-5 ${cancelAtPeriodEnd ? "bg-destructive/5 border-destructive/20" : "bg-primary/5 border-primary/20"}`}>
-                              <p className="text-xs text-muted-foreground">
-                                Current plan: <span className="font-semibold text-primary capitalize">{tier || "Active"}</span>
-                                {cancelAtPeriodEnd
-                                  ? <>{" · "}<span className="text-destructive font-semibold">Cancels {new Date(subscriptionEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span></>
-                                  : <>{" · "}Renews {new Date(subscriptionEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</>
-                                }
-                              </p>
-                            </div>
-                          )}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {(Object.entries(TIERS) as [TierKey, typeof TIERS[TierKey]][]).map(([key, t]) => {
-                              const isCurrent = subscribed && tier === key;
-                              return (
-                                <div key={key} className={`relative rounded-xl border p-5 transition-all ${isCurrent ? "border-primary ring-2 ring-primary/20 bg-primary/5" : "border-border bg-background hover:border-primary/40"} ${key === "pro" && !isCurrent ? "ring-1 ring-primary/10" : ""}`}>
-                                  {key === "pro" && !isCurrent && <span className="absolute -top-2.5 left-4 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-bold text-primary-foreground uppercase tracking-wider">Most Popular</span>}
-                                  {isCurrent && <span className="absolute -top-2.5 left-4 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-bold text-primary-foreground uppercase tracking-wider">Your Plan</span>}
-                                  <h4 className="text-sm font-bold text-foreground capitalize">{t.name}</h4>
-                                  <div className="mt-2 mb-4"><span className="text-3xl font-extrabold text-foreground">${t.price}</span><span className="text-sm text-muted-foreground">/mo</span></div>
-                                  <ul className="space-y-2 mb-5">{t.features.map((f) => <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground"><Check className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />{f}</li>)}</ul>
-                                  {isCurrent ? <Button variant="outline" size="sm" className="w-full" disabled>Current Plan</Button> : (
-                                    <Button size="sm" className="w-full" variant={key === "pro" ? "default" : "outline"} onClick={async () => { try { await startCheckout(t.price_id); } catch (e: any) { toast.error(e.message || "Checkout failed"); } }}>
-                                      {subscribed ? `Switch to ${t.name}` : `Get ${t.name}`}
-                                    </Button>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <div className="mt-4 flex items-center justify-between">
-                            <Button variant="ghost" size="sm" onClick={() => { checkSubscription(); refreshOrg(); toast.success("Subscription status refreshed"); }}>Refresh Status</Button>
-                            {subscribed && <Button variant="outline" size="sm" onClick={async () => { try { await openPortal(); } catch { toast.error("Could not open billing portal"); } }}><ExternalLink className="h-3.5 w-3.5 mr-1.5" />Manage Subscription</Button>}
-                          </div>
-                        </>
-                      )}
-                    </div>
+                    <BillingSection
+                      subLoading={subLoading}
+                      subscribed={subscribed}
+                      tier={tier}
+                      subscriptionEnd={subscriptionEnd}
+                      cancelAtPeriodEnd={cancelAtPeriodEnd}
+                      startCheckout={startCheckout}
+                      openPortal={openPortal}
+                      checkSubscription={checkSubscription}
+                      refreshOrg={refreshOrg}
+                      currentOrg={currentOrg}
+                    />
                   )}
 
                   {/* Security */}
