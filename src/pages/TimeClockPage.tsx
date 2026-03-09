@@ -28,20 +28,63 @@ export default function TimeClockPage() {
   }, 0);
   const totalTips = completedEntries.reduce((s, e) => s + Number(e.tips_earned || 0), 0);
 
+  const handleExportCSV = () => {
+    if (completedEntries.length === 0) return;
+    const dateLabel = new Date(selectedDate + "T12:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    const headers = ["Staff", "Clock In", "Clock Out", "Hours", "Rate ($/hr)", "Labor Cost ($)", "Tips ($)", "Notes"];
+    const rows = completedEntries.map(e => {
+      const hrs = (new Date(e.clock_out!).getTime() - new Date(e.clock_in).getTime()) / 3600000;
+      const cost = hrs * Number(e.hourly_rate);
+      return [
+        staffMap[e.staff_id] || "Unknown",
+        new Date(e.clock_in).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        new Date(e.clock_out!).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" }),
+        hrs.toFixed(2),
+        Number(e.hourly_rate).toFixed(2),
+        cost.toFixed(2),
+        Number(e.tips_earned || 0).toFixed(2),
+        e.notes || "",
+      ];
+    });
+    // Totals row
+    rows.push(["TOTAL", "", "", totalHours.toFixed(2), "", totalCost.toFixed(2), totalTips.toFixed(2), ""]);
+
+    const csv = [headers, ...rows].map(r => r.map(c => `"${c}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `time-clock-${selectedDate}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Time Clock</h1>
             <p className="text-sm text-muted-foreground mt-1">View and manage staff clock-in/out records.</p>
           </div>
-          <Input
-            type="date"
-            value={selectedDate}
-            onChange={e => setSelectedDate(e.target.value)}
-            className="w-44"
-          />
+          <div className="flex items-center gap-2">
+            <Input
+              type="date"
+              value={selectedDate}
+              onChange={e => setSelectedDate(e.target.value)}
+              className="w-44"
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportCSV}
+              disabled={completedEntries.length === 0}
+              className="gap-1.5 shrink-0"
+            >
+              <Download className="h-4 w-4" />
+              Export CSV
+            </Button>
+          </div>
         </div>
 
         {/* KPI Cards */}
@@ -72,8 +115,8 @@ export default function TimeClockPage() {
               <DollarSign className="h-4 w-4 text-warning" />
               <span className="text-xs font-semibold text-muted-foreground uppercase">Labor Cost</span>
             </div>
-            <p className="text-2xl font-bold text-warning">${totalCost.toFixed(1)}</p>
-            <p className="text-[10px] text-muted-foreground">Tips: ${totalTips.toFixed(1)}</p>
+            <p className="text-2xl font-bold text-warning">${totalCost.toFixed(2)}</p>
+            <p className="text-[10px] text-muted-foreground">Tips: ${totalTips.toFixed(2)}</p>
           </div>
         </div>
 
@@ -90,7 +133,7 @@ export default function TimeClockPage() {
                   <p className="text-sm font-bold text-foreground">{staffMap[c.staff_id] || "Unknown"}</p>
                   <p className="text-xs text-muted-foreground">
                     Since {new Date(c.clock_in).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                    {" · "}${Number(c.hourly_rate).toFixed(1)}/hr
+                    {" · "}${Number(c.hourly_rate).toFixed(2)}/hr
                   </p>
                 </div>
               ))}
@@ -104,6 +147,9 @@ export default function TimeClockPage() {
             <h3 className="text-sm font-semibold text-card-foreground">
               Shift Records — {new Date(selectedDate + "T12:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
             </h3>
+            {completedEntries.length > 0 && (
+              <span className="text-xs text-muted-foreground">{completedEntries.length} shift{completedEntries.length !== 1 ? "s" : ""}</span>
+            )}
           </div>
           {isLoading ? (
             <div className="flex items-center justify-center py-12">
@@ -141,15 +187,25 @@ export default function TimeClockPage() {
                         <td className="px-4 py-3 text-muted-foreground">
                           {new Date(e.clock_out!).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                         </td>
-                        <td className="px-4 py-3 text-right font-medium">{hrs.toFixed(1)}h</td>
-                        <td className="px-4 py-3 text-right text-muted-foreground">${Number(e.hourly_rate).toFixed(1)}</td>
-                        <td className="px-4 py-3 text-right font-semibold">${cost.toFixed(1)}</td>
-                        <td className="px-4 py-3 text-right text-muted-foreground">${Number(e.tips_earned || 0).toFixed(1)}</td>
+                        <td className="px-4 py-3 text-right font-medium">{hrs.toFixed(2)}h</td>
+                        <td className="px-4 py-3 text-right text-muted-foreground">${Number(e.hourly_rate).toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right font-semibold">${cost.toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right text-muted-foreground">${Number(e.tips_earned || 0).toFixed(2)}</td>
                         <td className="px-4 py-3 text-muted-foreground truncate max-w-[150px]">{e.notes || "—"}</td>
                       </tr>
                     );
                   })}
                 </tbody>
+                <tfoot>
+                  <tr className="border-t-2 border-border bg-muted/20">
+                    <td colSpan={3} className="px-4 py-3 font-bold text-foreground">Totals</td>
+                    <td className="px-4 py-3 text-right font-bold text-foreground">{totalHours.toFixed(2)}h</td>
+                    <td className="px-4 py-3" />
+                    <td className="px-4 py-3 text-right font-bold text-foreground">${totalCost.toFixed(2)}</td>
+                    <td className="px-4 py-3 text-right font-bold text-foreground">${totalTips.toFixed(2)}</td>
+                    <td className="px-4 py-3" />
+                  </tr>
+                </tfoot>
               </table>
             </div>
           )}
