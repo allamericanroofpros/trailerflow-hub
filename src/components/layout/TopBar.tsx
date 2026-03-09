@@ -86,10 +86,6 @@ export function TopBar() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <div className="hidden md:flex items-center gap-2 rounded-full bg-secondary px-3 py-1.5 text-xs font-medium text-secondary-foreground">
-          <Sparkles className="h-3.5 w-3.5 text-primary" />
-          <span>AI Forecast: <span className="font-semibold text-foreground">$12,400 projected this week</span></span>
-        </div>
       </div>
 
       <div className="flex items-center gap-3">
