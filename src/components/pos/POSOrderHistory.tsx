@@ -314,7 +314,7 @@ export default function POSOrderHistory() {
                   )}
                   <div className="flex justify-between text-lg font-black text-card-foreground pt-2 border-t border-border">
                     <span>Total</span>
-                    <span>${Number(selectedOrder.total).toFixed(2)}</span>
+                    <span>${Number(selectedOrder.total).toFixed(1)}</span>
                   </div>
                 </div>
 

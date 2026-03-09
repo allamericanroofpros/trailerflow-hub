@@ -155,7 +155,7 @@ export default function POSConfirmation({
                 {changeDue != null && changeDue > 0 && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Change</span>
-                    <span className="font-black text-success">${changeDue.toFixed(2)}</span>
+                    <span className="font-black text-success">${changeDue.toFixed(1)}</span>
                   </div>
                 )}
               </>
