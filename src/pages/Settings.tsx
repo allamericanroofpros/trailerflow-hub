@@ -162,6 +162,9 @@ export default function SettingsPage() {
   const [bookingsEnabled, setBookingsEnabled] = useState(false);
   const [bookingDepositPercent, setBookingDepositPercent] = useState("25");
   const [bookingMinNoticeDays, setBookingMinNoticeDays] = useState("7");
+  const [bookingMinimumAmount, setBookingMinimumAmount] = useState("0");
+  const [bookingPerGuestRate, setBookingPerGuestRate] = useState("0");
+  const [bookingHourlyRate, setBookingHourlyRate] = useState("0");
   const [bookingPackages, setBookingPackages] = useState<string[]>([]);
   const [newPackage, setNewPackage] = useState("");
 
