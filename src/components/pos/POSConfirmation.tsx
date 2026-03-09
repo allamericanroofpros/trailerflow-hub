@@ -99,7 +99,7 @@ export default function POSConfirmation({
                 <span className="text-muted-foreground">
                   <span className="font-black text-card-foreground">{item.quantity}×</span> {item.name}
                 </span>
-                <span className="font-bold text-card-foreground">${(item.price * item.quantity).toFixed(2)}</span>
+                <span className="font-bold text-card-foreground">${(item.price * item.quantity).toFixed(1)}</span>
               </div>
             ))}
           </div>
