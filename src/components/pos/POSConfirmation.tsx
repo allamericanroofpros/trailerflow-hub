@@ -125,7 +125,7 @@ export default function POSConfirmation({
             {tip > 0 && (
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>Tip</span>
-                <span className="font-semibold text-success">${tip.toFixed(2)}</span>
+                <span className="font-semibold text-success">${tip.toFixed(1)}</span>
               </div>
             )}
             {(surchargeAmount ?? 0) > 0 && (
