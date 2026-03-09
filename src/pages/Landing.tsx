@@ -189,7 +189,7 @@ export default function Landing() {
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Simple, transparent pricing</h2>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Start free. Upgrade when you're ready. No contracts, cancel anytime.
+              Every paid plan includes a 30-day free trial. No contracts, cancel anytime.
             </p>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
