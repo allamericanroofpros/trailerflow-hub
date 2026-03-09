@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { HelpCircle, Search, X, ChevronRight, MessageCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { HelpCircle, Search, X, ChevronRight, MessageCircle, ExternalLink } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface HelpArticle {
@@ -7,36 +8,37 @@ interface HelpArticle {
   title: string;
   category: string;
   content: string;
+  route?: string;
 }
 
 const HELP_ARTICLES: HelpArticle[] = [
   // Getting Started
-  { id: "first-steps", category: "Getting Started", title: "What should I do first?", content: "Start by adding your trailer, then build your menu. The setup checklist on your Dashboard guides you through each step — just follow the prompts!" },
-  { id: "trailer", category: "Getting Started", title: "How do I add my trailer?", content: "Go to Trailers and tap 'Add Trailer'. Give it a name, pick a type (food truck, concession, etc.), and add details like crew size and hourly costs. This helps with scheduling and forecasting." },
-  { id: "menu", category: "Getting Started", title: "How do I build my menu?", content: "Head to Menu and tap 'Add Item'. Set a name, price, and category. Pro tip: link inventory ingredients to each item so stock auto-deducts when you ring up orders." },
-  { id: "demo", category: "Getting Started", title: "Can I try with sample data?", content: "Yes! On the Dashboard, look for the 'Load demo data' button in the setup checklist. It fills your account with sample menus, events, and orders so you can explore every feature before going live." },
+  { id: "first-steps", category: "Getting Started", title: "What should I do first?", content: "Start by adding your trailer, then build your menu. The setup checklist on your Dashboard guides you through each step — just follow the prompts!", route: "/" },
+  { id: "trailer", category: "Getting Started", title: "How do I add my trailer?", content: "Go to Trailers and tap 'Add Trailer'. Give it a name, pick a type (food truck, concession, etc.), and add details like crew size and hourly costs.", route: "/trailers" },
+  { id: "menu", category: "Getting Started", title: "How do I build my menu?", content: "Head to Menu and tap 'Add Item'. Set a name, price, and category. Pro tip: link inventory ingredients to each item so stock auto-deducts when you ring up orders.", route: "/menu" },
+  { id: "demo", category: "Getting Started", title: "Can I try with sample data?", content: "Yes! On the Dashboard, look for the 'Load demo data' button in the setup checklist. It fills your account with sample menus, events, and orders so you can explore every feature before going live.", route: "/" },
 
   // POS & Payments
-  { id: "pos-start", category: "POS & Payments", title: "How do I start selling?", content: "Tap 'Open for Business' on your Dashboard. You'll run through a quick Start of Day check (opening cash, pick your trailer), then you're ready to ring up orders." },
-  { id: "pos-checkout", category: "POS & Payments", title: "How does checkout work?", content: "Tap menu items to add them to the cart, enter a customer name, then hit Charge. Pick Cash, Card, or Digital. For card, we process via Stripe — for cash, enter the amount tendered and we'll calculate change." },
-  { id: "stripe", category: "POS & Payments", title: "How do I accept card payments?", content: "Go to Settings → Payments & Fees and connect your Stripe account. It takes about 5 minutes. Once connected, you can process card payments right from the POS." },
-  { id: "tax", category: "POS & Payments", title: "How do I set up sales tax?", content: "Go to Settings → Payments & Fees. Enable tax, enter your rate (e.g. 8.75%), and choose whether prices include tax or not. Tax applies automatically to every order." },
-  { id: "surcharge", category: "POS & Payments", title: "What about card surcharges?", content: "In Settings → Payments & Fees, turn on the card surcharge option. Set a percentage (usually 2.5-3.5%) to pass processing fees to card-paying customers. Cash payments aren't affected." },
-  { id: "receipts", category: "POS & Payments", title: "How do customers get receipts?", content: "After each sale, a QR code appears on the confirmation screen. Customers scan it to view a mobile-friendly receipt — no printer needed!" },
+  { id: "pos-start", category: "POS & Payments", title: "How do I start selling?", content: "Tap 'Open for Business' on your Dashboard. You'll run through a quick Start of Day check (opening cash, pick your trailer), then you're ready to ring up orders.", route: "/pos" },
+  { id: "pos-checkout", category: "POS & Payments", title: "How does checkout work?", content: "Tap menu items to add them to the cart, enter a customer name, then hit Charge. Pick Cash, Card, or Digital. For card, we process via Stripe — for cash, enter the amount tendered and we'll calculate change.", route: "/pos" },
+  { id: "stripe", category: "POS & Payments", title: "How do I accept card payments?", content: "Go to Settings → Payments & Fees and connect your Stripe account. It takes about 5 minutes. Once connected, you can process card payments right from the POS.", route: "/settings?section=payments" },
+  { id: "tax", category: "POS & Payments", title: "How do I set up sales tax?", content: "Go to Settings → Payments & Fees. Enable tax, enter your rate (e.g. 8.75%), and choose whether prices include tax or not. Tax applies automatically to every order.", route: "/settings?section=payments" },
+  { id: "surcharge", category: "POS & Payments", title: "What about card surcharges?", content: "In Settings → Payments & Fees, turn on the card surcharge option. Set a percentage (usually 2.5-3.5%) to pass processing fees to card-paying customers.", route: "/settings?section=payments" },
+  { id: "receipts", category: "POS & Payments", title: "How do customers get receipts?", content: "After each sale, a QR code appears on the confirmation screen. Customers scan it to view a mobile-friendly receipt — no printer needed!", route: "/pos" },
 
   // Events & Bookings
-  { id: "events", category: "Events & Bookings", title: "How do I manage events?", content: "Events flow through stages: Lead → Applied → Tentative → Confirmed → Completed. Drag them through the pipeline, assign trailers and staff, and track revenue forecasts." },
-  { id: "bookings", category: "Events & Bookings", title: "How do catering bookings work?", content: "Clients submit requests through your public booking page. You'll see them in Bookings where you can confirm, set pricing, and track deposits. Each confirmed booking can auto-create an event." },
-  { id: "calendar", category: "Events & Bookings", title: "Where's my calendar?", content: "Tap Calendar in the sidebar to see all your events and bookings in a monthly or weekly view. Color-coded by stage so you can spot gaps at a glance." },
+  { id: "events", category: "Events & Bookings", title: "How do I manage events?", content: "Events flow through stages: Lead → Applied → Tentative → Confirmed → Completed. Drag them through the pipeline, assign trailers and staff, and track revenue forecasts.", route: "/events" },
+  { id: "bookings", category: "Events & Bookings", title: "How do catering bookings work?", content: "Clients submit requests through your public booking page. You'll see them in Bookings where you can confirm, set pricing, and track deposits.", route: "/bookings" },
+  { id: "calendar", category: "Events & Bookings", title: "Where's my calendar?", content: "Tap Calendar in the sidebar to see all your events and bookings in a monthly or weekly view. Color-coded by stage so you can spot gaps at a glance.", route: "/calendar" },
 
   // Team
-  { id: "staff-add", category: "Team", title: "How do I add team members?", content: "Go to Team and tap 'Add Staff'. Enter their name, email, hourly rate, and a 4-digit PIN for POS clock-in. You can also send email invites so they can log in to the app." },
-  { id: "roles", category: "Team", title: "What do the roles mean?", content: "Owner: Full access to everything including billing. Manager: Operations, staff, events, and inventory. Staff: POS access, clock-in/out, and basic views only." },
-  { id: "timeclock", category: "Team", title: "How does the time clock work?", content: "Staff enter their 4-digit PIN at the POS to clock in and out. Hours are tracked automatically and show up in your labor reports." },
+  { id: "staff-add", category: "Team", title: "How do I add team members?", content: "Go to Team and tap 'Add Staff'. Enter their name, email, hourly rate, and a 4-digit PIN for POS clock-in. You can also send email invites so they can log in to the app.", route: "/staff" },
+  { id: "roles", category: "Team", title: "What do the roles mean?", content: "Owner: Full access to everything including billing. Manager: Operations, staff, events, and inventory. Staff: POS access, clock-in/out, and basic views only.", route: "/staff" },
+  { id: "timeclock", category: "Team", title: "How does the time clock work?", content: "Staff enter their 4-digit PIN at the POS to clock in and out. Hours are tracked automatically and show up in your labor reports.", route: "/time-clock" },
 
   // Inventory
-  { id: "inventory", category: "Inventory", title: "How does inventory tracking work?", content: "Add items with current stock levels and reorder points. Link them to menu items as recipe ingredients — when you ring up an order, stock deducts automatically based on your recipes." },
-  { id: "low-stock", category: "Inventory", title: "How do I know when I'm running low?", content: "Items below their reorder point show a warning badge. Check the Inventory page before events to see what needs restocking." },
+  { id: "inventory", category: "Inventory", title: "How does inventory tracking work?", content: "Add items with current stock levels and reorder points. Link them to menu items as recipe ingredients — when you ring up an order, stock deducts automatically based on your recipes.", route: "/inventory" },
+  { id: "low-stock", category: "Inventory", title: "How do I know when I'm running low?", content: "Items below their reorder point show a warning badge. Check the Inventory page before events to see what needs restocking.", route: "/inventory" },
 ];
 
 interface HelpPanelProps {
@@ -130,6 +132,7 @@ export function HelpPanel({ open, onClose, onOpenChat }: HelpPanelProps) {
 
 function HelpArticleItem({ article }: { article: HelpArticle }) {
   const [expanded, setExpanded] = useState(false);
+  const navigate = useNavigate();
 
   return (
     <div className="rounded-lg border border-border bg-background">
@@ -141,8 +144,16 @@ function HelpArticleItem({ article }: { article: HelpArticle }) {
         <ChevronRight className={`h-4 w-4 text-muted-foreground transition-transform shrink-0 ${expanded ? "rotate-90" : ""}`} />
       </button>
       {expanded && (
-        <div className="px-3 pb-3">
+        <div className="px-3 pb-3 space-y-2">
           <p className="text-xs text-muted-foreground leading-relaxed">{article.content}</p>
+          {article.route && (
+            <button
+              onClick={() => navigate(article.route!)}
+              className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline touch-manipulation"
+            >
+              <ExternalLink className="h-3 w-3" /> Go to page
+            </button>
+          )}
         </div>
       )}
     </div>

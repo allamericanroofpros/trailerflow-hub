@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useOrders } from "@/hooks/useOrders";
 import {
-  DollarSign, Receipt, TrendingUp, Clock,
+  DollarSign, Receipt, TrendingUp, Clock, Banknote, CreditCard,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
@@ -47,7 +47,13 @@ export function TodaySnapshot() {
     // Find peak hour
     const peakHour = hourlyData.reduce((max, h) => h.revenue > max.revenue ? h : max, { hour: 0, label: "", revenue: 0 });
 
-    return { totalRevenue, orderCount: todayOrders.length, avgTicket, totalTips, topItems, hourlyData, peakHour };
+    // Cash vs Card
+    const cashOrders = todayOrders.filter(o => o.payment_method === "cash");
+    const cardOrders = todayOrders.filter(o => o.payment_method === "card" || o.payment_method === "digital");
+    const cashTotal = cashOrders.reduce((s, o) => s + Number(o.total), 0);
+    const cardTotal = cardOrders.reduce((s, o) => s + Number(o.total), 0);
+
+    return { totalRevenue, orderCount: todayOrders.length, avgTicket, totalTips, topItems, hourlyData, peakHour, cashTotal, cardTotal, cashCount: cashOrders.length, cardCount: cardOrders.length };
   }, [orders]);
 
   if (!stats) return null;
@@ -134,6 +140,28 @@ export function TodaySnapshot() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Cash vs Card */}
+      {hasData && (
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl border border-border bg-card p-4 shadow-card">
+            <div className="flex items-center gap-2 mb-1">
+              <Banknote className="h-4 w-4 text-success" />
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Cash</span>
+            </div>
+            <p className="text-xl font-black text-card-foreground">${stats.cashTotal.toFixed(0)}</p>
+            <p className="text-xs text-muted-foreground">{stats.cashCount} orders</p>
+          </div>
+          <div className="rounded-xl border border-border bg-card p-4 shadow-card">
+            <div className="flex items-center gap-2 mb-1">
+              <CreditCard className="h-4 w-4 text-primary" />
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Card / Digital</span>
+            </div>
+            <p className="text-xl font-black text-card-foreground">${stats.cardTotal.toFixed(0)}</p>
+            <p className="text-xs text-muted-foreground">{stats.cardCount} orders</p>
+          </div>
         </div>
       )}
 
