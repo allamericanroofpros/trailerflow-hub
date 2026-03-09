@@ -78,7 +78,7 @@ export default function ReceiptPage() {
                   {item.notes?.startsWith("Custom: ") ? item.notes.replace("Custom: ", "") : item.menu_items?.name || "Item"}
                 </span>
                 <span className="font-bold text-card-foreground">
-                  ${(Number(item.unit_price) * item.quantity).toFixed(2)}
+                  ${(Number(item.unit_price) * item.quantity).toFixed(1)}
                 </span>
               </div>
             ))}
