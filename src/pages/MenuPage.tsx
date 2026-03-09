@@ -335,7 +335,7 @@ export default function MenuPage() {
       const context = `Here are my menu items: ${JSON.stringify(menuItems.map((i) => {
         const liveCost = computeLiveCost(i, inventoryItems);
         return {
-          name: i.name, category: i.category, price: Number(i.price), cost: Number(liveCost.toFixed(2)),
+          name: i.name, category: i.category, price: Number(i.price), cost: Number(liveCost.toFixed(1)),
           margin: Number(i.price) > 0 ? ((Number(i.price) - liveCost) / Number(i.price) * 100).toFixed(1) + "%" : "N/A",
           ingredients: (i as any).menu_item_ingredients?.length || 0,
         };
@@ -354,11 +354,11 @@ Analyze my menu and provide: 1. Best/worst margins 2. Pricing suggestions 3. Men
     try {
       const context = `I'm pricing a food truck menu item. Details:
 - Item: ${form.name || "unnamed"} (${form.category})
-- Ingredient cost: $${ingredientCost.toFixed(2)}
+- Ingredient cost: $${ingredientCost.toFixed(1)}
 - Target margin: ${targetMargin}%
 - Category: ${form.category}
 ${form.description ? `- Description: ${form.description}` : ""}
-${menuItems?.length ? `- Other menu items for context: ${menuItems.slice(0, 10).map(i => `${i.name}: $${Number(i.price).toFixed(2)}`).join(", ")}` : ""}
+${menuItems?.length ? `- Other menu items for context: ${menuItems.slice(0, 10).map(i => `${i.name}: $${Number(i.price).toFixed(1)}`).join(", ")}` : ""}
 
 Suggest an optimal price for this item. Consider: ingredient cost, target margin, food truck pricing psychology, rounding to attractive price points. Return ONLY a number like 8.50 — no explanation.`;
       const result = await claudeNonStreaming("chat", [{ role: "user", content: context }]);
@@ -373,7 +373,7 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
   };
 
   const totalItems = menuItems?.length || 0;
-  const avgPrice = menuItems?.length ? (menuItems.reduce((s, i) => s + Number(i.price), 0) / menuItems.length).toFixed(2) : "0.00";
+  const avgPrice = menuItems?.length ? (menuItems.reduce((s, i) => s + Number(i.price), 0) / menuItems.length).toFixed(1) : "0.0";
   const nonCustomItems = menuItems?.filter(i => i.category !== "other") || [];
   const avgMargin = nonCustomItems.length
     ? (nonCustomItems.reduce((s, i) => { const p = Number(i.price), c = computeLiveCost(i, inventoryItems); return s + (p > 0 ? (p - c) / p * 100 : 0); }, 0) / nonCustomItems.length).toFixed(1)
@@ -457,8 +457,8 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-lg font-bold text-primary">${Number(item.price).toFixed(2)}</p>
-                      <p className="text-[11px] text-muted-foreground">Cost: ${liveCost.toFixed(2)} · Margin: {margin}%</p>
+                      <p className="text-lg font-bold text-primary">${Number(item.price).toFixed(1)}</p>
+                      <p className="text-[11px] text-muted-foreground">Cost: ${liveCost.toFixed(1)} · Margin: {margin}%</p>
                     </div>
                   </div>
                   {/* Recipe & modifier badges */}
@@ -612,7 +612,7 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                 <div>
                   <Label className="text-xs text-muted-foreground">Ingredient Cost (auto)</Label>
                   <div className="mt-1 h-10 flex items-center rounded-md border border-border bg-muted/50 px-3 text-sm font-semibold text-foreground">
-                    ${ingredientCost.toFixed(2)}
+                    ${ingredientCost.toFixed(1)}
                   </div>
                 </div>
                 <div>
@@ -627,7 +627,7 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
               {marginSuggestedPrice && (
                 <div className="flex items-center gap-2 text-xs">
                   <span className="text-muted-foreground">At {targetMargin}% margin →</span>
-                  <span className="font-bold text-primary">${marginSuggestedPrice.toFixed(2)}</span>
+                  <span className="font-bold text-primary">${marginSuggestedPrice.toFixed(1)}</span>
                   <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={() => setForm(f => ({ ...f, price: Math.ceil(marginSuggestedPrice * 4) / 4 }))}>
                     Use
                   </Button>
@@ -670,15 +670,15 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                     <span>Margin: <strong className={`${((1 - ingredientCost / form.price) * 100) >= targetMargin ? "text-success" : "text-warning"}`}>
                       {((1 - ingredientCost / form.price) * 100).toFixed(1)}%
                     </strong></span>
-                    <span>Profit: <strong className="text-foreground">${(form.price - ingredientCost).toFixed(2)}</strong></span>
+                    <span>Profit: <strong className="text-foreground">${(form.price - ingredientCost).toFixed(1)}</strong></span>
                   </div>
                   {modifierCostRange.max > 0 && (
                     <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-                      <span>Base cost: <strong className="text-foreground">${baseIngredientCost.toFixed(2)}</strong></span>
+                      <span>Base cost: <strong className="text-foreground">${baseIngredientCost.toFixed(1)}</strong></span>
                       <span>+ Modifier cost: <strong className="text-foreground">
                         {modifierCostRange.min === modifierCostRange.max 
-                          ? `$${modifierCostRange.min.toFixed(2)}`
-                          : `$${modifierCostRange.min.toFixed(2)}–$${modifierCostRange.max.toFixed(2)}`}
+                          ? `$${modifierCostRange.min.toFixed(1)}`
+                          : `$${modifierCostRange.min.toFixed(1)}–$${modifierCostRange.max.toFixed(1)}`}
                       </strong></span>
                     </div>
                   )}
@@ -811,7 +811,7 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                               }, 0);
                               return optCost > 0 ? (
                                 <span className="text-[10px] font-semibold text-warning">
-                                  Option cost: ${optCost.toFixed(2)}
+                                  Option cost: ${optCost.toFixed(1)}
                                 </span>
                               ) : null;
                             })()}

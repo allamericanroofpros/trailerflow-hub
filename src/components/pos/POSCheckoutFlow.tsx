@@ -151,7 +151,7 @@ export default function POSCheckoutFlow({
           </button>
           <div className="text-right">
             <p className="text-xs text-muted-foreground font-semibold">Total</p>
-            <p className="text-xl font-black text-card-foreground">${currentTotal.toFixed(2)}</p>
+            <p className="text-xl font-black text-card-foreground">${currentTotal.toFixed(1)}</p>
           </div>
         </div>
 
@@ -168,7 +168,7 @@ export default function POSCheckoutFlow({
               <div className="text-center">
                 <h3 className="text-lg font-black text-card-foreground">Payment Method</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Charge <span className="font-black text-card-foreground">${total.toFixed(2)}</span>
+                  Charge <span className="font-black text-card-foreground">${total.toFixed(1)}</span>
                 </p>
                 {surchargeSettings?.enabled && (
                   <p className="text-xs text-amber-600 mt-1">
@@ -213,7 +213,7 @@ export default function POSCheckoutFlow({
             >
               <div className="text-center">
                 <h3 className="text-lg font-black text-card-foreground">Add Tip</h3>
-                <p className="text-sm text-muted-foreground mt-1">Subtotal: ${subtotal.toFixed(2)}</p>
+                <p className="text-sm text-muted-foreground mt-1">Subtotal: ${subtotal.toFixed(1)}</p>
               </div>
 
               {/* Tip type toggle */}
@@ -250,7 +250,7 @@ export default function POSCheckoutFlow({
                     >
                       <p className="text-lg">{pct}%</p>
                       <p className="text-xs text-muted-foreground mt-0.5">
-                        ${(subtotal * pct / 100).toFixed(2)}
+                        ${(subtotal * pct / 100).toFixed(1)}
                       </p>
                     </button>
                   ))}
@@ -270,7 +270,7 @@ export default function POSCheckoutFlow({
               {surchargeAmount > 0 && (
                 <div className="text-center">
                   <p className="text-xs text-muted-foreground">
-                    {surchargeSettings?.label}: <span className="font-bold text-card-foreground">${surchargeAmount.toFixed(2)}</span>
+                    {surchargeSettings?.label}: <span className="font-bold text-card-foreground">${surchargeAmount.toFixed(1)}</span>
                   </p>
                 </div>
               )}
@@ -278,8 +278,8 @@ export default function POSCheckoutFlow({
               {(tipAmount > 0 || surchargeAmount > 0) && (
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground">
-                    {tipAmount > 0 && <>Tip: <span className="font-black text-success">${tipAmount.toFixed(2)}</span>{" · "}</>}
-                    New total: <span className="font-black text-card-foreground">${(total + surchargeAmount + tipAmount).toFixed(2)}</span>
+                    {tipAmount > 0 && <>Tip: <span className="font-black text-success">${tipAmount.toFixed(1)}</span>{" · "}</>}
+                    New total: <span className="font-black text-card-foreground">${(total + surchargeAmount + tipAmount).toFixed(1)}</span>
                   </p>
                 </div>
               )}
@@ -290,7 +290,7 @@ export default function POSCheckoutFlow({
                 onClick={handleTipComplete}
                 disabled={isPending}
               >
-                {tipAmount > 0 ? `Add Tip · $${tipAmount.toFixed(2)}` : `No Tip · Done`}
+                {tipAmount > 0 ? `Add Tip · $${tipAmount.toFixed(1)}` : `No Tip · Done`}
               </Button>
             </motion.div>
           )}
@@ -307,7 +307,7 @@ export default function POSCheckoutFlow({
               <div className="text-center">
                 <h3 className="text-lg font-black text-card-foreground">Cash Tendered</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Amount due: <span className="font-black text-card-foreground">${total.toFixed(2)}</span>
+                  Amount due: <span className="font-black text-card-foreground">${total.toFixed(1)}</span>
                 </p>
               </div>
 
@@ -342,7 +342,7 @@ export default function POSCheckoutFlow({
               {Number(cashTendered) >= total && (
                 <div className="rounded-2xl bg-success/10 border-2 border-success/30 p-4 text-center">
                   <p className="text-sm text-muted-foreground font-semibold">Change Due</p>
-                  <p className="text-4xl font-black text-success">${changeDue.toFixed(2)}</p>
+                  <p className="text-4xl font-black text-success">${changeDue.toFixed(1)}</p>
                 </div>
               )}
 
@@ -355,7 +355,7 @@ export default function POSCheckoutFlow({
                 {isPending ? (
                   <><Loader2 className="h-5 w-5 animate-spin mr-2" /> Processing...</>
                 ) : (
-                  `Complete Sale · $${total.toFixed(2)}`
+                  `Complete Sale · $${total.toFixed(1)}`
                 )}
               </Button>
             </motion.div>

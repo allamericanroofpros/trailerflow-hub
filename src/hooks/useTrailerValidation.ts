@@ -46,7 +46,7 @@ Type: ${trailerData.type || "Not specified"}
 Specialties: ${trailerData.specialties || "Not specified"}
 
 NUMBERS TO VALIDATE:
-- Average Ticket: $${ticket.toFixed(2)}
+- Average Ticket: $${ticket.toFixed(1)}
 - Customers/Hour: ${custPerHr}
 - Revenue/Hour (calculated): $${revenuePerHr.toFixed(0)}
 - Food Cost %: ${foodCostPct}%

@@ -72,8 +72,8 @@ export default function TimeClockPage() {
               <DollarSign className="h-4 w-4 text-warning" />
               <span className="text-xs font-semibold text-muted-foreground uppercase">Labor Cost</span>
             </div>
-            <p className="text-2xl font-bold text-warning">${totalCost.toFixed(2)}</p>
-            <p className="text-[10px] text-muted-foreground">Tips: ${totalTips.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-warning">${totalCost.toFixed(1)}</p>
+            <p className="text-[10px] text-muted-foreground">Tips: ${totalTips.toFixed(1)}</p>
           </div>
         </div>
 
@@ -90,7 +90,7 @@ export default function TimeClockPage() {
                   <p className="text-sm font-bold text-foreground">{staffMap[c.staff_id] || "Unknown"}</p>
                   <p className="text-xs text-muted-foreground">
                     Since {new Date(c.clock_in).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                    {" · "}${Number(c.hourly_rate).toFixed(2)}/hr
+                    {" · "}${Number(c.hourly_rate).toFixed(1)}/hr
                   </p>
                 </div>
               ))}
@@ -142,9 +142,9 @@ export default function TimeClockPage() {
                           {new Date(e.clock_out!).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
                         </td>
                         <td className="px-4 py-3 text-right font-medium">{hrs.toFixed(1)}h</td>
-                        <td className="px-4 py-3 text-right text-muted-foreground">${Number(e.hourly_rate).toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right font-semibold">${cost.toFixed(2)}</td>
-                        <td className="px-4 py-3 text-right text-muted-foreground">${Number(e.tips_earned || 0).toFixed(2)}</td>
+                        <td className="px-4 py-3 text-right text-muted-foreground">${Number(e.hourly_rate).toFixed(1)}</td>
+                        <td className="px-4 py-3 text-right font-semibold">${cost.toFixed(1)}</td>
+                        <td className="px-4 py-3 text-right text-muted-foreground">${Number(e.tips_earned || 0).toFixed(1)}</td>
                         <td className="px-4 py-3 text-muted-foreground truncate max-w-[150px]">{e.notes || "—"}</td>
                       </tr>
                     );

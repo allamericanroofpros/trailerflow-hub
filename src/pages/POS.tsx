@@ -340,7 +340,7 @@ export default function POS() {
         >
           <div className="flex-1 min-w-0">
             <p className="text-base font-bold text-card-foreground truncate">{item.name}</p>
-            <p className="text-sm text-muted-foreground">${item.price.toFixed(2)} ea</p>
+            <p className="text-sm text-muted-foreground">${item.price.toFixed(1)} ea</p>
           </div>
           <div className="flex items-center gap-1">
             <button
@@ -358,7 +358,7 @@ export default function POS() {
             </button>
           </div>
           <p className="w-20 text-right text-base font-black text-card-foreground">
-            ${(item.price * item.quantity).toFixed(2)}
+            ${(item.price * item.quantity).toFixed(1)}
           </p>
         </motion.div>
       </div>
@@ -384,24 +384,24 @@ export default function POS() {
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>Subtotal</span>
-            <span className="font-semibold">${subtotal.toFixed(2)}</span>
+            <span className="font-semibold">${subtotal.toFixed(1)}</span>
           </div>
           {taxSettings.inclusive ? (
             tax > 0 && (
               <div className="flex justify-between text-xs text-muted-foreground/70 italic">
                 <span>Includes {taxSettings.label}</span>
-                <span>${tax.toFixed(2)}</span>
+                <span>${tax.toFixed(1)}</span>
               </div>
             )
           ) : (
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>{taxSettings.label}{taxSettings.enabled && taxSettings.percent > 0 ? ` (${taxSettings.percent}%)` : ""}</span>
-              <span className="font-semibold">${tax.toFixed(2)}</span>
+              <span className="font-semibold">${tax.toFixed(1)}</span>
             </div>
           )}
           <div className="flex justify-between font-black text-xl text-card-foreground pt-2 border-t-2 border-border">
             <span>Total</span>
-            <span>${total.toFixed(2)}</span>
+            <span>${total.toFixed(1)}</span>
           </div>
         </div>
 
@@ -441,7 +441,7 @@ export default function POS() {
               }}
               disabled={createOrder.isPending}
             >
-              Charge ${total.toFixed(2)}
+              Charge ${total.toFixed(1)}
             </Button>
             <button
               onClick={() => { setCart([]); if (isCompact) setMobileCartOpen(false); }}

@@ -38,7 +38,7 @@ export function useAIDiscovery(searchQuery?: string) {
         return `TRAILER: ${t.name} (${t.type || "Unknown type"})
   Description: ${t.description || "No description"}
   Specialties: ${t.specialties || "Not specified"}
-  Avg Ticket: $${avgTicket.toFixed(2)}
+  Avg Ticket: $${avgTicket.toFixed(1)}
   Customers/Hour: ${custPerHr}
   Food Cost: ${foodCostPct}%
   Operating Cost: $${hourlyCost}/hr

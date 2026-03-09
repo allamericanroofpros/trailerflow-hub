@@ -80,10 +80,10 @@ const POSSalesView = forwardRef<HTMLDivElement>(function POSSalesView(_props, re
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: "Today's Revenue", value: `$${todayStats.totalRevenue.toFixed(2)}`, icon: DollarSign, accent: "text-primary" },
+          { label: "Today's Revenue", value: `$${todayStats.totalRevenue.toFixed(1)}`, icon: DollarSign, accent: "text-primary" },
           { label: "Orders", value: todayStats.todayOrders.length.toString(), icon: Receipt, accent: "text-primary" },
-          { label: "Avg Ticket", value: `$${todayStats.avgTicket.toFixed(2)}`, icon: TrendingUp, accent: "text-primary" },
-          { label: "Tips", value: `$${todayStats.totalTips.toFixed(2)}`, icon: DollarSign, accent: "text-success" },
+          { label: "Avg Ticket", value: `$${todayStats.avgTicket.toFixed(1)}`, icon: TrendingUp, accent: "text-primary" },
+          { label: "Tips", value: `$${todayStats.totalTips.toFixed(1)}`, icon: DollarSign, accent: "text-success" },
         ].map((kpi) => (
           <div key={kpi.label} className="rounded-2xl border-2 border-border bg-card p-4 md:p-5">
             <div className="flex items-center gap-2 mb-2">
@@ -105,7 +105,7 @@ const POSSalesView = forwardRef<HTMLDivElement>(function POSSalesView(_props, re
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} width={50} />
                 <Tooltip
-                  formatter={(value: number) => [`$${value.toFixed(2)}`, "Revenue"]}
+                  formatter={(value: number) => [`$${value.toFixed(1)}`, "Revenue"]}
                   contentStyle={{ borderRadius: 12, border: "2px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: 13, fontWeight: 700 }}
                 />
                 <Bar dataKey="revenue" radius={[6, 6, 0, 0]}>
@@ -136,7 +136,7 @@ const POSSalesView = forwardRef<HTMLDivElement>(function POSSalesView(_props, re
                   <p className="text-sm font-bold text-card-foreground capitalize">{method}</p>
                   <p className="text-xs text-muted-foreground">{data.count} orders</p>
                 </div>
-                <p className="text-base font-black text-card-foreground">${data.total.toFixed(2)}</p>
+                <p className="text-base font-black text-card-foreground">${data.total.toFixed(1)}</p>
               </div>
             ))}
             {Object.keys(todayStats.byPayment).length === 0 && (
@@ -158,7 +158,7 @@ const POSSalesView = forwardRef<HTMLDivElement>(function POSSalesView(_props, re
                   <p className="text-sm font-bold text-card-foreground truncate">{item.name}</p>
                   <p className="text-xs text-muted-foreground">{item.qty} sold</p>
                 </div>
-                <p className="text-base font-black text-card-foreground">${item.revenue.toFixed(2)}</p>
+                <p className="text-base font-black text-card-foreground">${item.revenue.toFixed(1)}</p>
               </div>
             ))}
             {todayStats.topItems.length === 0 && (

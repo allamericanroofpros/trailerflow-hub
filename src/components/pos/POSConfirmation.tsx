@@ -99,7 +99,7 @@ export default function POSConfirmation({
                 <span className="text-muted-foreground">
                   <span className="font-black text-card-foreground">{item.quantity}×</span> {item.name}
                 </span>
-                <span className="font-bold text-card-foreground">${(item.price * item.quantity).toFixed(2)}</span>
+                <span className="font-bold text-card-foreground">${(item.price * item.quantity).toFixed(1)}</span>
               </div>
             ))}
           </div>
@@ -107,36 +107,36 @@ export default function POSConfirmation({
           <div className="border-t-2 border-border pt-3 space-y-1.5">
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>Subtotal</span>
-              <span className="font-semibold">${subtotal.toFixed(2)}</span>
+              <span className="font-semibold">${subtotal.toFixed(1)}</span>
             </div>
             {taxInclusive ? (
               tax > 0 && (
                 <div className="flex justify-between text-xs text-muted-foreground/70 italic">
                   <span>Includes {taxLabel || "Tax"}</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span>${tax.toFixed(1)}</span>
                 </div>
               )
             ) : (
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>{taxLabel || "Tax"}</span>
-                <span className="font-semibold">${tax.toFixed(2)}</span>
+                <span className="font-semibold">${tax.toFixed(1)}</span>
               </div>
             )}
             {tip > 0 && (
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>Tip</span>
-                <span className="font-semibold text-success">${tip.toFixed(2)}</span>
+                <span className="font-semibold text-success">${tip.toFixed(1)}</span>
               </div>
             )}
             {(surchargeAmount ?? 0) > 0 && (
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>{surchargeLabel || "Non-Cash Adjustment"}</span>
-                <span className="font-semibold">${(surchargeAmount ?? 0).toFixed(2)}</span>
+                <span className="font-semibold">${(surchargeAmount ?? 0).toFixed(1)}</span>
               </div>
             )}
             <div className="flex justify-between text-lg font-black text-card-foreground pt-2 border-t-2 border-border">
               <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+              <span>${total.toFixed(1)}</span>
             </div>
           </div>
 
@@ -150,12 +150,12 @@ export default function POSConfirmation({
               <>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Cash tendered</span>
-                  <span className="font-bold text-card-foreground">${cashTendered.toFixed(2)}</span>
+                  <span className="font-bold text-card-foreground">${cashTendered.toFixed(1)}</span>
                 </div>
                 {changeDue != null && changeDue > 0 && (
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Change</span>
-                    <span className="font-black text-success">${changeDue.toFixed(2)}</span>
+                    <span className="font-black text-success">${changeDue.toFixed(1)}</span>
                   </div>
                 )}
               </>

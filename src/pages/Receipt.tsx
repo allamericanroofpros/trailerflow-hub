@@ -78,7 +78,7 @@ export default function ReceiptPage() {
                   {item.notes?.startsWith("Custom: ") ? item.notes.replace("Custom: ", "") : item.menu_items?.name || "Item"}
                 </span>
                 <span className="font-bold text-card-foreground">
-                  ${(Number(item.unit_price) * item.quantity).toFixed(2)}
+                  ${(Number(item.unit_price) * item.quantity).toFixed(1)}
                 </span>
               </div>
             ))}
@@ -88,36 +88,36 @@ export default function ReceiptPage() {
           <div className="px-6 py-4 border-t border-border space-y-1.5">
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>Subtotal</span>
-              <span className="font-semibold">${Number(order.subtotal).toFixed(2)}</span>
+              <span className="font-semibold">${Number(order.subtotal).toFixed(1)}</span>
             </div>
             {order.tax_inclusive ? (
               Number(order.tax) > 0 && (
                 <div className="flex justify-between text-xs text-muted-foreground/70 italic">
                   <span>Includes {order.tax_label || "Tax"}</span>
-                  <span>${Number(order.tax).toFixed(2)}</span>
+                  <span>${Number(order.tax).toFixed(1)}</span>
                 </div>
               )
             ) : (
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>{order.tax_label || "Tax"}</span>
-                <span className="font-semibold">${Number(order.tax).toFixed(2)}</span>
+                <span className="font-semibold">${Number(order.tax).toFixed(1)}</span>
               </div>
             )}
             {Number(order.tip) > 0 && (
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>Tip</span>
-                <span className="font-semibold">${Number(order.tip).toFixed(2)}</span>
+                <span className="font-semibold">${Number(order.tip).toFixed(1)}</span>
               </div>
             )}
             {Number(order.surcharge_amount) > 0 && (
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>{order.surcharge_label || "Non-Cash Adjustment"}</span>
-                <span className="font-semibold">${Number(order.surcharge_amount).toFixed(2)}</span>
+                <span className="font-semibold">${Number(order.surcharge_amount).toFixed(1)}</span>
               </div>
             )}
             <div className="flex justify-between text-lg font-black text-card-foreground pt-2 border-t border-border">
               <span>Total</span>
-              <span>${Number(order.total).toFixed(2)}</span>
+              <span>${Number(order.total).toFixed(1)}</span>
             </div>
           </div>
 

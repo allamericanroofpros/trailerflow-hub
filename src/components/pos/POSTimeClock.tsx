@@ -193,15 +193,15 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
             <DollarSign className="h-4 w-4 text-warning" />
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Running Cost</span>
           </div>
-          <p className="text-2xl font-black text-warning">${totalActiveCost.toFixed(2)}</p>
+          <p className="text-2xl font-black text-warning">${totalActiveCost.toFixed(1)}</p>
         </div>
         <div className="rounded-2xl border-2 border-border bg-card p-4">
           <div className="flex items-center gap-2 mb-2">
             <DollarSign className="h-4 w-4 text-success" />
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Today's Labor</span>
           </div>
-          <p className="text-lg font-black text-card-foreground">${(todayTotalCost + totalActiveCost).toFixed(2)}</p>
-          <p className="text-[10px] text-muted-foreground">{(todayTotalHours + totalActiveHours).toFixed(1)}h · Tips: ${todayTotalTips.toFixed(2)}</p>
+          <p className="text-lg font-black text-card-foreground">${(todayTotalCost + totalActiveCost).toFixed(1)}</p>
+          <p className="text-[10px] text-muted-foreground">{(todayTotalHours + totalActiveHours).toFixed(1)}h · Tips: ${todayTotalTips.toFixed(1)}</p>
         </div>
       </div>
 
@@ -315,7 +315,7 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
                   <CheckCircle className="h-8 w-8 text-success" />
                 </div>
                 <p className="text-xl font-black text-success">{matchedStaff.name} Clocked In!</p>
-                <p className="text-sm text-muted-foreground">Rate: ${Number(matchedStaff.hourly_rate).toFixed(2)}/hr</p>
+                <p className="text-sm text-muted-foreground">Rate: ${Number(matchedStaff.hourly_rate).toFixed(1)}/hr</p>
                 <Button variant="outline" className="h-12 font-bold rounded-xl w-full" onClick={clearPin}>Done</Button>
               </motion.div>
             )}
@@ -331,7 +331,7 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
                     {formatDuration((now.getTime() - new Date(matchedClock.clock_in).getTime()) / 3600000)}
                   </p>
                   <p className="text-sm font-bold text-warning mt-1">
-                    ${((now.getTime() - new Date(matchedClock.clock_in).getTime()) / 3600000 * Number(matchedClock.hourly_rate)).toFixed(2)} earned
+                    ${((now.getTime() - new Date(matchedClock.clock_in).getTime()) / 3600000 * Number(matchedClock.hourly_rate)).toFixed(1)} earned
                   </p>
                 </div>
 
@@ -384,7 +384,7 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-card-foreground truncate">{(c as any).staff_members?.name || "Staff"}</p>
                     <p className="text-xs text-muted-foreground">
-                      {formatDuration(c.hours)} · ${c.cost.toFixed(2)}
+                      {formatDuration(c.hours)} · ${c.cost.toFixed(1)}
                     </p>
                   </div>
                   <p className="text-xs font-bold text-primary">${Number(c.hourly_rate).toFixed(0)}/hr</p>
@@ -409,7 +409,7 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
                     </div>
                     <div className="text-right">
                       <p className="text-xs font-bold text-card-foreground">{hrs.toFixed(1)}h</p>
-                      <p className="text-[10px] text-muted-foreground">${(hrs * Number(e.hourly_rate)).toFixed(2)}</p>
+                      <p className="text-[10px] text-muted-foreground">${(hrs * Number(e.hourly_rate)).toFixed(1)}</p>
                     </div>
                   </div>
                 );

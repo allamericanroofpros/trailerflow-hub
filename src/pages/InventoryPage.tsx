@@ -513,7 +513,7 @@ export default function Inventory() {
                             )}
                           </div>
                           <div><span className="text-muted-foreground">Par</span><p className="font-semibold text-card-foreground">{Number(item.par_level).toFixed(1)}</p></div>
-                          <div><span className="text-muted-foreground">Cost</span><p className="font-semibold text-card-foreground">${Number(item.cost_per_unit).toFixed(2)}</p></div>
+                          <div><span className="text-muted-foreground">Cost</span><p className="font-semibold text-card-foreground">${Number(item.cost_per_unit).toFixed(1)}</p></div>
                         </div>
                         <Button variant="outline" size="sm" className="text-xs h-8 w-full touch-manipulation"
                           onClick={() => setAdjustDialog({ id: item.id, name: item.name, unit: item.unit })}>
@@ -577,7 +577,7 @@ export default function Inventory() {
                             <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">
                               {shelfLife ? <span className={shelfLife <= 3 ? "text-destructive font-semibold" : shelfLife <= 7 ? "text-warning" : ""}>{shelfLife}d</span> : "—"}
                             </td>
-                            <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">${Number(item.cost_per_unit).toFixed(2)}</td>
+                            <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">${Number(item.cost_per_unit).toFixed(1)}</td>
                             <td className="text-right px-4 py-3 text-muted-foreground hidden lg:table-cell">{item.supplier || "—"}</td>
                             <td className="text-right px-4 py-3">
                               <div className="flex items-center justify-end gap-1">
@@ -641,7 +641,7 @@ export default function Inventory() {
                     <ShoppingCart className="h-4 w-4 text-primary" />
                     <h3 className="text-sm font-semibold text-card-foreground">Order List</h3>
                   </div>
-                  <span className="text-sm font-bold text-primary">Est. ${totalOrderCost.toFixed(2)}</span>
+                  <span className="text-sm font-bold text-primary">Est. ${totalOrderCost.toFixed(1)}</span>
                 </div>
                 <table className="w-full text-sm hidden sm:table">
                   <thead>
@@ -660,14 +660,14 @@ export default function Inventory() {
                         <td className="text-right px-4 py-2.5 text-muted-foreground">{need.current.toFixed(1)}</td>
                         <td className="text-right px-4 py-2.5 text-muted-foreground">{need.needed.toFixed(1)}</td>
                         <td className="text-right px-4 py-2.5 font-bold text-primary">{need.toOrder.toFixed(1)}</td>
-                        <td className="text-right px-4 py-2.5 font-semibold text-card-foreground">${need.totalCost.toFixed(2)}</td>
+                        <td className="text-right px-4 py-2.5 font-semibold text-card-foreground">${need.totalCost.toFixed(1)}</td>
                       </tr>
                     ))}
                   </tbody>
                   <tfoot>
                     <tr className="border-t-2 border-border bg-secondary/50">
                       <td colSpan={4} className="px-4 py-2.5 font-bold text-card-foreground text-right">Total</td>
-                      <td className="text-right px-4 py-2.5 font-black text-primary text-base">${totalOrderCost.toFixed(2)}</td>
+                      <td className="text-right px-4 py-2.5 font-black text-primary text-base">${totalOrderCost.toFixed(1)}</td>
                     </tr>
                   </tfoot>
                 </table>
@@ -679,7 +679,7 @@ export default function Inventory() {
                         <p className="text-sm font-semibold text-card-foreground">{need.name}</p>
                         <p className="text-sm font-bold text-primary">{need.toOrder.toFixed(1)} {need.unit}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">Have {need.current.toFixed(1)} · Need {need.needed.toFixed(1)} · ${need.totalCost.toFixed(2)}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Have {need.current.toFixed(1)} · Need {need.needed.toFixed(1)} · ${need.totalCost.toFixed(1)}</p>
                     </div>
                   ))}
                 </div>

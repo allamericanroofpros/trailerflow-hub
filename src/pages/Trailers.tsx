@@ -699,7 +699,7 @@ export default function Trailers() {
                     {Number((t as any).avg_ticket) > 0 && (
                       <div className="flex items-center gap-1 text-xs text-muted-foreground">
                         <DollarSign className="h-3 w-3" />
-                        <span>${Number((t as any).avg_ticket).toFixed(2)} avg ticket</span>
+                        <span>${Number((t as any).avg_ticket).toFixed(1)} avg ticket</span>
                       </div>
                     )}
                     {Number((t as any).avg_customers_per_hour) > 0 && (

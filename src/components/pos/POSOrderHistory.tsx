@@ -212,7 +212,7 @@ export default function POSOrderHistory() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-base font-black text-card-foreground">
-                        ${Number(order.total).toFixed(2)}
+                        ${Number(order.total).toFixed(1)}
                       </p>
                       <span className={`inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-xs font-bold ${sc.color}`}>
                         {sc.icon} {sc.label}
@@ -276,7 +276,7 @@ export default function POSOrderHistory() {
                           <span className="text-muted-foreground ml-1">({item.notes})</span>
                         )}
                       </span>
-                      <span className="font-bold">${(item.unit_price * item.quantity).toFixed(2)}</span>
+                      <span className="font-bold">${(item.unit_price * item.quantity).toFixed(1)}</span>
                     </div>
                   ))}
                 </div>
@@ -285,36 +285,36 @@ export default function POSOrderHistory() {
                 <div className="border-t-2 border-border pt-3 space-y-1.5">
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Subtotal</span>
-                    <span>${Number(selectedOrder.subtotal).toFixed(2)}</span>
+                    <span>${Number(selectedOrder.subtotal).toFixed(1)}</span>
                   </div>
                   {selectedOrder.tax_inclusive ? (
                     Number(selectedOrder.tax) > 0 && (
                       <div className="flex justify-between text-xs text-muted-foreground/70 italic">
                         <span>Includes {selectedOrder.tax_label || "Tax"}</span>
-                        <span>${Number(selectedOrder.tax).toFixed(2)}</span>
+                         <span>${Number(selectedOrder.tax).toFixed(1)}</span>
                       </div>
                     )
                   ) : (
                     <div className="flex justify-between text-sm text-muted-foreground">
                       <span>{selectedOrder.tax_label || "Tax"}</span>
-                      <span>${Number(selectedOrder.tax).toFixed(2)}</span>
+                      <span>${Number(selectedOrder.tax).toFixed(1)}</span>
                     </div>
                   )}
                   {Number(selectedOrder.tip) > 0 && (
                     <div className="flex justify-between text-sm text-success">
                       <span>Tip</span>
-                      <span>${Number(selectedOrder.tip).toFixed(2)}</span>
+                      <span>${Number(selectedOrder.tip).toFixed(1)}</span>
                     </div>
                   )}
                   {Number(selectedOrder.surcharge_amount) > 0 && (
                     <div className="flex justify-between text-sm text-muted-foreground">
                       <span>{selectedOrder.surcharge_label || "Non-Cash Adjustment"}</span>
-                      <span>${Number(selectedOrder.surcharge_amount).toFixed(2)}</span>
+                      <span>${Number(selectedOrder.surcharge_amount).toFixed(1)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-lg font-black text-card-foreground pt-2 border-t border-border">
                     <span>Total</span>
-                    <span>${Number(selectedOrder.total).toFixed(2)}</span>
+                    <span>${Number(selectedOrder.total).toFixed(1)}</span>
                   </div>
                 </div>
 

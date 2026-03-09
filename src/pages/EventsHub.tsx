@@ -822,7 +822,7 @@ Return ONLY a JSON object with: revenue_forecast_low (number), revenue_forecast_
                   ) : null}
                   {selectedEvent.attendance_estimate ? (
                     <p className="text-xs text-muted-foreground">
-                      ~${((selectedEvent.revenue_forecast_low || 0) / selectedEvent.attendance_estimate).toFixed(2)}-${((selectedEvent.revenue_forecast_high || 0) / selectedEvent.attendance_estimate).toFixed(2)} rev/attendee
+                      ~${((selectedEvent.revenue_forecast_low || 0) / selectedEvent.attendance_estimate).toFixed(1)}-${((selectedEvent.revenue_forecast_high || 0) / selectedEvent.attendance_estimate).toFixed(1)} rev/attendee
                     </p>
                   ) : null}
                   <Button

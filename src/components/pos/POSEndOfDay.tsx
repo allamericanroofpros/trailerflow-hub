@@ -176,7 +176,7 @@ const POSEndOfDay = forwardRef<HTMLDivElement, { onClose: () => void; openingCas
                 <div className="grid grid-cols-2 gap-3">
                   <div className="rounded-2xl border-2 border-border bg-background p-4 text-center">
                     <p className="text-xs font-bold text-muted-foreground uppercase">Revenue</p>
-                    <p className="text-2xl font-black text-card-foreground">${todayStats.totalRevenue.toFixed(2)}</p>
+                    <p className="text-2xl font-black text-card-foreground">${todayStats.totalRevenue.toFixed(1)}</p>
                   </div>
                   <div className="rounded-2xl border-2 border-border bg-background p-4 text-center">
                     <p className="text-xs font-bold text-muted-foreground uppercase">Orders</p>
@@ -184,11 +184,11 @@ const POSEndOfDay = forwardRef<HTMLDivElement, { onClose: () => void; openingCas
                   </div>
                   <div className="rounded-2xl border-2 border-border bg-background p-4 text-center">
                     <p className="text-xs font-bold text-muted-foreground uppercase">Tips</p>
-                    <p className="text-2xl font-black text-success">${todayStats.totalTips.toFixed(2)}</p>
+                    <p className="text-2xl font-black text-success">${todayStats.totalTips.toFixed(1)}</p>
                   </div>
                   <div className="rounded-2xl border-2 border-border bg-background p-4 text-center">
                     <p className="text-xs font-bold text-muted-foreground uppercase">Tax Collected</p>
-                    <p className="text-2xl font-black text-card-foreground">${todayStats.totalTax.toFixed(2)}</p>
+                    <p className="text-2xl font-black text-card-foreground">${todayStats.totalTax.toFixed(1)}</p>
                   </div>
                 </div>
 
@@ -203,7 +203,7 @@ const POSEndOfDay = forwardRef<HTMLDivElement, { onClose: () => void; openingCas
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <p.icon className="h-4 w-4" /> {p.label}
                       </div>
-                      <span className="text-sm font-bold text-card-foreground">${p.value.toFixed(2)}</span>
+                      <span className="text-sm font-bold text-card-foreground">${p.value.toFixed(1)}</span>
                     </div>
                   ))}
                 </div>
@@ -226,7 +226,7 @@ const POSEndOfDay = forwardRef<HTMLDivElement, { onClose: () => void; openingCas
                 {/* Opening cash display */}
                 <div className="rounded-xl border-2 border-border bg-secondary/30 p-3 flex items-center justify-between">
                   <span className="text-sm font-bold text-muted-foreground">Opening Cash (from Start of Day)</span>
-                  <span className="text-lg font-black text-card-foreground">${openingCash.toFixed(2)}</span>
+                  <span className="text-lg font-black text-card-foreground">${openingCash.toFixed(1)}</span>
                 </div>
 
                 {/* Bills */}
@@ -246,7 +246,7 @@ const POSEndOfDay = forwardRef<HTMLDivElement, { onClose: () => void; openingCas
                         />
                         {Number(denomCounts[d.label] || 0) > 0 && (
                           <p className="text-[10px] text-primary font-bold mt-0.5">
-                            ${(Number(denomCounts[d.label]) * d.value).toFixed(2)}
+                            ${(Number(denomCounts[d.label]) * d.value).toFixed(1)}
                           </p>
                         )}
                       </div>
@@ -271,7 +271,7 @@ const POSEndOfDay = forwardRef<HTMLDivElement, { onClose: () => void; openingCas
                         />
                         {Number(denomCounts[d.label] || 0) > 0 && (
                           <p className="text-[10px] text-primary font-bold mt-0.5">
-                            ${(Number(denomCounts[d.label]) * d.value).toFixed(2)}
+                            ${(Number(denomCounts[d.label]) * d.value).toFixed(1)}
                           </p>
                         )}
                       </div>
@@ -282,7 +282,7 @@ const POSEndOfDay = forwardRef<HTMLDivElement, { onClose: () => void; openingCas
                 {/* Drawer total */}
                 <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-4 text-center">
                   <p className="text-xs font-bold text-muted-foreground">Drawer Total</p>
-                  <p className="text-3xl font-black text-card-foreground">${drawerTotal.toFixed(2)}</p>
+                  <p className="text-3xl font-black text-card-foreground">${drawerTotal.toFixed(1)}</p>
                 </div>
 
                 {/* Variance */}
@@ -292,14 +292,14 @@ const POSEndOfDay = forwardRef<HTMLDivElement, { onClose: () => void; openingCas
                     : Math.abs(cashVariance.variance) < 5 ? "border-warning/30 bg-warning/5"
                     : "border-destructive/30 bg-destructive/5"
                   }`}>
-                    <p className="text-xs font-bold text-muted-foreground">Expected: ${cashVariance.expected.toFixed(2)} (${openingCash.toFixed(2)} open + ${todayStats.cashSales.toFixed(2)} cash sales)</p>
-                    <p className="text-xs font-bold text-muted-foreground">Counted: ${cashVariance.actual.toFixed(2)}</p>
+                    <p className="text-xs font-bold text-muted-foreground">Expected: ${cashVariance.expected.toFixed(1)} (${openingCash.toFixed(1)} open + ${todayStats.cashSales.toFixed(1)} cash sales)</p>
+                    <p className="text-xs font-bold text-muted-foreground">Counted: ${cashVariance.actual.toFixed(1)}</p>
                     <p className={`text-2xl font-black mt-1 ${
                       Math.abs(cashVariance.variance) < 1 ? "text-success"
                       : Math.abs(cashVariance.variance) < 5 ? "text-warning"
                       : "text-destructive"
                     }`}>
-                      {cashVariance.variance >= 0 ? "+" : ""}${cashVariance.variance.toFixed(2)}
+                      {cashVariance.variance >= 0 ? "+" : ""}${cashVariance.variance.toFixed(1)}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {Math.abs(cashVariance.variance) < 1 ? "✅ Perfect!" : Math.abs(cashVariance.variance) < 5 ? "⚠️ Close enough" : "❌ Significant variance — check for errors"}
@@ -412,7 +412,7 @@ const POSEndOfDay = forwardRef<HTMLDivElement, { onClose: () => void; openingCas
                   <div className="rounded-xl border border-border bg-background p-4">
                     <p className="text-xs font-bold text-muted-foreground">Cash Variance</p>
                     <p className={`text-xl font-black ${Math.abs(cashVariance.variance) < 1 ? "text-success" : Math.abs(cashVariance.variance) < 5 ? "text-warning" : "text-destructive"}`}>
-                      {cashVariance.variance >= 0 ? "+" : ""}${cashVariance.variance.toFixed(2)}
+                      {cashVariance.variance >= 0 ? "+" : ""}${cashVariance.variance.toFixed(1)}
                     </p>
                   </div>
                 )}

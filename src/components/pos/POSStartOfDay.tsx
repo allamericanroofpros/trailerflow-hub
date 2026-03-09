@@ -298,7 +298,7 @@ export default function POSStartOfDay({ onComplete }: { onComplete: (data: Start
                           />
                           {Number(denomCounts[d.label] || 0) > 0 && (
                             <p className="text-[10px] text-primary font-bold mt-0.5">
-                              ${(Number(denomCounts[d.label]) * d.value).toFixed(2)}
+                              ${(Number(denomCounts[d.label]) * d.value).toFixed(1)}
                             </p>
                           )}
                         </div>
@@ -323,7 +323,7 @@ export default function POSStartOfDay({ onComplete }: { onComplete: (data: Start
                           />
                           {Number(denomCounts[d.label] || 0) > 0 && (
                             <p className="text-[10px] text-primary font-bold mt-0.5">
-                              ${(Number(denomCounts[d.label]) * d.value).toFixed(2)}
+                              ${(Number(denomCounts[d.label]) * d.value).toFixed(1)}
                             </p>
                           )}
                         </div>
@@ -334,7 +334,7 @@ export default function POSStartOfDay({ onComplete }: { onComplete: (data: Start
                   {/* Drawer total */}
                   <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-4 text-center">
                     <p className="text-xs font-bold text-muted-foreground">Drawer Total</p>
-                    <p className="text-3xl font-black text-card-foreground">${denomTotal.toFixed(2)}</p>
+                    <p className="text-3xl font-black text-card-foreground">${denomTotal.toFixed(1)}</p>
                   </div>
                 </div>
               ) : (

@@ -119,10 +119,10 @@ const POSReportView = forwardRef<HTMLDivElement>(function POSReportView(_props, 
       {/* Revenue Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: "Gross Revenue", value: `$${report.grossRevenue.toFixed(2)}`, icon: DollarSign, accent: "text-primary" },
-          { label: "Net Revenue", value: `$${report.netRevenue.toFixed(2)}`, icon: TrendingUp, accent: "text-success" },
+          { label: "Gross Revenue", value: `$${report.grossRevenue.toFixed(1)}`, icon: DollarSign, accent: "text-primary" },
+          { label: "Net Revenue", value: `$${report.netRevenue.toFixed(1)}`, icon: TrendingUp, accent: "text-success" },
           { label: "Rev / Hour", value: `$${report.revenuePerHour.toFixed(0)}`, icon: Clock, accent: "text-primary" },
-          { label: "Avg Ticket", value: `$${report.avgTicket.toFixed(2)}`, icon: Receipt, accent: "text-primary" },
+          { label: "Avg Ticket", value: `$${report.avgTicket.toFixed(1)}`, icon: Receipt, accent: "text-primary" },
         ].map((kpi) => (
           <div key={kpi.label} className="rounded-2xl border-2 border-border bg-card p-4">
             <div className="flex items-center gap-2 mb-1.5">
@@ -139,8 +139,8 @@ const POSReportView = forwardRef<HTMLDivElement>(function POSReportView(_props, 
         {[
           { label: "Orders", value: report.orderCount },
           { label: "Items Sold", value: report.totalItemsSold },
-          { label: "Tips Collected", value: `$${report.totalTips.toFixed(2)}` },
-          { label: "Tax Collected", value: `$${report.totalTax.toFixed(2)}` },
+          { label: "Tips Collected", value: `$${report.totalTips.toFixed(1)}` },
+          { label: "Tax Collected", value: `$${report.totalTax.toFixed(1)}` },
         ].map((m) => (
           <div key={m.label} className="rounded-2xl border-2 border-border bg-card p-4">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">{m.label}</p>
@@ -163,7 +163,7 @@ const POSReportView = forwardRef<HTMLDivElement>(function POSReportView(_props, 
                         <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v: number) => `$${v.toFixed(2)}`} />
+                    <Tooltip formatter={(v: number) => `$${v.toFixed(1)}`} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
@@ -172,7 +172,7 @@ const POSReportView = forwardRef<HTMLDivElement>(function POSReportView(_props, 
                   <div key={p.name} className="flex items-center gap-2">
                     <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
                     <span className="text-sm font-bold text-card-foreground capitalize flex-1">{p.name}</span>
-                    <span className="text-sm font-black text-card-foreground">${p.value.toFixed(2)}</span>
+                    <span className="text-sm font-black text-card-foreground">${p.value.toFixed(1)}</span>
                   </div>
                 ))}
               </div>
@@ -191,7 +191,7 @@ const POSReportView = forwardRef<HTMLDivElement>(function POSReportView(_props, 
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-bold text-card-foreground truncate flex-1">{item.name}</span>
                     <span className="text-xs text-muted-foreground ml-2">{item.qty} sold</span>
-                    <span className="text-sm font-black text-card-foreground ml-3">${item.revenue.toFixed(2)}</span>
+                    <span className="text-sm font-black text-card-foreground ml-3">${item.revenue.toFixed(1)}</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
                     <div
