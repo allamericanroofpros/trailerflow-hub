@@ -194,6 +194,21 @@ Deno.serve(async (req) => {
         else log("Connected account synced", { accountId: account.id, status: connectStatus });
         break;
       }
+
+      case "payment_intent.succeeded": {
+        const pi = event.data.object as Stripe.PaymentIntent;
+        const orgId = pi.metadata?.org_id;
+        const platformFeeCents = pi.metadata?.platform_fee_cents;
+        log("PaymentIntent succeeded", {
+          id: pi.id,
+          amount: pi.amount,
+          orgId,
+          platformFeeCents,
+          connectedAccount: pi.transfer_data?.destination ?? null,
+        });
+        // Future: record transaction, update order status, etc.
+        break;
+      }
     }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Unknown";
