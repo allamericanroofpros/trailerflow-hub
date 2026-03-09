@@ -12,7 +12,7 @@ import {
   Building2, Search, MoreHorizontal, Ban, CheckCircle, ChevronRight, ArrowLeft,
   Truck, UtensilsCrossed, ShoppingCart, DollarSign, Users, Copy, Edit3,
   Plus, Unlink, Calendar, Wrench, UserPlus, AlertTriangle, Heart,
-  MessageSquare, Tag, Clock, ChevronDown, Send, Activity, TrendingDown,
+  MessageSquare, Tag, Clock, ChevronDown, Send, Activity, TrendingDown, LogIn,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
@@ -108,6 +108,25 @@ function OrgDetailView({ orgId, onBack }: { orgId: string; onBack: () => void })
       return data;
     },
     onSuccess: (data) => { qc.invalidateQueries({ queryKey: ["admin_org_members", orgId] }); toast.success(data?.message || "Repair complete"); },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
+  const impersonateOwner = useMutation({
+    mutationFn: async () => {
+      if (!org?.owner_user_id) throw new Error("No owner found");
+      const { data, error } = await invoke("impersonate", { user_id: org.owner_user_id });
+      if (error || data?.error) throw new Error(data?.error || error?.message);
+      return data;
+    },
+    onSuccess: (data) => {
+      localStorage.setItem("impersonating", JSON.stringify({
+        targetEmail: data.target_email,
+        targetName: data.target_name,
+        startedAt: new Date().toISOString(),
+      }));
+      const verifyUrl = `${import.meta.env.VITE_SUPABASE_URL}/auth/v1/verify?token=${data.token_hash}&type=${data.verification_type}&redirect_to=${window.location.origin}`;
+      window.location.href = verifyUrl;
+    },
     onError: (e: Error) => toast.error(e.message),
   });
 
@@ -278,7 +297,10 @@ function OrgDetailView({ orgId, onBack }: { orgId: string; onBack: () => void })
           </div>
           <p className="text-xs text-muted-foreground">{org?.slug} · Created {org ? format(new Date(org.created_at), "PP") : "—"}</p>
         </div>
-        <div className="flex gap-2 shrink-0">
+        <div className="flex gap-2 shrink-0 flex-wrap">
+          <Button variant="outline" size="sm" onClick={() => impersonateOwner.mutate()} disabled={impersonateOwner.isPending || !org?.owner_user_id}>
+            <LogIn className="h-3.5 w-3.5 mr-1.5" />Impersonate Owner
+          </Button>
           <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(orgId); toast.success("Org ID copied"); }}><Copy className="h-3.5 w-3.5 mr-1.5" />Copy ID</Button>
           <Button variant="outline" size="sm" onClick={() => repairOrg.mutate()} disabled={repairOrg.isPending}><Wrench className="h-3.5 w-3.5 mr-1.5" />Repair</Button>
         </div>

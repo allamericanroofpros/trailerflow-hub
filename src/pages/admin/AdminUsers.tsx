@@ -585,6 +585,26 @@ export default function AdminUsers() {
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const impersonateUser = useMutation({
+    mutationFn: async (user_id: string) => {
+      const { data, error } = await invoke("impersonate", { user_id });
+      if (error || data?.error) throw new Error(data?.error || error?.message);
+      return data;
+    },
+    onSuccess: (data) => {
+      // Store impersonation info for banner
+      localStorage.setItem("impersonating", JSON.stringify({
+        targetEmail: data.target_email,
+        targetName: data.target_name,
+        startedAt: new Date().toISOString(),
+      }));
+      // Redirect to the magic link verification
+      const verifyUrl = `${import.meta.env.VITE_SUPABASE_URL}/auth/v1/verify?token=${data.token_hash}&type=${data.verification_type}&redirect_to=${window.location.origin}`;
+      window.location.href = verifyUrl;
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   let filtered = users?.filter(
     (u) =>
       (u.full_name || "").toLowerCase().includes(search.toLowerCase()) ||
@@ -735,6 +755,9 @@ export default function AdminUsers() {
                       <DropdownMenuSeparator />
                       <DropdownMenuItem onClick={() => toggleBan.mutate({ user_id: u.user_id, banned: u.banned })}>
                         {u.banned ? <><Shield className="h-4 w-4 mr-2" />Enable</> : <><ShieldOff className="h-4 w-4 mr-2" />Disable</>}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => impersonateUser.mutate(u.user_id)} disabled={impersonateUser.isPending}>
+                        <LogIn className="h-4 w-4 mr-2" />Impersonate
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
