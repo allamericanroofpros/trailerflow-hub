@@ -31,6 +31,7 @@ export { TrailerContext };
 export function TopBar() {
   const { user } = useAuth();
   const { data: trailers } = useTrailers();
+  const navigate = useNavigate();
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
