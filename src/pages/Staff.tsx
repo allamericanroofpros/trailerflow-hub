@@ -668,24 +668,13 @@ export default function Staff() {
 
             {/* AI Schedule Suggestion */}
             {canManage("staff") && (
-              <div className="rounded-xl border border-primary/20 bg-primary/5 p-6 shadow-card">
-                <div className="flex items-center gap-2 mb-2">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  <h3 className="text-sm font-semibold text-card-foreground">AI Schedule Assistant</h3>
-                </div>
-                <p className="text-xs text-muted-foreground mb-3">
-                  Based on staff availability and upcoming events, AI can suggest tentative schedules. Assign staff from the Schedule tab, or let AI generate a draft.
-                </p>
-                <Button
-                  size="sm"
-                  className="gap-1.5"
-                  onClick={() => {
-                    toast.info("AI scheduling coming soon! For now, use the Schedule tab to manually assign staff based on their availability.");
-                  }}
-                >
-                  <Sparkles className="h-3.5 w-3.5" /> Suggest Schedule
-                </Button>
-              </div>
+              <AIScheduleSuggestion
+                staff={staff || []}
+                events={events || []}
+                assignments={assignments || []}
+                orgId={orgId}
+                onAssign={(staffId, eventId) => assignStaff.mutate({ staff_id: staffId, event_id: eventId })}
+              />
             )}
           </div>
         )}
