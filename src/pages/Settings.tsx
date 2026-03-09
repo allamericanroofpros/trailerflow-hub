@@ -186,6 +186,10 @@ export default function SettingsPage() {
       setTaxLabel(org.tax_label ?? "Sales Tax");
       setTaxPercent(String(org.tax_percent ?? 0));
       setTaxInclusive(org.tax_inclusive ?? false);
+      setBookingsEnabled(org.bookings_enabled ?? false);
+      setBookingDepositPercent(String(org.booking_deposit_percent ?? 25));
+      setBookingMinNoticeDays(String(org.booking_min_notice_days ?? 7));
+      setBookingPackages(Array.isArray(org.booking_service_packages) ? org.booking_service_packages : []);
       setPaymentSettingsLoaded(true);
     }
   }, [currentOrg, paymentSettingsLoaded]);
