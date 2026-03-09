@@ -573,7 +573,7 @@ export default function POS() {
                   <p className="text-base mt-1">Add items in the Menu page to start selling.</p>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                <div className="grid grid-cols-2 gap-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                   {filteredItems.map((item) => (
                     <motion.button
                       key={item.id}
