@@ -111,6 +111,25 @@ function OrgDetailView({ orgId, onBack }: { orgId: string; onBack: () => void })
     onError: (e: Error) => toast.error(e.message),
   });
 
+  const impersonateOwner = useMutation({
+    mutationFn: async () => {
+      if (!org?.owner_user_id) throw new Error("No owner found");
+      const { data, error } = await invoke("impersonate", { user_id: org.owner_user_id });
+      if (error || data?.error) throw new Error(data?.error || error?.message);
+      return data;
+    },
+    onSuccess: (data) => {
+      localStorage.setItem("impersonating", JSON.stringify({
+        targetEmail: data.target_email,
+        targetName: data.target_name,
+        startedAt: new Date().toISOString(),
+      }));
+      const verifyUrl = `${import.meta.env.VITE_SUPABASE_URL}/auth/v1/verify?token=${data.token_hash}&type=${data.verification_type}&redirect_to=${window.location.origin}`;
+      window.location.href = verifyUrl;
+    },
+    onError: (e: Error) => toast.error(e.message),
+  });
+
   const { data: members, refetch: refetchMembers } = useQuery({
     queryKey: ["admin_org_members", orgId],
     queryFn: async () => {
