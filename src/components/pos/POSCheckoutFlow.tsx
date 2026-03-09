@@ -307,7 +307,7 @@ export default function POSCheckoutFlow({
               <div className="text-center">
                 <h3 className="text-lg font-black text-card-foreground">Cash Tendered</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Amount due: <span className="font-black text-card-foreground">${total.toFixed(2)}</span>
+                  Amount due: <span className="font-black text-card-foreground">${total.toFixed(1)}</span>
                 </p>
               </div>
 
