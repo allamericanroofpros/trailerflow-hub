@@ -3,8 +3,9 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, ChevronRight, Truck, Check, Crown } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Crown } from "lucide-react";
 import { TIERS, type TierKey } from "@/config/tiers";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const VENDOR_TYPES = [
   "Food Truck",
