@@ -627,7 +627,7 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
               {marginSuggestedPrice && (
                 <div className="flex items-center gap-2 text-xs">
                   <span className="text-muted-foreground">At {targetMargin}% margin →</span>
-                  <span className="font-bold text-primary">${marginSuggestedPrice.toFixed(2)}</span>
+                  <span className="font-bold text-primary">${marginSuggestedPrice.toFixed(1)}</span>
                   <Button variant="ghost" size="sm" className="h-6 text-[10px] px-2" onClick={() => setForm(f => ({ ...f, price: Math.ceil(marginSuggestedPrice * 4) / 4 }))}>
                     Use
                   </Button>
