@@ -365,9 +365,9 @@ export default function AdminSettings() {
         )}
 
         {/* Demo Data Management */}
-        <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-4 sm:p-6 max-w-2xl">
+        <div className="rounded-xl border border-warning/30 bg-warning/5 p-4 sm:p-6 max-w-2xl">
           <div className="flex items-center gap-2 mb-3">
-            <FlaskConical className="h-4 w-4 text-amber-500" />
+            <FlaskConical className="h-4 w-4 text-warning" />
             <h3 className="text-sm font-semibold text-foreground">Demo Environment</h3>
           </div>
           <p className="text-xs text-muted-foreground mb-4">
@@ -380,7 +380,7 @@ export default function AdminSettings() {
             size="sm"
             onClick={handleResetDemo}
             disabled={resetting}
-            className="border-amber-500/30 text-amber-600 hover:bg-amber-500/10"
+            className="border-warning/30 text-warning hover:bg-warning/10"
           >
             {resetting ? (
               <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
