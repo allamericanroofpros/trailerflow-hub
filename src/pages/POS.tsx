@@ -390,7 +390,7 @@ export default function POS() {
             tax > 0 && (
               <div className="flex justify-between text-xs text-muted-foreground/70 italic">
                 <span>Includes {taxSettings.label}</span>
-                <span>${tax.toFixed(2)}</span>
+                <span>${tax.toFixed(1)}</span>
               </div>
             )
           ) : (
