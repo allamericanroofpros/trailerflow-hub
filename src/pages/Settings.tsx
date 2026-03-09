@@ -217,6 +217,25 @@ export default function SettingsPage() {
     onError: (e: any) => toast.error(e.message),
   });
 
+  const saveBookingSettings = useMutation({
+    mutationFn: async () => {
+      if (!currentOrg) throw new Error("No org");
+      const { error } = await supabase.from("organizations").update({
+        bookings_enabled: bookingsEnabled,
+        booking_deposit_percent: parseFloat(bookingDepositPercent) || 25,
+        booking_min_notice_days: parseInt(bookingMinNoticeDays) || 7,
+        booking_service_packages: bookingPackages,
+      } as any).eq("id", currentOrg.id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["org_memberships"] });
+      refreshOrg();
+      toast.success("Booking settings saved");
+    },
+    onError: (e: any) => toast.error(e.message),
+  });
+
   // Sync form state when profile loads
   const profileLoaded = profile && !businessName && !fullName;
   if (profileLoaded) {
