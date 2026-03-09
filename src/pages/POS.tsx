@@ -384,7 +384,7 @@ export default function POS() {
         <div className="space-y-2">
           <div className="flex justify-between text-sm text-muted-foreground">
             <span>Subtotal</span>
-            <span className="font-semibold">${subtotal.toFixed(2)}</span>
+            <span className="font-semibold">${subtotal.toFixed(1)}</span>
           </div>
           {taxSettings.inclusive ? (
             tax > 0 && (
