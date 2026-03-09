@@ -163,7 +163,7 @@ const POSReportView = forwardRef<HTMLDivElement>(function POSReportView(_props, 
                         <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(v: number) => `$${v.toFixed(2)}`} />
+                    <Tooltip formatter={(v: number) => `$${v.toFixed(1)}`} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
