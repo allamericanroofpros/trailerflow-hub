@@ -200,8 +200,8 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
             <DollarSign className="h-4 w-4 text-success" />
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Today's Labor</span>
           </div>
-          <p className="text-lg font-black text-card-foreground">${(todayTotalCost + totalActiveCost).toFixed(2)}</p>
-          <p className="text-[10px] text-muted-foreground">{(todayTotalHours + totalActiveHours).toFixed(1)}h · Tips: ${todayTotalTips.toFixed(2)}</p>
+          <p className="text-lg font-black text-card-foreground">${(todayTotalCost + totalActiveCost).toFixed(1)}</p>
+          <p className="text-[10px] text-muted-foreground">{(todayTotalHours + totalActiveHours).toFixed(1)}h · Tips: ${todayTotalTips.toFixed(1)}</p>
         </div>
       </div>
 
