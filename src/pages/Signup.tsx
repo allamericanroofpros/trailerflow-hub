@@ -358,6 +358,9 @@ export default function Signup() {
           </div>
         </form>
 
+        {/* Contextual upsell */}
+        <UpsellCard step={step} trailerCount={trailerCount} teamSize={teamSize} />
+
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{" "}
           <Link to="/login" className="text-primary hover:underline">Sign in</Link>
