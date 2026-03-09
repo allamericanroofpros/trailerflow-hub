@@ -112,20 +112,35 @@ export default function PublicBooking() {
 
   const trailer = trailers?.find(t => t.id === selectedTrailer);
 
-  // Pricing estimate
-  const getPricingEstimate = (hours: number) => {
+  // Pricing estimate — uses guest count as primary driver when available
+  const getPricingEstimate = () => {
     if (!trailer) return null;
     const ticket = Number(trailer.avg_ticket) || 0;
+    if (!ticket) return null;
+
+    const guests = parseInt(form.guest_count) || 0;
     const custPerHr = Number(trailer.avg_customers_per_hour) || 0;
-    if (!ticket || !custPerHr) return null;
-    const revenue = ticket * custPerHr * hours;
-    return { min: Math.round(revenue * 0.6), max: Math.round(revenue * 1.1), typical: Math.round(revenue * 0.85) };
+    const hours = form.start_time && form.end_time
+      ? Math.max(1, (parseInt(form.end_time.split(":")[0]) * 60 + parseInt(form.end_time.split(":")[1]) - parseInt(form.start_time.split(":")[0]) * 60 - parseInt(form.start_time.split(":")[1])) / 60)
+      : 0;
+
+    if (guests > 0) {
+      // Guest-based: assume ~60-80% of guests buy, at avg ticket
+      const estimatedBuyers = guests * 0.7;
+      const baseRevenue = estimatedBuyers * ticket;
+      return { min: Math.round(baseRevenue * 0.75), max: Math.round(baseRevenue * 1.2), typical: Math.round(baseRevenue), basis: "guest count" as const };
+    }
+
+    if (hours > 0 && custPerHr > 0) {
+      // Time-based fallback
+      const revenue = ticket * custPerHr * hours;
+      return { min: Math.round(revenue * 0.6), max: Math.round(revenue * 1.1), typical: Math.round(revenue * 0.85), basis: "event duration" as const };
+    }
+
+    return null;
   };
 
-  const estimatedHours = form.start_time && form.end_time
-    ? Math.max(1, (parseInt(form.end_time.split(":")[0]) * 60 + parseInt(form.end_time.split(":")[1]) - parseInt(form.start_time.split(":")[0]) * 60 - parseInt(form.start_time.split(":")[1])) / 60)
-    : 4;
-  const pricing = getPricingEstimate(estimatedHours);
+  const pricing = getPricingEstimate();
 
   const handleSubmit = async () => {
     if (!form.client_name || !form.client_email || !form.event_name || !selectedDate) {
