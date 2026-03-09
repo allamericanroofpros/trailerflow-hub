@@ -342,7 +342,7 @@ export default function POSCheckoutFlow({
               {Number(cashTendered) >= total && (
                 <div className="rounded-2xl bg-success/10 border-2 border-success/30 p-4 text-center">
                   <p className="text-sm text-muted-foreground font-semibold">Change Due</p>
-                  <p className="text-4xl font-black text-success">${changeDue.toFixed(2)}</p>
+                  <p className="text-4xl font-black text-success">${changeDue.toFixed(1)}</p>
                 </div>
               )}
 
