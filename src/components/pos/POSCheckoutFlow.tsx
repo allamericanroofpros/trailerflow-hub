@@ -355,7 +355,7 @@ export default function POSCheckoutFlow({
                 {isPending ? (
                   <><Loader2 className="h-5 w-5 animate-spin mr-2" /> Processing...</>
                 ) : (
-                  `Complete Sale · $${total.toFixed(2)}`
+                  `Complete Sale · $${total.toFixed(1)}`
                 )}
               </Button>
             </motion.div>
