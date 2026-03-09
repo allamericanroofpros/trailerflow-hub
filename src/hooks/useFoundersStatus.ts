@@ -15,13 +15,13 @@ export function useFoundersStatus(): FoundersStatus {
   const { data: limits, isLoading: limitsLoading } = useQuery({
     queryKey: ["platform_limits"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("platform_limits" as any)
+      const { data, error } = await (supabase as any)
+        .from("platform_limits")
         .select("*")
         .eq("id", 1)
         .single();
       if (error) throw error;
-      return data as any;
+      return data;
     },
     staleTime: 30_000,
   });
