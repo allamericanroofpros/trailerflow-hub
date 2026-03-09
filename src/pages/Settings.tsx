@@ -446,20 +446,7 @@ export default function SettingsPage() {
 
                   {/* Appearance */}
                   {s.id === "appearance" && (
-                    <div className="space-y-4 max-w-lg">
-                      <div className="flex items-center justify-between py-3 border-b border-border">
-                        <div><p className="text-sm font-medium text-card-foreground">Theme</p><p className="text-xs text-muted-foreground">Choose your preferred color scheme</p></div>
-                        <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">Light</span>
-                      </div>
-                      <div className="flex items-center justify-between py-3 border-b border-border">
-                        <div><p className="text-sm font-medium text-card-foreground">Compact Mode</p><p className="text-xs text-muted-foreground">Use a denser layout for more information</p></div>
-                        <input type="checkbox" className="rounded border-border text-primary h-4 w-4" />
-                      </div>
-                      <div className="flex items-center justify-between py-3">
-                        <div><p className="text-sm font-medium text-card-foreground">Sidebar Collapsed by Default</p><p className="text-xs text-muted-foreground">Start with the sidebar minimized</p></div>
-                        <input type="checkbox" className="rounded border-border text-primary h-4 w-4" />
-                      </div>
-                    </div>
+                    <AppearanceSettings />
                   )}
                 </div>
               )}
