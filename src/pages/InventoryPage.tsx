@@ -513,7 +513,7 @@ export default function Inventory() {
                             )}
                           </div>
                           <div><span className="text-muted-foreground">Par</span><p className="font-semibold text-card-foreground">{Number(item.par_level).toFixed(1)}</p></div>
-                          <div><span className="text-muted-foreground">Cost</span><p className="font-semibold text-card-foreground">${Number(item.cost_per_unit).toFixed(2)}</p></div>
+                          <div><span className="text-muted-foreground">Cost</span><p className="font-semibold text-card-foreground">${Number(item.cost_per_unit).toFixed(1)}</p></div>
                         </div>
                         <Button variant="outline" size="sm" className="text-xs h-8 w-full touch-manipulation"
                           onClick={() => setAdjustDialog({ id: item.id, name: item.name, unit: item.unit })}>
