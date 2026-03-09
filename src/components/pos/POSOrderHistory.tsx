@@ -212,7 +212,7 @@ export default function POSOrderHistory() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-base font-black text-card-foreground">
-                        ${Number(order.total).toFixed(2)}
+                        ${Number(order.total).toFixed(1)}
                       </p>
                       <span className={`inline-flex items-center gap-1 rounded-lg border px-2 py-0.5 text-xs font-bold ${sc.color}`}>
                         {sc.icon} {sc.label}
