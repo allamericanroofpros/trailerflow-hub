@@ -148,6 +148,51 @@ Deno.serve(async (req) => {
         }
         break;
       }
+
+      case "account.updated": {
+        // Stripe Connect: connected account status changed
+        const account = event.data.object as Stripe.Account;
+        log("Connected account updated", { accountId: account.id });
+
+        let connectStatus = "pending";
+        if (account.details_submitted && account.charges_enabled && account.payouts_enabled) {
+          connectStatus = "connected";
+        } else if (account.details_submitted) {
+          connectStatus = "restricted";
+        } else {
+          connectStatus = "onboarding_started";
+        }
+
+        const requirements = {
+          currently_due: account.requirements?.currently_due || [],
+          eventually_due: account.requirements?.eventually_due || [],
+          past_due: account.requirements?.past_due || [],
+          disabled_reason: account.requirements?.disabled_reason || null,
+        };
+
+        const connectUpdates: Record<string, unknown> = {
+          stripe_charges_enabled: account.charges_enabled ?? false,
+          stripe_payouts_enabled: account.payouts_enabled ?? false,
+          stripe_details_submitted: account.details_submitted ?? false,
+          stripe_connect_status: connectStatus,
+          stripe_requirements_json: requirements,
+          stripe_connect_email: account.email || null,
+        };
+
+        if (connectStatus === "connected") {
+          connectUpdates.stripe_onboarding_completed_at = new Date().toISOString();
+        }
+
+        const { error: connectError } = await supabase
+          .from("organization_payment_accounts")
+          .update(connectUpdates)
+          .eq("stripe_connected_account_id", account.id)
+          .eq("is_active", true);
+
+        if (connectError) log("DB update error (account.updated)", { error: connectError.message });
+        else log("Connected account synced", { accountId: account.id, status: connectStatus });
+        break;
+      }
     }
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "Unknown";
