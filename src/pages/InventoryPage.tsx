@@ -660,7 +660,7 @@ export default function Inventory() {
                         <td className="text-right px-4 py-2.5 text-muted-foreground">{need.current.toFixed(1)}</td>
                         <td className="text-right px-4 py-2.5 text-muted-foreground">{need.needed.toFixed(1)}</td>
                         <td className="text-right px-4 py-2.5 font-bold text-primary">{need.toOrder.toFixed(1)}</td>
-                        <td className="text-right px-4 py-2.5 font-semibold text-card-foreground">${need.totalCost.toFixed(2)}</td>
+                        <td className="text-right px-4 py-2.5 font-semibold text-card-foreground">${need.totalCost.toFixed(1)}</td>
                       </tr>
                     ))}
                   </tbody>
