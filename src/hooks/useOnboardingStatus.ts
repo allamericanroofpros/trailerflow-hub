@@ -3,7 +3,6 @@ import { useTrailers } from "@/hooks/useTrailers";
 import { useMenuItems } from "@/hooks/useMenuItems";
 import { useInventoryItems } from "@/hooks/useInventory";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
-import { useBookings } from "@/hooks/useBookings";
 import { useOrg } from "@/contexts/OrgContext";
 import { useStripeConnect } from "@/hooks/useStripeConnect";
 
