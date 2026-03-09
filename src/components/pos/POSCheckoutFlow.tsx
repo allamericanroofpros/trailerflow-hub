@@ -19,6 +19,7 @@ type CheckoutProps = {
   subtotal: number;
   tax: number;
   total: number;
+  orgId?: string | null;
   surchargeSettings?: { enabled: boolean; label: string; percent: number; flat: number | null; cap: number | null };
   onComplete: (data: {
     paymentMethod: "cash" | "card" | "digital";
