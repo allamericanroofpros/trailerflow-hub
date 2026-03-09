@@ -132,7 +132,14 @@ export function AppSidebar({ defaultCollapsed = false }: { defaultCollapsed?: bo
             return (
               <div key={entry.title}>
                 <button
-                  onClick={() => setMgmtOpen(!groupOpen)}
+                  onClick={() => {
+                    if (collapsed) {
+                      setCollapsed(false);
+                      setMgmtOpen(true);
+                    } else {
+                      setMgmtOpen(!groupOpen);
+                    }
+                  }}
                   className={cn(
                     "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150",
                     isMgmtActive
