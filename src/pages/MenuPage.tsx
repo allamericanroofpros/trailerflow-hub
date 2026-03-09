@@ -335,7 +335,7 @@ export default function MenuPage() {
       const context = `Here are my menu items: ${JSON.stringify(menuItems.map((i) => {
         const liveCost = computeLiveCost(i, inventoryItems);
         return {
-          name: i.name, category: i.category, price: Number(i.price), cost: Number(liveCost.toFixed(2)),
+          name: i.name, category: i.category, price: Number(i.price), cost: Number(liveCost.toFixed(1)),
           margin: Number(i.price) > 0 ? ((Number(i.price) - liveCost) / Number(i.price) * 100).toFixed(1) + "%" : "N/A",
           ingredients: (i as any).menu_item_ingredients?.length || 0,
         };
