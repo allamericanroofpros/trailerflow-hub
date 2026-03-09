@@ -354,11 +354,11 @@ Analyze my menu and provide: 1. Best/worst margins 2. Pricing suggestions 3. Men
     try {
       const context = `I'm pricing a food truck menu item. Details:
 - Item: ${form.name || "unnamed"} (${form.category})
-- Ingredient cost: $${ingredientCost.toFixed(2)}
+- Ingredient cost: $${ingredientCost.toFixed(1)}
 - Target margin: ${targetMargin}%
 - Category: ${form.category}
 ${form.description ? `- Description: ${form.description}` : ""}
-${menuItems?.length ? `- Other menu items for context: ${menuItems.slice(0, 10).map(i => `${i.name}: $${Number(i.price).toFixed(2)}`).join(", ")}` : ""}
+${menuItems?.length ? `- Other menu items for context: ${menuItems.slice(0, 10).map(i => `${i.name}: $${Number(i.price).toFixed(1)}`).join(", ")}` : ""}
 
 Suggest an optimal price for this item. Consider: ingredient cost, target margin, food truck pricing psychology, rounding to attractive price points. Return ONLY a number like 8.50 — no explanation.`;
       const result = await claudeNonStreaming("chat", [{ role: "user", content: context }]);
