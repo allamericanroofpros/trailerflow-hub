@@ -446,6 +446,24 @@ export default function SettingsPage() {
                             <Input type="number" min="0" max="90" value={bookingMinNoticeDays} onChange={(e) => setBookingMinNoticeDays(e.target.value)} className="mt-1" />
                             <p className="text-[11px] text-muted-foreground mt-1">How far in advance clients must book</p>
                           </div>
+                          <div className="pl-4 border-t border-border pt-4 mt-2">
+                            <h4 className="text-sm font-semibold text-card-foreground mb-1">Pricing Algorithm</h4>
+                            <p className="text-[11px] text-muted-foreground mb-3">These values drive the estimate shown to customers on your public booking page.</p>
+                          </div>
+                          <div className="pl-4">
+                            <label className="text-xs font-medium text-muted-foreground">Minimum Booking Amount ($)</label>
+                            <Input type="number" min="0" step="25" value={bookingMinimumAmount} onChange={(e) => setBookingMinimumAmount(e.target.value)} className="mt-1" placeholder="0" />
+                            <p className="text-[11px] text-muted-foreground mt-1">The lowest you'll accept for any booking</p>
+                          </div>
+                          <div className="pl-4">
+                            <label className="text-xs font-medium text-muted-foreground">Per-Guest Rate ($)</label>
+                            <Input type="number" min="0" step="0.5" value={bookingPerGuestRate} onChange={(e) => setBookingPerGuestRate(e.target.value)} className="mt-1" placeholder="0" />
+                            <p className="text-[11px] text-muted-foreground mt-1">Price per guest (e.g. $12/head for taco bar)</p>
+                          </div>
+                          <div className="pl-4">
+                            <label className="text-xs font-medium text-muted-foreground">Hourly Rate ($)</label>
+                            <Input type="number" min="0" step="25" value={bookingHourlyRate} onChange={(e) => setBookingHourlyRate(e.target.value)} className="mt-1" placeholder="0" />
+                            <p className="text-[11px] text-muted-foreground mt-1">Charged per hour of service (added to per-guest total)</p>
                           <div className="pl-4">
                             <label className="text-xs font-medium text-muted-foreground">Default Deposit (%)</label>
                             <Input type="number" min="0" max="100" step="5" value={bookingDepositPercent} onChange={(e) => setBookingDepositPercent(e.target.value)} className="mt-1" />
