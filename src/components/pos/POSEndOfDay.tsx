@@ -292,8 +292,8 @@ const POSEndOfDay = forwardRef<HTMLDivElement, { onClose: () => void; openingCas
                     : Math.abs(cashVariance.variance) < 5 ? "border-warning/30 bg-warning/5"
                     : "border-destructive/30 bg-destructive/5"
                   }`}>
-                    <p className="text-xs font-bold text-muted-foreground">Expected: ${cashVariance.expected.toFixed(2)} (${openingCash.toFixed(2)} open + ${todayStats.cashSales.toFixed(2)} cash sales)</p>
-                    <p className="text-xs font-bold text-muted-foreground">Counted: ${cashVariance.actual.toFixed(2)}</p>
+                    <p className="text-xs font-bold text-muted-foreground">Expected: ${cashVariance.expected.toFixed(1)} (${openingCash.toFixed(1)} open + ${todayStats.cashSales.toFixed(1)} cash sales)</p>
+                    <p className="text-xs font-bold text-muted-foreground">Counted: ${cashVariance.actual.toFixed(1)}</p>
                     <p className={`text-2xl font-black mt-1 ${
                       Math.abs(cashVariance.variance) < 1 ? "text-success"
                       : Math.abs(cashVariance.variance) < 5 ? "text-warning"
