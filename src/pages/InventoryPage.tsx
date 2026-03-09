@@ -577,7 +577,7 @@ export default function Inventory() {
                             <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">
                               {shelfLife ? <span className={shelfLife <= 3 ? "text-destructive font-semibold" : shelfLife <= 7 ? "text-warning" : ""}>{shelfLife}d</span> : "—"}
                             </td>
-                            <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">${Number(item.cost_per_unit).toFixed(2)}</td>
+                            <td className="text-right px-4 py-3 text-muted-foreground hidden md:table-cell">${Number(item.cost_per_unit).toFixed(1)}</td>
                             <td className="text-right px-4 py-3 text-muted-foreground hidden lg:table-cell">{item.supplier || "—"}</td>
                             <td className="text-right px-4 py-3">
                               <div className="flex items-center justify-end gap-1">
