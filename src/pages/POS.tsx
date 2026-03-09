@@ -798,6 +798,7 @@ export default function POS() {
           subtotal={subtotal}
           tax={tax}
           total={total}
+          orgId={orgId}
           surchargeSettings={surchargeSettings}
           onComplete={handleCheckout}
           onCancel={() => setShowCheckout(false)}

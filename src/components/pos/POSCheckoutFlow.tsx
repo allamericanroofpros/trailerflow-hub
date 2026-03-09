@@ -19,6 +19,7 @@ type CheckoutProps = {
   subtotal: number;
   tax: number;
   total: number;
+  orgId?: string | null;
   surchargeSettings?: { enabled: boolean; label: string; percent: number; flat: number | null; cap: number | null };
   onComplete: (data: {
     paymentMethod: "cash" | "card" | "digital";
@@ -37,21 +38,18 @@ const tipPresets = [0, 15, 18, 20, 25];
 
 import { supabase } from "@/integrations/supabase/client";
 
-const processStripePayment = async (amount: number): Promise<{ success: boolean; chargeId?: string; paymentIntentId?: string }> => {
+const processStripePayment = async (amount: number, orgId?: string | null): Promise<{ success: boolean; chargeId?: string; paymentIntentId?: string }> => {
   const { data, error } = await supabase.functions.invoke("create-payment-intent", {
-    body: { amount, description: "POS Sale" },
+    body: { amount, description: "POS Sale", org_id: orgId },
   });
   if (error || data?.error) {
     throw new Error(data?.error || error?.message || "Payment failed");
   }
-  // Payment intent created — in a web POS without a physical terminal,
-  // the intent is created and we treat it as successful for now.
-  // Full Stripe Elements integration can be added for on-screen card entry.
   return { success: true, chargeId: data.paymentIntentId, paymentIntentId: data.paymentIntentId };
 };
 
 export default function POSCheckoutFlow({
-  cart, subtotal, tax, total, surchargeSettings, onComplete, onCancel, isPending,
+  cart, subtotal, tax, total, orgId, surchargeSettings, onComplete, onCancel, isPending,
 }: CheckoutProps) {
   const [step, setStep] = useState<Step>("payment");
   const [tipType, setTipType] = useState<"percent" | "dollar">("percent");
@@ -84,7 +82,7 @@ export default function POSCheckoutFlow({
     if (method === "card") {
       // Card → process payment first, then ask for tip
       setStep("processing");
-      const result = await processStripePayment(total);
+      const result = await processStripePayment(total, orgId);
       if (result.success) {
         setStep("tip");
       }

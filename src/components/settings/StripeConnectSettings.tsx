@@ -1,8 +1,10 @@
-import { ExternalLink, RefreshCw, Loader2, CheckCircle2, AlertTriangle, XCircle, Zap } from "lucide-react";
+import { ExternalLink, RefreshCw, Loader2, CheckCircle2, AlertTriangle, XCircle, Zap, Percent } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useStripeConnect, ConnectStatus } from "@/hooks/useStripeConnect";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
+import { useOrg } from "@/contexts/OrgContext";
+import { getPlatformFeePct, getPlatformFeeLabel } from "@/config/platformFees";
 import { toast } from "sonner";
 
 const statusConfig: Record<ConnectStatus, { label: string; color: string; icon: typeof CheckCircle2 }> = {
@@ -14,6 +16,10 @@ const statusConfig: Record<ConnectStatus, { label: string; color: string; icon: 
 };
 
 export function StripeConnectSettings() {
+  const { currentOrg } = useOrg();
+  const plan = currentOrg?.plan || "free";
+  const feePct = getPlatformFeePct(plan);
+  const feeLabel = getPlatformFeeLabel(plan);
   const { isOwner } = useRoleAccess();
   const {
     account,
@@ -141,6 +147,19 @@ export function StripeConnectSettings() {
                 </p>
               </div>
             )}
+            {/* Platform fee */}
+            <div className="rounded-lg border border-border bg-background p-3">
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">
+                Platform Fee
+              </p>
+              <p className="text-sm font-semibold text-card-foreground flex items-center gap-1.5">
+                <Percent className="h-3.5 w-3.5 text-primary" />
+                {feeLabel}
+                <span className="text-[11px] font-normal text-muted-foreground ml-1">
+                  ({plan} plan)
+                </span>
+              </p>
+            </div>
           </div>
 
           {/* Requirements warning */}
