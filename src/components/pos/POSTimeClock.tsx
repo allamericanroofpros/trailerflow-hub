@@ -193,7 +193,7 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
             <DollarSign className="h-4 w-4 text-warning" />
             <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Running Cost</span>
           </div>
-          <p className="text-2xl font-black text-warning">${totalActiveCost.toFixed(2)}</p>
+          <p className="text-2xl font-black text-warning">${totalActiveCost.toFixed(1)}</p>
         </div>
         <div className="rounded-2xl border-2 border-border bg-card p-4">
           <div className="flex items-center gap-2 mb-2">
