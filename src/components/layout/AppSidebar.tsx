@@ -27,13 +27,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { OrgSwitcher } from "./OrgSwitcher";
+import vfLogo from "@/assets/vf-monogram.png";
 
 type NavItem = {
   title: string;
   url: string;
   icon: any;
   viewKey: string;
-  /** If set, item is only shown when this entitlement is true */
   entitlementKey?: string;
 };
 
@@ -80,37 +80,33 @@ export function AppSidebar({ defaultCollapsed = false }: { defaultCollapsed?: bo
   const { role, canView } = useRoleAccess();
   const ent = useEntitlements();
 
-  // Check if an item passes both role and entitlement checks
   const isItemVisible = (item: NavItem): boolean => {
     if (!canView(item.viewKey)) return false;
     if (item.entitlementKey && !(ent as any)[item.entitlementKey]) return false;
     return true;
   };
 
-  // Auto-open management group if current route is inside it
   const mgmtGroup = sidebarEntries.find(e => isGroup(e)) as NavGroup | undefined;
   const isMgmtActive = mgmtGroup?.children.some(c => location.pathname.startsWith(c.url)) ?? false;
 
   return (
     <aside
       className={cn(
-        "sticky top-0 h-screen flex flex-col border-r border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out",
+        "sticky top-0 h-screen flex flex-col border-r border-sidebar-border transition-all duration-300 ease-in-out",
         collapsed ? "w-[68px]" : "w-[240px]"
       )}
       style={{ background: "var(--gradient-sidebar)" }}
     >
-      {/* Logo */}
+      {/* Brand header */}
       <div className="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg gradient-warm">
-          <Truck className="h-4 w-4 text-primary-foreground" />
-        </div>
+        <img src={vfLogo} alt="VF" className="h-8 w-8 shrink-0 rounded-lg" />
         {!collapsed && (
           <div className="flex flex-col">
-            <span className="text-lg font-bold text-sidebar-accent-foreground tracking-tight leading-tight">
+            <span className="text-lg font-extrabold text-sidebar-accent-foreground tracking-tight leading-tight">
               VendorFlow
             </span>
             {role && (
-              <span className="text-[10px] font-medium text-sidebar-muted uppercase tracking-wider flex items-center gap-1">
+              <span className="text-[10px] font-semibold text-sidebar-muted uppercase tracking-wider flex items-center gap-1">
                 <Shield className="h-2.5 w-2.5" />
                 {role}
               </span>
@@ -125,7 +121,7 @@ export function AppSidebar({ defaultCollapsed = false }: { defaultCollapsed?: bo
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 space-y-1 px-3 py-4 overflow-y-auto">
+      <nav className="flex-1 space-y-0.5 px-3 py-4 overflow-y-auto scrollbar-thin">
         {sidebarEntries.map((entry) => {
           if (isGroup(entry)) {
             const visibleChildren = entry.children.filter(c => isItemVisible(c));
@@ -138,7 +134,7 @@ export function AppSidebar({ defaultCollapsed = false }: { defaultCollapsed?: bo
                 <button
                   onClick={() => setMgmtOpen(!groupOpen)}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                    "flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150",
                     isMgmtActive
                       ? "text-sidebar-primary"
                       : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -156,7 +152,7 @@ export function AppSidebar({ defaultCollapsed = false }: { defaultCollapsed?: bo
                   )}
                 </button>
                 {!collapsed && groupOpen && (
-                  <div className="ml-4 mt-1 space-y-0.5 border-l border-sidebar-border pl-3">
+                  <div className="ml-4 mt-1 space-y-0.5 border-l-2 border-sidebar-border pl-3">
                     {visibleChildren.map((child) => {
                       const isActive = location.pathname.startsWith(child.url);
                       return (
@@ -181,7 +177,6 @@ export function AppSidebar({ defaultCollapsed = false }: { defaultCollapsed?: bo
             );
           }
 
-          // Regular nav item
           if (!isItemVisible(entry as NavItem)) return null;
           const isActive =
             entry.url === "/"
@@ -193,7 +188,7 @@ export function AppSidebar({ defaultCollapsed = false }: { defaultCollapsed?: bo
               key={entry.title}
               to={entry.url}
               className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-150",
+                "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-semibold transition-all duration-150",
                 isActive
                   ? "bg-sidebar-accent text-sidebar-primary"
                   : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
@@ -206,13 +201,13 @@ export function AppSidebar({ defaultCollapsed = false }: { defaultCollapsed?: bo
         })}
       </nav>
 
-      {/* Footer actions */}
+      {/* Footer */}
       <div className="mt-auto border-t border-sidebar-border">
         {role === "super_admin" && (
           <NavLink
             to="/admin"
             className={cn(
-              "flex w-full items-center gap-3 px-6 py-3 text-sm font-medium text-sidebar-primary hover:bg-sidebar-accent transition-colors",
+              "flex w-full items-center gap-3 px-6 py-3 text-sm font-semibold text-sidebar-primary hover:bg-sidebar-accent transition-colors",
               collapsed && "justify-center px-3"
             )}
           >
