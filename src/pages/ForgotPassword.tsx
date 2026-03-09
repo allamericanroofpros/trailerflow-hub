@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -26,7 +27,8 @@ export default function ForgotPassword() {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="w-full max-w-sm text-center space-y-4">
-          <h1 className="text-2xl font-bold text-foreground">Check your email</h1>
+          <BrandLogo size="lg" className="justify-center" />
+          <h2 className="text-xl font-bold text-foreground">Check your email</h2>
           <p className="text-sm text-muted-foreground">We sent a password reset link to <strong>{email}</strong>.</p>
           <Link to="/login" className="text-sm text-primary hover:underline">Back to login</Link>
         </div>
@@ -37,9 +39,9 @@ export default function ForgotPassword() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">Reset Password</h1>
-          <p className="text-sm text-muted-foreground mt-1">Enter your email to receive a reset link.</p>
+        <div className="flex flex-col items-center gap-3">
+          <BrandLogo size="lg" />
+          <p className="text-sm text-muted-foreground">Enter your email to receive a reset link.</p>
         </div>
         <form onSubmit={handleReset} className="space-y-4">
           <div>

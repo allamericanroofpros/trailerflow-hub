@@ -3,8 +3,9 @@ import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, ChevronRight, Truck, Check, Crown } from "lucide-react";
+import { ChevronLeft, ChevronRight, Check, Crown } from "lucide-react";
 import { TIERS, type TierKey } from "@/config/tiers";
+import { BrandLogo } from "@/components/BrandLogo";
 
 const VENDOR_TYPES = [
   "Food Truck",
@@ -204,11 +205,8 @@ export default function Signup() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-md space-y-6">
-        <div className="text-center">
-          <div className="mx-auto mb-3 flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Truck className="h-5 w-5" />
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">VendorFlow</h1>
+        <div className="flex flex-col items-center gap-2">
+          <BrandLogo size="lg" />
           <p className="text-sm text-muted-foreground mt-1">
             {step === 1 && "Create your account"}
             {step === 2 && "Tell us about your business"}
@@ -354,7 +352,7 @@ export default function Signup() {
               className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
               {step < totalSteps ? (
                 <>Continue <ChevronRight className="h-4 w-4" /></>
-              ) : loading ? "Creating account..." : isPaid ? `Create Account & Pay ${planInfo.price}` : "Start Free Plan"}
+              ) : loading ? "Creating account..." : isPaid ? `Start 30-Day Free Trial` : "Start Free Plan"}
             </button>
           </div>
         </form>

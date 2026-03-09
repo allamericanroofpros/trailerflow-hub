@@ -45,6 +45,9 @@ Deno.serve(async (req) => {
       customer_email: customerId ? undefined : user.email,
       line_items: [{ price: price_id, quantity: 1 }],
       mode: "subscription",
+      subscription_data: {
+        trial_period_days: 30,
+      },
       success_url: `${origin}/settings?subscription=success`,
       cancel_url: `${origin}/settings?subscription=cancelled`,
       metadata: {

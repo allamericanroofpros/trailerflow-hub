@@ -122,7 +122,7 @@ export default function Landing() {
               <Link to="/login">Log In</Link>
             </Button>
             <Button asChild>
-              <Link to="/signup">Get Started Free <ArrowRight className="ml-1 h-4 w-4" /></Link>
+              <Link to="/signup">Start Free Trial <ArrowRight className="ml-1 h-4 w-4" /></Link>
             </Button>
           </div>
         </div>
@@ -146,13 +146,13 @@ export default function Landing() {
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" className="text-base px-8 h-12" asChild>
-                <Link to="/signup">Start Free Today <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/signup">Start Your 30-Day Free Trial <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
               <Button size="lg" variant="outline" className="text-base px-8 h-12" asChild>
                 <a href="#features">See What's Included</a>
               </Button>
             </div>
-            <p className="mt-4 text-sm text-muted-foreground">No credit card required · Free plan available</p>
+            <p className="mt-4 text-sm text-muted-foreground">No credit card required · 30-day free trial on all plans</p>
           </div>
         </div>
       </section>
@@ -189,7 +189,7 @@ export default function Landing() {
           <div className="text-center mb-16">
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Simple, transparent pricing</h2>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Start free. Upgrade when you're ready. No contracts, cancel anytime.
+              Every paid plan includes a 30-day free trial. No contracts, cancel anytime.
             </p>
           </div>
           <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
@@ -226,7 +226,7 @@ export default function Landing() {
                   asChild
                 >
                   <Link to={`/signup?plan=${plan.planKey}`}>
-                    {plan.price === "$0" ? "Get Started" : "Start Free Trial"}
+                    {plan.price === "$0" ? "Get Started" : "Start 30-Day Trial"}
                     <ChevronRight className="ml-1 h-4 w-4" />
                   </Link>
                 </Button>
@@ -277,7 +277,7 @@ export default function Landing() {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" className="text-base px-8 h-12" asChild>
-                <Link to="/signup">Create Your Free Account <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/signup">Start Your 30-Day Free Trial <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
             </div>
             <div className="mt-6 flex items-center justify-center gap-6 text-sm text-muted-foreground">
