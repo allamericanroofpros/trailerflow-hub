@@ -277,7 +277,7 @@ export default function Landing() {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" className="text-base px-8 h-12" asChild>
-                <Link to="/signup">Create Your Free Account <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/signup">Start Your 30-Day Free Trial <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
             </div>
             <div className="mt-6 flex items-center justify-center gap-6 text-sm text-muted-foreground">

@@ -352,7 +352,7 @@ export default function Signup() {
               className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
               {step < totalSteps ? (
                 <>Continue <ChevronRight className="h-4 w-4" /></>
-              ) : loading ? "Creating account..." : isPaid ? `Create Account & Pay ${planInfo.price}` : "Start Free Plan"}
+              ) : loading ? "Creating account..." : isPaid ? `Start 30-Day Free Trial` : "Start Free Plan"}
             </button>
           </div>
         </form>
