@@ -1,31 +1,16 @@
 export const TIERS = {
-  starter: {
-    name: "Starter",
-    price: 29,
-    price_id: "price_1T8ntxEHIsr46VcJ3J4mPMEq",
-    product_id: "prod_U71xlqwCNiq83e",
-    features: [
-      "1 trailer",
-      "Full POS system",
-      "Menu & inventory management",
-      "Booking system",
-      "Basic reports",
-      "2 staff accounts",
-    ],
-    limits: { trailers: 1, staff: 2 },
-  },
   pro: {
     name: "Pro",
     price: 79,
+    annualPrice: 790, // 10 months
     price_id: "price_1T8nuWEHIsr46VcJxMizsKl7",
     product_id: "prod_U71yhcJZEwTQZv",
     features: [
-      "Unlimited trailers",
+      "Unlimited trailers & staff",
       "Full analytics & reports",
-      "AI forecasting",
-      "Unlimited staff accounts",
-      "Event discovery",
+      "AI forecasting & discovery",
       "Time clock & labor tracking",
+      "Fleet overview",
       "Priority support",
     ],
     limits: { trailers: Infinity, staff: Infinity },
@@ -33,6 +18,7 @@ export const TIERS = {
   enterprise: {
     name: "Enterprise",
     price: 199,
+    annualPrice: 1990, // 10 months
     price_id: "price_1T8nugEHIsr46VcJ6ugiRGFR",
     product_id: "prod_U71y5TWZAmWkws",
     features: [
@@ -47,6 +33,23 @@ export const TIERS = {
 } as const;
 
 export type TierKey = keyof typeof TIERS;
+
+/** Founders tier info (not in TIERS because it's a limited-time offer) */
+export const FOUNDERS_TIER = {
+  name: "Founders",
+  price: 29,
+  annualPrice: 290, // 10 months
+  features: [
+    "Everything in Enterprise",
+    "Unlimited trailers & staff",
+    "AI forecasting & discovery",
+    "Multi-org management",
+    "Custom integrations & API",
+    "White-label receipts",
+    "Priority support",
+    "Price locked for life",
+  ],
+} as const;
 
 export function getTierByProductId(productId: string): TierKey | null {
   for (const [key, tier] of Object.entries(TIERS)) {
