@@ -225,7 +225,7 @@ export default function Landing() {
                   variant={plan.highlight ? "default" : "outline"}
                   asChild
                 >
-                  <Link to="/signup">
+                  <Link to={`/signup?plan=${plan.planKey}`}>
                     {plan.price === "$0" ? "Get Started" : "Start Free Trial"}
                     <ChevronRight className="ml-1 h-4 w-4" />
                   </Link>
