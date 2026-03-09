@@ -1,8 +1,10 @@
-import { ExternalLink, RefreshCw, Loader2, CheckCircle2, AlertTriangle, XCircle, Zap } from "lucide-react";
+import { ExternalLink, RefreshCw, Loader2, CheckCircle2, AlertTriangle, XCircle, Zap, Percent } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useStripeConnect, ConnectStatus } from "@/hooks/useStripeConnect";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
+import { useOrg } from "@/contexts/OrgContext";
+import { getPlatformFeePct, getPlatformFeeLabel } from "@/config/platformFees";
 import { toast } from "sonner";
 
 const statusConfig: Record<ConnectStatus, { label: string; color: string; icon: typeof CheckCircle2 }> = {
