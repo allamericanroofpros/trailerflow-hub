@@ -188,7 +188,7 @@ const POSEndOfDay = forwardRef<HTMLDivElement, { onClose: () => void; openingCas
                   </div>
                   <div className="rounded-2xl border-2 border-border bg-background p-4 text-center">
                     <p className="text-xs font-bold text-muted-foreground uppercase">Tax Collected</p>
-                    <p className="text-2xl font-black text-card-foreground">${todayStats.totalTax.toFixed(2)}</p>
+                    <p className="text-2xl font-black text-card-foreground">${todayStats.totalTax.toFixed(1)}</p>
                   </div>
                 </div>
 
