@@ -213,7 +213,7 @@ export default function POSCheckoutFlow({
             >
               <div className="text-center">
                 <h3 className="text-lg font-black text-card-foreground">Add Tip</h3>
-                <p className="text-sm text-muted-foreground mt-1">Subtotal: ${subtotal.toFixed(2)}</p>
+                <p className="text-sm text-muted-foreground mt-1">Subtotal: ${subtotal.toFixed(1)}</p>
               </div>
 
               {/* Tip type toggle */}
