@@ -457,8 +457,8 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                   </div>
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-lg font-bold text-primary">${Number(item.price).toFixed(2)}</p>
-                      <p className="text-[11px] text-muted-foreground">Cost: ${liveCost.toFixed(2)} · Margin: {margin}%</p>
+                      <p className="text-lg font-bold text-primary">${Number(item.price).toFixed(1)}</p>
+                      <p className="text-[11px] text-muted-foreground">Cost: ${liveCost.toFixed(1)} · Margin: {margin}%</p>
                     </div>
                   </div>
                   {/* Recipe & modifier badges */}
