@@ -299,7 +299,7 @@ const POSEndOfDay = forwardRef<HTMLDivElement, { onClose: () => void; openingCas
                       : Math.abs(cashVariance.variance) < 5 ? "text-warning"
                       : "text-destructive"
                     }`}>
-                      {cashVariance.variance >= 0 ? "+" : ""}${cashVariance.variance.toFixed(2)}
+                      {cashVariance.variance >= 0 ? "+" : ""}${cashVariance.variance.toFixed(1)}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
                       {Math.abs(cashVariance.variance) < 1 ? "✅ Perfect!" : Math.abs(cashVariance.variance) < 5 ? "⚠️ Close enough" : "❌ Significant variance — check for errors"}
