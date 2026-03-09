@@ -158,6 +158,13 @@ export default function SettingsPage() {
   const [taxPercent, setTaxPercent] = useState("0");
   const [taxInclusive, setTaxInclusive] = useState(false);
 
+  // Bookings settings
+  const [bookingsEnabled, setBookingsEnabled] = useState(false);
+  const [bookingDepositPercent, setBookingDepositPercent] = useState("25");
+  const [bookingMinNoticeDays, setBookingMinNoticeDays] = useState("7");
+  const [bookingPackages, setBookingPackages] = useState<string[]>([]);
+  const [newPackage, setNewPackage] = useState("");
+
   // Auto-refresh org data when landing on billing (e.g. returning from Stripe)
   useEffect(() => {
     if (activeSection === "billing") {
