@@ -122,7 +122,7 @@ export default function Landing() {
               <Link to="/login">Log In</Link>
             </Button>
             <Button asChild>
-              <Link to="/signup">Get Started Free <ArrowRight className="ml-1 h-4 w-4" /></Link>
+              <Link to="/signup">Start Free Trial <ArrowRight className="ml-1 h-4 w-4" /></Link>
             </Button>
           </div>
         </div>
