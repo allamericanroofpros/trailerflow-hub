@@ -1117,6 +1117,7 @@ export type Database = {
       organizations: {
         Row: {
           assigned_owner: string | null
+          billing_interval: string
           booking_deposit_percent: number | null
           booking_hourly_rate: number | null
           booking_min_notice_days: number | null
@@ -1132,14 +1133,18 @@ export type Database = {
           current_period_end: string | null
           feature_request_notes: string | null
           follow_up_date: string | null
+          founder_number: number | null
+          founder_pricing_version: string | null
           health_status: string
           id: string
+          is_founder: boolean
           last_active_at: string | null
           logo_url: string | null
           name: string
           onboarding_stage: string
           owner_user_id: string
           plan: string
+          plan_price_locked: boolean
           slug: string
           source: string | null
           status: string
@@ -1161,6 +1166,7 @@ export type Database = {
         }
         Insert: {
           assigned_owner?: string | null
+          billing_interval?: string
           booking_deposit_percent?: number | null
           booking_hourly_rate?: number | null
           booking_min_notice_days?: number | null
@@ -1176,14 +1182,18 @@ export type Database = {
           current_period_end?: string | null
           feature_request_notes?: string | null
           follow_up_date?: string | null
+          founder_number?: number | null
+          founder_pricing_version?: string | null
           health_status?: string
           id?: string
+          is_founder?: boolean
           last_active_at?: string | null
           logo_url?: string | null
           name: string
           onboarding_stage?: string
           owner_user_id: string
           plan?: string
+          plan_price_locked?: boolean
           slug: string
           source?: string | null
           status?: string
@@ -1205,6 +1215,7 @@ export type Database = {
         }
         Update: {
           assigned_owner?: string | null
+          billing_interval?: string
           booking_deposit_percent?: number | null
           booking_hourly_rate?: number | null
           booking_min_notice_days?: number | null
@@ -1220,14 +1231,18 @@ export type Database = {
           current_period_end?: string | null
           feature_request_notes?: string | null
           follow_up_date?: string | null
+          founder_number?: number | null
+          founder_pricing_version?: string | null
           health_status?: string
           id?: string
+          is_founder?: boolean
           last_active_at?: string | null
           logo_url?: string | null
           name?: string
           onboarding_stage?: string
           owner_user_id?: string
           plan?: string
+          plan_price_locked?: boolean
           slug?: string
           source?: string | null
           status?: string
@@ -1267,6 +1282,36 @@ export type Database = {
           updated_at?: string
           updated_by?: string | null
           value?: Json
+        }
+        Relationships: []
+      }
+      platform_limits: {
+        Row: {
+          founders_annual_price: number
+          founders_enabled: boolean
+          founders_limit: number
+          founders_monthly_price: number
+          id: number
+          standard_plans_active: boolean
+          updated_at: string
+        }
+        Insert: {
+          founders_annual_price?: number
+          founders_enabled?: boolean
+          founders_limit?: number
+          founders_monthly_price?: number
+          id?: number
+          standard_plans_active?: boolean
+          updated_at?: string
+        }
+        Update: {
+          founders_annual_price?: number
+          founders_enabled?: boolean
+          founders_limit?: number
+          founders_monthly_price?: number
+          id?: number
+          standard_plans_active?: boolean
+          updated_at?: string
         }
         Relationships: []
       }
