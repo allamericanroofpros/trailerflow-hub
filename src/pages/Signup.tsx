@@ -6,6 +6,7 @@ import { Progress } from "@/components/ui/progress";
 import { ChevronLeft, ChevronRight, Check, Crown } from "lucide-react";
 import { TIERS, type TierKey } from "@/config/tiers";
 import { BrandLogo } from "@/components/BrandLogo";
+import { UpsellCard } from "@/components/signup/UpsellCard";
 
 const VENDOR_TYPES = [
   "Food Truck",
@@ -356,6 +357,9 @@ export default function Signup() {
             </button>
           </div>
         </form>
+
+        {/* Contextual upsell */}
+        <UpsellCard step={step} trailerCount={trailerCount} teamSize={teamSize} />
 
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{" "}
