@@ -340,7 +340,7 @@ export default function POS() {
         >
           <div className="flex-1 min-w-0">
             <p className="text-base font-bold text-card-foreground truncate">{item.name}</p>
-            <p className="text-sm text-muted-foreground">${item.price.toFixed(2)} ea</p>
+            <p className="text-sm text-muted-foreground">${item.price.toFixed(1)} ea</p>
           </div>
           <div className="flex items-center gap-1">
             <button
