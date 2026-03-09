@@ -162,6 +162,9 @@ export default function SettingsPage() {
   const [bookingsEnabled, setBookingsEnabled] = useState(false);
   const [bookingDepositPercent, setBookingDepositPercent] = useState("25");
   const [bookingMinNoticeDays, setBookingMinNoticeDays] = useState("7");
+  const [bookingMinimumAmount, setBookingMinimumAmount] = useState("0");
+  const [bookingPerGuestRate, setBookingPerGuestRate] = useState("0");
+  const [bookingHourlyRate, setBookingHourlyRate] = useState("0");
   const [bookingPackages, setBookingPackages] = useState<string[]>([]);
   const [newPackage, setNewPackage] = useState("");
 
@@ -190,6 +193,9 @@ export default function SettingsPage() {
       setBookingDepositPercent(String(org.booking_deposit_percent ?? 25));
       setBookingMinNoticeDays(String(org.booking_min_notice_days ?? 7));
       setBookingPackages(Array.isArray(org.booking_service_packages) ? org.booking_service_packages : []);
+      setBookingMinimumAmount(String(org.booking_minimum_amount ?? 0));
+      setBookingPerGuestRate(String(org.booking_per_guest_rate ?? 0));
+      setBookingHourlyRate(String(org.booking_hourly_rate ?? 0));
       setPaymentSettingsLoaded(true);
     }
   }, [currentOrg, paymentSettingsLoaded]);
@@ -225,6 +231,9 @@ export default function SettingsPage() {
         booking_deposit_percent: parseFloat(bookingDepositPercent) || 25,
         booking_min_notice_days: parseInt(bookingMinNoticeDays) || 7,
         booking_service_packages: bookingPackages,
+        booking_minimum_amount: parseFloat(bookingMinimumAmount) || 0,
+        booking_per_guest_rate: parseFloat(bookingPerGuestRate) || 0,
+        booking_hourly_rate: parseFloat(bookingHourlyRate) || 0,
       } as any).eq("id", currentOrg.id);
       if (error) throw error;
     },
@@ -436,6 +445,25 @@ export default function SettingsPage() {
                             <label className="text-xs font-medium text-muted-foreground">Minimum Notice (days)</label>
                             <Input type="number" min="0" max="90" value={bookingMinNoticeDays} onChange={(e) => setBookingMinNoticeDays(e.target.value)} className="mt-1" />
                             <p className="text-[11px] text-muted-foreground mt-1">How far in advance clients must book</p>
+                          </div>
+                          <div className="pl-4 border-t border-border pt-4 mt-2">
+                            <h4 className="text-sm font-semibold text-card-foreground mb-1">Pricing Algorithm</h4>
+                            <p className="text-[11px] text-muted-foreground mb-3">These values drive the estimate shown to customers on your public booking page.</p>
+                          </div>
+                          <div className="pl-4">
+                            <label className="text-xs font-medium text-muted-foreground">Minimum Booking Amount ($)</label>
+                            <Input type="number" min="0" step="25" value={bookingMinimumAmount} onChange={(e) => setBookingMinimumAmount(e.target.value)} className="mt-1" placeholder="0" />
+                            <p className="text-[11px] text-muted-foreground mt-1">The lowest you'll accept for any booking</p>
+                          </div>
+                          <div className="pl-4">
+                            <label className="text-xs font-medium text-muted-foreground">Per-Guest Rate ($)</label>
+                            <Input type="number" min="0" step="0.5" value={bookingPerGuestRate} onChange={(e) => setBookingPerGuestRate(e.target.value)} className="mt-1" placeholder="0" />
+                            <p className="text-[11px] text-muted-foreground mt-1">Price per guest (e.g. $12/head for taco bar)</p>
+                          </div>
+                          <div className="pl-4">
+                            <label className="text-xs font-medium text-muted-foreground">Hourly Rate ($)</label>
+                            <Input type="number" min="0" step="25" value={bookingHourlyRate} onChange={(e) => setBookingHourlyRate(e.target.value)} className="mt-1" placeholder="0" />
+                            <p className="text-[11px] text-muted-foreground mt-1">Charged per hour of service (added to per-guest total)</p>
                           </div>
                           <div className="pl-4">
                             <label className="text-xs font-medium text-muted-foreground">Default Deposit (%)</label>
