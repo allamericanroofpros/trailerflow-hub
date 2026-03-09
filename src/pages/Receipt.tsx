@@ -88,7 +88,7 @@ export default function ReceiptPage() {
           <div className="px-6 py-4 border-t border-border space-y-1.5">
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>Subtotal</span>
-              <span className="font-semibold">${Number(order.subtotal).toFixed(2)}</span>
+              <span className="font-semibold">${Number(order.subtotal).toFixed(1)}</span>
             </div>
             {order.tax_inclusive ? (
               Number(order.tax) > 0 && (
