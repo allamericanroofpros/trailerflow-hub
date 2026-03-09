@@ -5,6 +5,7 @@ import { useInventoryItems } from "@/hooks/useInventory";
 import { useStaffMembers } from "@/hooks/useStaffMembers";
 import { useBookings } from "@/hooks/useBookings";
 import { useOrg } from "@/contexts/OrgContext";
+import { useStripeConnect } from "@/hooks/useStripeConnect";
 
 export function useOnboardingStatus() {
   const { currentOrg } = useOrg();
@@ -13,6 +14,7 @@ export function useOnboardingStatus() {
   const { data: inventory } = useInventoryItems();
   const { data: staff } = useStaffMembers();
   const { data: bookings } = useBookings();
+  const { status: stripeStatus } = useStripeConnect();
 
   const completedSteps = useMemo(() => {
     const org = currentOrg as any;
@@ -23,8 +25,9 @@ export function useOnboardingStatus() {
       inventory: (inventory?.length || 0) > 0,
       staff: (staff?.length || 0) > 0,
       bookings: (bookings?.length || 0) > 0,
+      stripe: stripeStatus === "connected",
     };
-  }, [trailers, menuItems, inventory, staff, bookings, currentOrg]);
+  }, [trailers, menuItems, inventory, staff, bookings, currentOrg, stripeStatus]);
 
   const completedCount = Object.values(completedSteps).filter(Boolean).length;
   const totalSteps = Object.keys(completedSteps).length;
