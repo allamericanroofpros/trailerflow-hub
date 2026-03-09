@@ -816,7 +816,7 @@ export default function POS() {
 
       {/* Modifier Picker Dialog */}
       <Dialog open={!!showModifierPicker} onOpenChange={(v) => { if (!v) setShowModifierPicker(null); }}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-sm mx-4">
           <DialogHeader>
             <DialogTitle>{showModifierPicker?.item?.name} — Options</DialogTitle>
           </DialogHeader>
