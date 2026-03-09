@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { HelpCircle, Search, X, ChevronRight, MessageCircle } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { HelpCircle, Search, X, ChevronRight, MessageCircle, ExternalLink } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface HelpArticle {
