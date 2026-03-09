@@ -270,7 +270,7 @@ export default function POSCheckoutFlow({
               {surchargeAmount > 0 && (
                 <div className="text-center">
                   <p className="text-xs text-muted-foreground">
-                    {surchargeSettings?.label}: <span className="font-bold text-card-foreground">${surchargeAmount.toFixed(2)}</span>
+                    {surchargeSettings?.label}: <span className="font-bold text-card-foreground">${surchargeAmount.toFixed(1)}</span>
                   </p>
                 </div>
               )}
