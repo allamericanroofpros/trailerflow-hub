@@ -426,9 +426,10 @@ export default function PublicBooking() {
                     )}
                     <div className="space-y-2 text-xs text-muted-foreground">
                       <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" /> {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
-                      {form.start_time && form.end_time && (
-                        <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" /> {form.start_time} – {form.end_time} ({estimatedHours.toFixed(1)}h)</div>
-                      )}
+                      {form.start_time && form.end_time && (() => {
+                        const hrs = Math.max(1, (parseInt(form.end_time.split(":")[0]) * 60 + parseInt(form.end_time.split(":")[1]) - parseInt(form.start_time.split(":")[0]) * 60 - parseInt(form.start_time.split(":")[1])) / 60);
+                        return <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" /> {form.start_time} – {form.end_time} ({hrs.toFixed(1)}h)</div>;
+                      })()}
                       {form.guest_count && (
                         <div className="flex items-center gap-2"><Users className="h-3.5 w-3.5" /> ~{form.guest_count} guests</div>
                       )}
