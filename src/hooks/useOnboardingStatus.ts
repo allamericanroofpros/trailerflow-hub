@@ -12,7 +12,6 @@ export function useOnboardingStatus() {
   const { data: menuItems } = useMenuItems();
   const { data: inventory } = useInventoryItems();
   const { data: staff } = useStaffMembers();
-  const { data: bookings } = useBookings();
   const { status: stripeStatus } = useStripeConnect();
 
   const completedSteps = useMemo(() => {
