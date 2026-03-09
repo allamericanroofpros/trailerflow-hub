@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useOrg } from "@/contexts/OrgContext";
+import { StripeConnectSettings } from "@/components/settings/StripeConnectSettings";
 
 function AppearanceSettings() {
   const [theme, setTheme] = useState(() => localStorage.getItem("vf_theme") || "light");
