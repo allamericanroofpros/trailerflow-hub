@@ -197,7 +197,7 @@ export default function PublicBooking() {
             Thank you, {form.client_name}! We've received your booking request for <strong>{form.event_name}</strong> on <strong>{selectedDate}</strong>.
             We'll be in touch at <strong>{form.client_email}</strong> within 24 hours to confirm details and discuss pricing.
           </p>
-          <Button onClick={() => { setStep("select"); setSelectedDate(""); setForm({ client_name: "", client_email: "", client_phone: "", event_name: "", location: "", guest_count: "", service_package: "", notes: "", start_time: "", end_time: "" }); }}>
+          <Button onClick={() => { setStep("select"); setSelectedDate(""); setForm({ client_name: "", client_email: "", client_phone: "", event_name: "", location: "", guest_count: "", service_package: "", notes: "", start_time: "", end_time: "", event_type: "", budget_range: "" }); }}>
             Submit Another Request
           </Button>
         </div>
