@@ -16,6 +16,10 @@ const statusConfig: Record<ConnectStatus, { label: string; color: string; icon: 
 };
 
 export function StripeConnectSettings() {
+  const { currentOrg } = useOrg();
+  const plan = currentOrg?.plan || "free";
+  const feePct = getPlatformFeePct(plan);
+  const feeLabel = getPlatformFeeLabel(plan);
   const { isOwner } = useRoleAccess();
   const {
     account,
