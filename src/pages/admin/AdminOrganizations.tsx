@@ -12,7 +12,7 @@ import {
   Building2, Search, MoreHorizontal, Ban, CheckCircle, ChevronRight, ArrowLeft,
   Truck, UtensilsCrossed, ShoppingCart, DollarSign, Users, Copy, Edit3,
   Plus, Unlink, Calendar, Wrench, UserPlus, AlertTriangle, Heart,
-  MessageSquare, Tag, Clock, ChevronDown, Send, Activity, TrendingDown,
+  MessageSquare, Tag, Clock, ChevronDown, Send, Activity, TrendingDown, LogIn,
 } from "lucide-react";
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
