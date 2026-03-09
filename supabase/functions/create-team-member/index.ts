@@ -38,7 +38,22 @@ Deno.serve(async (req) => {
       throw new Error("Only owners can create team accounts");
     }
 
-    const { email, password, full_name, role } = await req.json();
+    const { email, password, full_name, role, organization_id } = await req.json();
+    if (!organization_id) {
+      throw new Error("Missing required field: organization_id");
+    }
+
+    // Verify caller is a member (owner) of this org
+    const { data: callerMembership } = await adminClient
+      .from("organization_members")
+      .select("role")
+      .eq("user_id", caller.id)
+      .eq("org_id", organization_id)
+      .single();
+    
+    if (!callerMembership || callerMembership.role !== "owner") {
+      throw new Error("You must be an owner of this organization");
+    }
     if (!email || !password || !full_name || !role) {
       throw new Error("Missing required fields: email, password, full_name, role");
     }
