@@ -323,7 +323,7 @@ export default function POSStartOfDay({ onComplete }: { onComplete: (data: Start
                           />
                           {Number(denomCounts[d.label] || 0) > 0 && (
                             <p className="text-[10px] text-primary font-bold mt-0.5">
-                              ${(Number(denomCounts[d.label]) * d.value).toFixed(2)}
+                              ${(Number(denomCounts[d.label]) * d.value).toFixed(1)}
                             </p>
                           )}
                         </div>
