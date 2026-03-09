@@ -106,7 +106,7 @@ export default function ReceiptPage() {
             {Number(order.tip) > 0 && (
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>Tip</span>
-                <span className="font-semibold">${Number(order.tip).toFixed(2)}</span>
+                <span className="font-semibold">${Number(order.tip).toFixed(1)}</span>
               </div>
             )}
             {Number(order.surcharge_amount) > 0 && (
