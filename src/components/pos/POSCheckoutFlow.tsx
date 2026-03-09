@@ -37,16 +37,13 @@ const tipPresets = [0, 15, 18, 20, 25];
 
 import { supabase } from "@/integrations/supabase/client";
 
-const processStripePayment = async (amount: number): Promise<{ success: boolean; chargeId?: string; paymentIntentId?: string }> => {
+const processStripePayment = async (amount: number, orgId?: string | null): Promise<{ success: boolean; chargeId?: string; paymentIntentId?: string }> => {
   const { data, error } = await supabase.functions.invoke("create-payment-intent", {
-    body: { amount, description: "POS Sale" },
+    body: { amount, description: "POS Sale", org_id: orgId },
   });
   if (error || data?.error) {
     throw new Error(data?.error || error?.message || "Payment failed");
   }
-  // Payment intent created — in a web POS without a physical terminal,
-  // the intent is created and we treat it as successful for now.
-  // Full Stripe Elements integration can be added for on-screen card entry.
   return { success: true, chargeId: data.paymentIntentId, paymentIntentId: data.paymentIntentId };
 };
 
