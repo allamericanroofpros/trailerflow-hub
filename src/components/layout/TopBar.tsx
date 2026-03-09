@@ -95,7 +95,7 @@ export function TopBar() {
       <div className="flex items-center gap-3">
         <NotificationDropdown />
 
-        <button className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-secondary transition-colors">
+        <button onClick={() => navigate("/settings")} className="flex items-center gap-2.5 rounded-lg px-2 py-1.5 hover:bg-secondary transition-colors">
           <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground">
             <User className="h-4 w-4" />
           </div>
