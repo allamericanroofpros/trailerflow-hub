@@ -679,7 +679,7 @@ export default function Inventory() {
                         <p className="text-sm font-semibold text-card-foreground">{need.name}</p>
                         <p className="text-sm font-bold text-primary">{need.toOrder.toFixed(1)} {need.unit}</p>
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">Have {need.current.toFixed(1)} · Need {need.needed.toFixed(1)} · ${need.totalCost.toFixed(2)}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">Have {need.current.toFixed(1)} · Need {need.needed.toFixed(1)} · ${need.totalCost.toFixed(1)}</p>
                     </div>
                   ))}
                 </div>

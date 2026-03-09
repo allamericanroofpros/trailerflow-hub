@@ -409,7 +409,7 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
                     </div>
                     <div className="text-right">
                       <p className="text-xs font-bold text-card-foreground">{hrs.toFixed(1)}h</p>
-                      <p className="text-[10px] text-muted-foreground">${(hrs * Number(e.hourly_rate)).toFixed(2)}</p>
+                      <p className="text-[10px] text-muted-foreground">${(hrs * Number(e.hourly_rate)).toFixed(1)}</p>
                     </div>
                   </div>
                 );

@@ -811,7 +811,7 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                               }, 0);
                               return optCost > 0 ? (
                                 <span className="text-[10px] font-semibold text-warning">
-                                  Option cost: ${optCost.toFixed(2)}
+                                  Option cost: ${optCost.toFixed(1)}
                                 </span>
                               ) : null;
                             })()}
