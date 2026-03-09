@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import { useOrders } from "@/hooks/useOrders";
 import {
-  DollarSign, Receipt, TrendingUp, Clock,
+  DollarSign, Receipt, TrendingUp, Clock, Banknote, CreditCard,
 } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell } from "recharts";
 
