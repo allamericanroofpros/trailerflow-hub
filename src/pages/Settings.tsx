@@ -170,7 +170,7 @@ function BillingSection({ subLoading, subscribed, tier, subscriptionEnd, cancelA
   );
 }
 
-
+const baseSections = [
   { id: "profile", title: "Profile", description: "Manage your account details and preferences.", icon: User },
   { id: "pos", title: "POS Terminal", description: "Configure terminal lock mode and register behavior.", icon: Monitor, ownerOnly: true },
   { id: "payments", title: "Payments & Fees", description: "Card surcharge, fee pass-through, and payment settings.", icon: Receipt, ownerOnly: true },
