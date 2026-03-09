@@ -187,7 +187,7 @@ export default function AdminAnalytics() {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 10 }} />
-                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }} formatter={(v: number) => `$${v.toFixed(2)}`} />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }} formatter={(v: number) => `$${v.toFixed(1)}`} />
                   <Bar dataKey="income" fill="hsl(142, 70%, 45%)" radius={[4, 4, 0, 0]} name="Income" />
                   <Bar dataKey="expense" fill="hsl(0, 70%, 55%)" radius={[4, 4, 0, 0]} name="Expenses" />
                 </BarChart>
