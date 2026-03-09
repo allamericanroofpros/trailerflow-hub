@@ -3,6 +3,7 @@ import { TeamInvitePanel } from "@/components/onboarding/TeamInvitePanel";
 import {
   Users as UsersIcon, AlertTriangle, Clock, Shield, Eye, Plus, Pencil,
   Trash2, X, Save, Calendar, Loader2, ChevronLeft, ChevronRight, UserPlus, CalendarClock, Sparkles, Lock,
+  CheckCircle,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useStaffMembers, useCreateStaffMember, useUpdateStaffMember, useDeleteStaffMember } from "@/hooks/useStaffMembers";
@@ -17,6 +18,7 @@ import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useOrgId } from "@/hooks/useOrgId";
 import { useEntitlements } from "@/hooks/useEntitlements";
 import { UpgradeModal } from "@/components/UpgradeModal";
+import { claudeNonStreaming } from "@/hooks/useClaudeAI";
 
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, "0")}:00`);
