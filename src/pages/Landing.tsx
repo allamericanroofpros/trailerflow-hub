@@ -146,13 +146,13 @@ export default function Landing() {
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" className="text-base px-8 h-12" asChild>
-                <Link to="/signup">Start Free Today <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/signup">Start Your 30-Day Free Trial <ArrowRight className="ml-2 h-4 w-4" /></Link>
               </Button>
               <Button size="lg" variant="outline" className="text-base px-8 h-12" asChild>
                 <a href="#features">See What's Included</a>
               </Button>
             </div>
-            <p className="mt-4 text-sm text-muted-foreground">No credit card required · Free plan available</p>
+            <p className="mt-4 text-sm text-muted-foreground">No credit card required · 30-day free trial on all plans</p>
           </div>
         </div>
       </section>
