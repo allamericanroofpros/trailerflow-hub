@@ -107,7 +107,7 @@ export default function POSConfirmation({
           <div className="border-t-2 border-border pt-3 space-y-1.5">
             <div className="flex justify-between text-sm text-muted-foreground">
               <span>Subtotal</span>
-              <span className="font-semibold">${subtotal.toFixed(2)}</span>
+              <span className="font-semibold">${subtotal.toFixed(1)}</span>
             </div>
             {taxInclusive ? (
               tax > 0 && (
