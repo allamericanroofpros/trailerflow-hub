@@ -1118,8 +1118,11 @@ export type Database = {
         Row: {
           assigned_owner: string | null
           booking_deposit_percent: number | null
+          booking_hourly_rate: number | null
           booking_min_notice_days: number | null
+          booking_minimum_amount: number | null
           booking_notes_template: string | null
+          booking_per_guest_rate: number | null
           booking_service_packages: Json | null
           bookings_enabled: boolean
           cancel_at_period_end: boolean
@@ -1159,8 +1162,11 @@ export type Database = {
         Insert: {
           assigned_owner?: string | null
           booking_deposit_percent?: number | null
+          booking_hourly_rate?: number | null
           booking_min_notice_days?: number | null
+          booking_minimum_amount?: number | null
           booking_notes_template?: string | null
+          booking_per_guest_rate?: number | null
           booking_service_packages?: Json | null
           bookings_enabled?: boolean
           cancel_at_period_end?: boolean
@@ -1200,8 +1206,11 @@ export type Database = {
         Update: {
           assigned_owner?: string | null
           booking_deposit_percent?: number | null
+          booking_hourly_rate?: number | null
           booking_min_notice_days?: number | null
+          booking_minimum_amount?: number | null
           booking_notes_template?: string | null
+          booking_per_guest_rate?: number | null
           booking_service_packages?: Json | null
           bookings_enabled?: boolean
           cancel_at_period_end?: boolean
