@@ -508,16 +508,31 @@ export default function PublicBooking() {
                     </div>
                     <p className="text-xs text-muted-foreground mb-3">Based on {pricing.basis}</p>
                     <div className="space-y-2">
+                      {pricing.breakdown && (
+                        <div className="space-y-1 mb-3 pb-3 border-b border-border">
+                          {pricing.breakdown.map((line, i) => (
+                            <div key={i} className="flex justify-between text-xs text-muted-foreground">
+                              <span>{line}</span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Estimated Range</span>
-                        <span className="font-bold text-foreground">${pricing.min} – ${pricing.max}</span>
+                        <span className="font-bold text-foreground">${pricing.min.toLocaleString()} – ${pricing.max.toLocaleString()}</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Typical Price</span>
-                        <span className="font-bold text-primary text-lg">${pricing.typical}</span>
+                        <span className="text-muted-foreground">Estimated Total</span>
+                        <span className="font-bold text-primary text-lg">${pricing.typical.toLocaleString()}</span>
                       </div>
+                      {orgConfig?.booking_deposit_percent > 0 && (
+                        <div className="flex justify-between text-xs pt-2 border-t border-border mt-2">
+                          <span className="text-muted-foreground">Deposit ({orgConfig.booking_deposit_percent}%)</span>
+                          <span className="font-semibold text-foreground">${Math.round(pricing.typical * orgConfig.booking_deposit_percent / 100).toLocaleString()}</span>
+                        </div>
+                      )}
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-3">* Estimate based on your {pricing.basis} and our average service rates. Final pricing confirmed after review.</p>
+                    <p className="text-[10px] text-muted-foreground mt-3">* Estimate based on {pricing.basis}. Final pricing confirmed after review.</p>
                   </div>
                 )}
               </div>
