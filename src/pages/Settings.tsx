@@ -231,6 +231,9 @@ export default function SettingsPage() {
         booking_deposit_percent: parseFloat(bookingDepositPercent) || 25,
         booking_min_notice_days: parseInt(bookingMinNoticeDays) || 7,
         booking_service_packages: bookingPackages,
+        booking_minimum_amount: parseFloat(bookingMinimumAmount) || 0,
+        booking_per_guest_rate: parseFloat(bookingPerGuestRate) || 0,
+        booking_hourly_rate: parseFloat(bookingHourlyRate) || 0,
       } as any).eq("id", currentOrg.id);
       if (error) throw error;
     },
