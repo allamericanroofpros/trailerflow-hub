@@ -13,16 +13,38 @@ const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 export default function PublicBooking() {
   const [searchParams] = useSearchParams();
   const preselectedTrailerId = searchParams.get("trailer");
+  const orgSlug = searchParams.get("org");
+
+  // Fetch org by slug (if provided)
+  const { data: org } = useQuery({
+    queryKey: ["public-org-by-slug", orgSlug],
+    enabled: !!orgSlug,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("organizations")
+        .select("id, name, bookings_enabled")
+        .eq("slug", orgSlug!)
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  const orgIdFilter = org?.id;
 
   // Fetch trailers (public - RLS allows SELECT for all)
   const { data: trailers, isLoading: trailersLoading } = useQuery({
-    queryKey: ["public-trailers"],
+    queryKey: ["public-trailers", orgIdFilter],
     queryFn: async () => {
-      const { data, error } = await supabase
+      let query = supabase
         .from("trailers")
         .select("id, name, type, description, specialties, image_url, status, avg_ticket, avg_customers_per_hour, avg_food_cost_percent, staff_required, setup_teardown_hours, org_id")
         .eq("status", "active")
         .order("name");
+      if (orgIdFilter) {
+        query = query.eq("org_id", orgIdFilter);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return data;
     },
