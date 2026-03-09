@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useOrg } from "@/contexts/OrgContext";
+import { StripeConnectSettings } from "@/components/settings/StripeConnectSettings";
 
 function AppearanceSettings() {
   const [theme, setTheme] = useState(() => localStorage.getItem("vf_theme") || "light");
@@ -375,6 +376,12 @@ export default function SettingsPage() {
                           </div>
                         )}
                       </div>
+
+                      {/* Stripe Connect Section */}
+                      <div className="border-t border-border pt-5 mt-5">
+                        <StripeConnectSettings />
+                      </div>
+
                       <Button onClick={() => saveSurcharge.mutate()} disabled={saveSurcharge.isPending}>
                         {saveSurcharge.isPending ? "Saving..." : "Save Payment Settings"}
                       </Button>

@@ -1055,6 +1055,65 @@ export type Database = {
           },
         ]
       }
+      organization_payment_accounts: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          org_id: string
+          stripe_charges_enabled: boolean
+          stripe_connect_email: string | null
+          stripe_connect_status: string
+          stripe_connected_account_id: string
+          stripe_details_submitted: boolean
+          stripe_onboarding_completed_at: string | null
+          stripe_onboarding_started_at: string | null
+          stripe_payouts_enabled: boolean
+          stripe_requirements_json: Json | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          org_id: string
+          stripe_charges_enabled?: boolean
+          stripe_connect_email?: string | null
+          stripe_connect_status?: string
+          stripe_connected_account_id: string
+          stripe_details_submitted?: boolean
+          stripe_onboarding_completed_at?: string | null
+          stripe_onboarding_started_at?: string | null
+          stripe_payouts_enabled?: boolean
+          stripe_requirements_json?: Json | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          org_id?: string
+          stripe_charges_enabled?: boolean
+          stripe_connect_email?: string | null
+          stripe_connect_status?: string
+          stripe_connected_account_id?: string
+          stripe_details_submitted?: boolean
+          stripe_onboarding_completed_at?: string | null
+          stripe_onboarding_started_at?: string | null
+          stripe_payouts_enabled?: boolean
+          stripe_requirements_json?: Json | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organization_payment_accounts_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           assigned_owner: string | null
