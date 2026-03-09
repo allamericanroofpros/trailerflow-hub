@@ -54,6 +54,7 @@ Deno.serve(async (req) => {
     "customer.subscription.deleted",
     "invoice.paid",
     "invoice.payment_failed",
+    "account.updated",
   ];
 
   if (!handled.includes(event.type)) {
