@@ -90,7 +90,7 @@ export default function TimeClockPage() {
                   <p className="text-sm font-bold text-foreground">{staffMap[c.staff_id] || "Unknown"}</p>
                   <p className="text-xs text-muted-foreground">
                     Since {new Date(c.clock_in).toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit" })}
-                    {" · "}${Number(c.hourly_rate).toFixed(2)}/hr
+                    {" · "}${Number(c.hourly_rate).toFixed(1)}/hr
                   </p>
                 </div>
               ))}
