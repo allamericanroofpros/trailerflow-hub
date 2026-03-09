@@ -56,7 +56,7 @@ export default function PublicBooking() {
   const [form, setForm] = useState({
     client_name: "", client_email: "", client_phone: "", event_name: "",
     location: "", guest_count: "", service_package: "", notes: "",
-    start_time: "", end_time: "",
+    start_time: "", end_time: "", event_type: "", budget_range: "",
   });
 
   const year = currentDate.getFullYear();
@@ -112,20 +112,35 @@ export default function PublicBooking() {
 
   const trailer = trailers?.find(t => t.id === selectedTrailer);
 
-  // Pricing estimate
-  const getPricingEstimate = (hours: number) => {
+  // Pricing estimate — uses guest count as primary driver when available
+  const getPricingEstimate = () => {
     if (!trailer) return null;
     const ticket = Number(trailer.avg_ticket) || 0;
+    if (!ticket) return null;
+
+    const guests = parseInt(form.guest_count) || 0;
     const custPerHr = Number(trailer.avg_customers_per_hour) || 0;
-    if (!ticket || !custPerHr) return null;
-    const revenue = ticket * custPerHr * hours;
-    return { min: Math.round(revenue * 0.6), max: Math.round(revenue * 1.1), typical: Math.round(revenue * 0.85) };
+    const hours = form.start_time && form.end_time
+      ? Math.max(1, (parseInt(form.end_time.split(":")[0]) * 60 + parseInt(form.end_time.split(":")[1]) - parseInt(form.start_time.split(":")[0]) * 60 - parseInt(form.start_time.split(":")[1])) / 60)
+      : 0;
+
+    if (guests > 0) {
+      // Guest-based: assume ~60-80% of guests buy, at avg ticket
+      const estimatedBuyers = guests * 0.7;
+      const baseRevenue = estimatedBuyers * ticket;
+      return { min: Math.round(baseRevenue * 0.75), max: Math.round(baseRevenue * 1.2), typical: Math.round(baseRevenue), basis: "guest count" as const };
+    }
+
+    if (hours > 0 && custPerHr > 0) {
+      // Time-based fallback
+      const revenue = ticket * custPerHr * hours;
+      return { min: Math.round(revenue * 0.6), max: Math.round(revenue * 1.1), typical: Math.round(revenue * 0.85), basis: "event duration" as const };
+    }
+
+    return null;
   };
 
-  const estimatedHours = form.start_time && form.end_time
-    ? Math.max(1, (parseInt(form.end_time.split(":")[0]) * 60 + parseInt(form.end_time.split(":")[1]) - parseInt(form.start_time.split(":")[0]) * 60 - parseInt(form.start_time.split(":")[1])) / 60)
-    : 4;
-  const pricing = getPricingEstimate(estimatedHours);
+  const pricing = getPricingEstimate();
 
   const handleSubmit = async () => {
     if (!form.client_name || !form.client_email || !form.event_name || !selectedDate) {
@@ -146,7 +161,7 @@ export default function PublicBooking() {
         trailer_id: selectedTrailer || null,
         service_package: form.service_package || null,
         guest_count: form.guest_count ? parseInt(form.guest_count) : null,
-        notes: form.notes || null,
+        notes: [form.event_type && `Event type: ${form.event_type}`, form.budget_range && `Budget: ${form.budget_range}`, form.notes].filter(Boolean).join("\n") || null,
         start_time: form.start_time || null,
         end_time: form.end_time || null,
         status: "pending",
@@ -182,7 +197,7 @@ export default function PublicBooking() {
             Thank you, {form.client_name}! We've received your booking request for <strong>{form.event_name}</strong> on <strong>{selectedDate}</strong>.
             We'll be in touch at <strong>{form.client_email}</strong> within 24 hours to confirm details and discuss pricing.
           </p>
-          <Button onClick={() => { setStep("select"); setSelectedDate(""); setForm({ client_name: "", client_email: "", client_phone: "", event_name: "", location: "", guest_count: "", service_package: "", notes: "", start_time: "", end_time: "" }); }}>
+          <Button onClick={() => { setStep("select"); setSelectedDate(""); setForm({ client_name: "", client_email: "", client_phone: "", event_name: "", location: "", guest_count: "", service_package: "", notes: "", start_time: "", end_time: "", event_type: "", budget_range: "" }); }}>
             Submit Another Request
           </Button>
         </div>
@@ -338,9 +353,25 @@ export default function PublicBooking() {
                     <label className="text-xs font-medium text-muted-foreground">Location</label>
                     <Input value={form.location} onChange={e => setForm({ ...form, location: e.target.value })} placeholder="123 Main St, Anytown OH" className="mt-1" />
                   </div>
-                  <div>
-                    <label className="text-xs font-medium text-muted-foreground">Estimated Guests</label>
+                   <div>
+                    <label className="text-xs font-medium text-muted-foreground">Estimated Guests *</label>
                     <Input type="number" value={form.guest_count} onChange={e => setForm({ ...form, guest_count: e.target.value })} placeholder="50" className="mt-1" />
+                    <p className="text-[10px] text-muted-foreground mt-1">Used to calculate your pricing estimate</p>
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Event Type</label>
+                    <select value={form.event_type} onChange={e => setForm({ ...form, event_type: e.target.value })}
+                      className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none">
+                      <option value="">Select type...</option>
+                      <option value="birthday">Birthday Party</option>
+                      <option value="wedding">Wedding / Reception</option>
+                      <option value="corporate">Corporate Event</option>
+                      <option value="festival">Festival / Fair</option>
+                      <option value="school">School / Church Event</option>
+                      <option value="fundraiser">Fundraiser</option>
+                      <option value="neighborhood">Block Party / Neighborhood</option>
+                      <option value="other">Other</option>
+                    </select>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Start Time</label>
@@ -349,6 +380,19 @@ export default function PublicBooking() {
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">End Time</label>
                     <Input type="time" value={form.end_time} onChange={e => setForm({ ...form, end_time: e.target.value })} className="mt-1" />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-muted-foreground">Budget Range</label>
+                    <select value={form.budget_range} onChange={e => setForm({ ...form, budget_range: e.target.value })}
+                      className="mt-1 w-full rounded-md border border-border bg-background px-3 py-2 text-sm outline-none">
+                      <option value="">Select range...</option>
+                      <option value="under_500">Under $500</option>
+                      <option value="500_1000">$500 – $1,000</option>
+                      <option value="1000_2000">$1,000 – $2,000</option>
+                      <option value="2000_5000">$2,000 – $5,000</option>
+                      <option value="5000_plus">$5,000+</option>
+                      <option value="flexible">Flexible / Not Sure</option>
+                    </select>
                   </div>
                   <div>
                     <label className="text-xs font-medium text-muted-foreground">Package</label>
@@ -382,9 +426,10 @@ export default function PublicBooking() {
                     )}
                     <div className="space-y-2 text-xs text-muted-foreground">
                       <div className="flex items-center gap-2"><Calendar className="h-3.5 w-3.5" /> {new Date(selectedDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}</div>
-                      {form.start_time && form.end_time && (
-                        <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" /> {form.start_time} – {form.end_time} ({estimatedHours.toFixed(1)}h)</div>
-                      )}
+                      {form.start_time && form.end_time && (() => {
+                        const hrs = Math.max(1, (parseInt(form.end_time.split(":")[0]) * 60 + parseInt(form.end_time.split(":")[1]) - parseInt(form.start_time.split(":")[0]) * 60 - parseInt(form.start_time.split(":")[1])) / 60);
+                        return <div className="flex items-center gap-2"><Clock className="h-3.5 w-3.5" /> {form.start_time} – {form.end_time} ({hrs.toFixed(1)}h)</div>;
+                      })()}
                       {form.guest_count && (
                         <div className="flex items-center gap-2"><Users className="h-3.5 w-3.5" /> ~{form.guest_count} guests</div>
                       )}
@@ -401,7 +446,7 @@ export default function PublicBooking() {
                       <DollarSign className="h-4 w-4 text-primary" />
                       <h3 className="text-sm font-bold text-foreground">Pricing Estimate</h3>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-3">Based on a {estimatedHours.toFixed(1)}-hour event</p>
+                    <p className="text-xs text-muted-foreground mb-3">Based on {pricing.basis === "guest count" ? `~${form.guest_count} guests` : "event duration"}</p>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Estimated Range</span>
@@ -412,7 +457,7 @@ export default function PublicBooking() {
                         <span className="font-bold text-primary text-lg">${pricing.typical}</span>
                       </div>
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-3">* Final pricing discussed after booking confirmation. Estimates based on event duration and typical service rates.</p>
+                    <p className="text-[10px] text-muted-foreground mt-3">* Estimate based on your {pricing.basis} and our average service rates. Final pricing confirmed after review.</p>
                   </div>
                 )}
               </div>
