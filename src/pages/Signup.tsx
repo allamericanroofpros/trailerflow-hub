@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, ChevronRight, Truck, Check } from "lucide-react";
+import { ChevronLeft, ChevronRight, Truck, Check, Crown } from "lucide-react";
+import { TIERS, type TierKey } from "@/config/tiers";
 
 const VENDOR_TYPES = [
   "Food Truck",
@@ -26,8 +27,20 @@ const USE_CASES = [
 
 const TEAM_SIZES = ["Just me", "2-3", "4-7", "8-15", "16+"];
 
+const PLAN_LABELS: Record<string, { name: string; price: string }> = {
+  free: { name: "Free", price: "$0" },
+  starter: { name: "Starter", price: "$29/mo" },
+  pro: { name: "Pro", price: "$79/mo" },
+  enterprise: { name: "Enterprise", price: "$199/mo" },
+};
+
 export default function Signup() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const selectedPlan = searchParams.get("plan") || "free";
+  const planInfo = PLAN_LABELS[selectedPlan] || PLAN_LABELS.free;
+  const isPaid = selectedPlan !== "free";
+
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -76,6 +89,32 @@ export default function Signup() {
     setStep(step + 1);
   };
 
+  const redirectToStripe = async () => {
+    try {
+      const tier = TIERS[selectedPlan as TierKey];
+      if (!tier) throw new Error("Invalid plan");
+
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) throw new Error("Not authenticated");
+
+      const { data, error } = await supabase.functions.invoke("create-checkout", {
+        body: {
+          price_id: tier.price_id,
+          plan_tier: selectedPlan,
+        },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      console.error("Stripe redirect error:", err);
+      toast.error("Could not start checkout. You can upgrade from Settings later.");
+      navigate("/");
+    }
+  };
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateStep3()) return;
@@ -95,6 +134,7 @@ export default function Signup() {
           team_size: teamSize,
           primary_use_case: useCase,
           referral_source: referral || null,
+          selected_plan: selectedPlan,
         },
       },
     });
@@ -105,10 +145,30 @@ export default function Signup() {
       return;
     }
 
-    setSent(true);
-    toast.success("Check your email to confirm your account!");
+    if (isPaid) {
+      // For paid plans: show confirmation then redirect to Stripe
+      setSent(true);
+      toast.success("Account created! Redirecting to payment...");
+    } else {
+      setSent(true);
+      toast.success("Check your email to confirm your account!");
+    }
     setLoading(false);
   };
+
+  // After signup, if paid plan, attempt Stripe redirect once session is ready
+  useEffect(() => {
+    if (!sent || !isPaid) return;
+
+    const timer = setTimeout(async () => {
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        await redirectToStripe();
+      }
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [sent, isPaid]);
 
   if (sent) {
     return (
@@ -117,10 +177,24 @@ export default function Signup() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
             <Check className="h-8 w-8 text-primary" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Check your email</h1>
-          <p className="text-sm text-muted-foreground">
-            We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account and start setting up {businessName}.
-          </p>
+          {isPaid ? (
+            <>
+              <h1 className="text-2xl font-bold text-foreground">Account created!</h1>
+              <p className="text-sm text-muted-foreground">
+                Redirecting you to Stripe to complete your <strong>{planInfo.name}</strong> subscription...
+              </p>
+              <p className="text-xs text-muted-foreground">
+                If you're not redirected, check your email to confirm your account first, then upgrade from Settings.
+              </p>
+            </>
+          ) : (
+            <>
+              <h1 className="text-2xl font-bold text-foreground">Check your email</h1>
+              <p className="text-sm text-muted-foreground">
+                We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account and start setting up {businessName}.
+              </p>
+            </>
+          )}
           <Link to="/login" className="text-sm text-primary hover:underline">Back to login</Link>
         </div>
       </div>
@@ -140,6 +214,19 @@ export default function Signup() {
             {step === 2 && "Tell us about your business"}
             {step === 3 && "Almost there!"}
           </p>
+        </div>
+
+        {/* Selected plan badge */}
+        <div className="flex items-center justify-center">
+          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm">
+            <Crown className="h-3.5 w-3.5 text-primary" />
+            <span className="font-medium text-foreground">{planInfo.name} Plan</span>
+            <span className="text-muted-foreground">·</span>
+            <span className="font-semibold text-primary">{planInfo.price}</span>
+            <Link to="/landing#pricing" className="text-xs text-muted-foreground hover:text-foreground transition-colors ml-1">
+              Change
+            </Link>
+          </div>
         </div>
 
         <div className="space-y-1">
@@ -267,7 +354,7 @@ export default function Signup() {
               className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
               {step < totalSteps ? (
                 <>Continue <ChevronRight className="h-4 w-4" /></>
-              ) : loading ? "Creating account..." : "Start Free Trial"}
+              ) : loading ? "Creating account..." : isPaid ? `Create Account & Pay ${planInfo.price}` : "Start Free Plan"}
             </button>
           </div>
         </form>
