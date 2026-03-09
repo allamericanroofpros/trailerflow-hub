@@ -119,7 +119,7 @@ export default function POSConfirmation({
             ) : (
               <div className="flex justify-between text-sm text-muted-foreground">
                 <span>{taxLabel || "Tax"}</span>
-                <span className="font-semibold">${tax.toFixed(2)}</span>
+                <span className="font-semibold">${tax.toFixed(1)}</span>
               </div>
             )}
             {tip > 0 && (
