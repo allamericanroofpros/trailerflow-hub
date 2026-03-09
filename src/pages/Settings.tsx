@@ -464,6 +464,7 @@ export default function SettingsPage() {
                             <label className="text-xs font-medium text-muted-foreground">Hourly Rate ($)</label>
                             <Input type="number" min="0" step="25" value={bookingHourlyRate} onChange={(e) => setBookingHourlyRate(e.target.value)} className="mt-1" placeholder="0" />
                             <p className="text-[11px] text-muted-foreground mt-1">Charged per hour of service (added to per-guest total)</p>
+                          </div>
                           <div className="pl-4">
                             <label className="text-xs font-medium text-muted-foreground">Default Deposit (%)</label>
                             <Input type="number" min="0" max="100" step="5" value={bookingDepositPercent} onChange={(e) => setBookingDepositPercent(e.target.value)} className="mt-1" />
