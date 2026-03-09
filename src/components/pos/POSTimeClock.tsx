@@ -315,7 +315,7 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
                   <CheckCircle className="h-8 w-8 text-success" />
                 </div>
                 <p className="text-xl font-black text-success">{matchedStaff.name} Clocked In!</p>
-                <p className="text-sm text-muted-foreground">Rate: ${Number(matchedStaff.hourly_rate).toFixed(2)}/hr</p>
+                <p className="text-sm text-muted-foreground">Rate: ${Number(matchedStaff.hourly_rate).toFixed(1)}/hr</p>
                 <Button variant="outline" className="h-12 font-bold rounded-xl w-full" onClick={clearPin}>Done</Button>
               </motion.div>
             )}
