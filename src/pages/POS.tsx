@@ -441,7 +441,7 @@ export default function POS() {
               }}
               disabled={createOrder.isPending}
             >
-              Charge ${total.toFixed(2)}
+              Charge ${total.toFixed(1)}
             </Button>
             <button
               onClick={() => { setCart([]); if (isCompact) setMobileCartOpen(false); }}
