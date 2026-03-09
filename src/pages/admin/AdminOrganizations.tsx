@@ -297,7 +297,10 @@ function OrgDetailView({ orgId, onBack }: { orgId: string; onBack: () => void })
           </div>
           <p className="text-xs text-muted-foreground">{org?.slug} · Created {org ? format(new Date(org.created_at), "PP") : "—"}</p>
         </div>
-        <div className="flex gap-2 shrink-0">
+        <div className="flex gap-2 shrink-0 flex-wrap">
+          <Button variant="outline" size="sm" onClick={() => impersonateOwner.mutate()} disabled={impersonateOwner.isPending || !org?.owner_user_id}>
+            <LogIn className="h-3.5 w-3.5 mr-1.5" />Impersonate Owner
+          </Button>
           <Button variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(orgId); toast.success("Org ID copied"); }}><Copy className="h-3.5 w-3.5 mr-1.5" />Copy ID</Button>
           <Button variant="outline" size="sm" onClick={() => repairOrg.mutate()} disabled={repairOrg.isPending}><Wrench className="h-3.5 w-3.5 mr-1.5" />Repair</Button>
         </div>
