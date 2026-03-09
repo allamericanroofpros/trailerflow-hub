@@ -168,7 +168,7 @@ export default function POSCheckoutFlow({
               <div className="text-center">
                 <h3 className="text-lg font-black text-card-foreground">Payment Method</h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Charge <span className="font-black text-card-foreground">${total.toFixed(2)}</span>
+                  Charge <span className="font-black text-card-foreground">${total.toFixed(1)}</span>
                 </p>
                 {surchargeSettings?.enabled && (
                   <p className="text-xs text-amber-600 mt-1">
