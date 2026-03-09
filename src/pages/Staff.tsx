@@ -33,18 +33,41 @@ export default function Staff() {
   const deleteStaff = useDeleteStaffMember();
   const qc = useQueryClient();
 
-  // Team roles data (owner/manager only)
+  // Team roles data scoped to current org
   const { data: teamMembers, isLoading: teamLoading } = useQuery({
-    queryKey: ["team_roles"],
-    enabled: isOwner,
+    queryKey: ["team_roles", orgId],
+    enabled: isOwner && !!orgId,
     queryFn: async () => {
-      const { data: roles } = await supabase.from("user_roles").select("*");
-      if (!roles) return [];
-      const userIds = roles.map((r) => r.user_id);
-      const { data: profiles } = await supabase.from("profiles").select("*").in("user_id", userIds);
-      return roles.map((r) => ({
-        ...r,
-        profile: profiles?.find((p) => p.user_id === r.user_id),
+      const { data: members } = await supabase
+        .from("organization_members")
+        .select("*")
+        .eq("org_id", orgId!);
+      if (!members || members.length === 0) return [];
+      const userIds = members.map((m) => m.user_id);
+      const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, phone, avatar_url").in("user_id", userIds);
+      // Get staff_members to find trailer assignments
+      const { data: staffRows } = await supabase.from("staff_members").select("user_id, name").eq("org_id", orgId!).not("user_id", "is", null);
+      // Get trailers for the org
+      const { data: trailers } = await supabase.from("trailers").select("id, name").eq("org_id", orgId!);
+      // Get event_staff → events to find trailer associations per staff
+      const { data: eventStaffRows } = await supabase.from("event_staff").select("staff_id, events(trailer_id)").eq("org_id", orgId!);
+      // Build a map: user_id → trailer names
+      const staffIdByUserId: Record<string, string> = {};
+      staffRows?.forEach((s) => { if (s.user_id) staffIdByUserId[s.user_id] = s.id; });
+      const trailerMap: Record<string, Set<string>> = {};
+      eventStaffRows?.forEach((es: any) => {
+        if (es.events?.trailer_id) {
+          if (!trailerMap[es.staff_id]) trailerMap[es.staff_id] = new Set();
+          const trailer = trailers?.find((t) => t.id === es.events.trailer_id);
+          if (trailer) trailerMap[es.staff_id].add(trailer.name);
+        }
+      });
+      return members.map((m) => ({
+        ...m,
+        profile: profiles?.find((p) => p.user_id === m.user_id),
+        trailerNames: Object.entries(staffIdByUserId)
+          .filter(([uid]) => uid === m.user_id)
+          .flatMap(([, staffId]) => Array.from(trailerMap[staffId] || [])),
       }));
     },
   });
