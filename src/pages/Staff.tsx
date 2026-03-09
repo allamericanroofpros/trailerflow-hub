@@ -459,7 +459,9 @@ export default function Staff() {
                           {member.profile?.full_name || "Unnamed User"}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          {member.profile?.phone || member.profile?.business_name || "No details"}
+                          {member.trailerNames?.length > 0
+                            ? `Trailers: ${member.trailerNames.join(", ")}`
+                            : member.profile?.phone || "No trailer assigned"}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
