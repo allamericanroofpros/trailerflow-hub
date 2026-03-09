@@ -641,7 +641,7 @@ export default function Inventory() {
                     <ShoppingCart className="h-4 w-4 text-primary" />
                     <h3 className="text-sm font-semibold text-card-foreground">Order List</h3>
                   </div>
-                  <span className="text-sm font-bold text-primary">Est. ${totalOrderCost.toFixed(2)}</span>
+                  <span className="text-sm font-bold text-primary">Est. ${totalOrderCost.toFixed(1)}</span>
                 </div>
                 <table className="w-full text-sm hidden sm:table">
                   <thead>
