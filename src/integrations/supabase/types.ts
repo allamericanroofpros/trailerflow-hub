@@ -1117,6 +1117,11 @@ export type Database = {
       organizations: {
         Row: {
           assigned_owner: string | null
+          booking_deposit_percent: number | null
+          booking_min_notice_days: number | null
+          booking_notes_template: string | null
+          booking_service_packages: Json | null
+          bookings_enabled: boolean
           cancel_at_period_end: boolean
           churn_risk: string
           created_at: string
@@ -1153,6 +1158,11 @@ export type Database = {
         }
         Insert: {
           assigned_owner?: string | null
+          booking_deposit_percent?: number | null
+          booking_min_notice_days?: number | null
+          booking_notes_template?: string | null
+          booking_service_packages?: Json | null
+          bookings_enabled?: boolean
           cancel_at_period_end?: boolean
           churn_risk?: string
           created_at?: string
@@ -1189,6 +1199,11 @@ export type Database = {
         }
         Update: {
           assigned_owner?: string | null
+          booking_deposit_percent?: number | null
+          booking_min_notice_days?: number | null
+          booking_notes_template?: string | null
+          booking_service_packages?: Json | null
+          bookings_enabled?: boolean
           cancel_at_period_end?: boolean
           churn_risk?: string
           created_at?: string
