@@ -47,6 +47,23 @@ export default function PublicBooking() {
     },
   });
 
+
+  // Fetch org pricing config for selected trailer
+  const selectedOrgId = trailers?.find(t => t.id === selectedTrailer)?.org_id;
+  const { data: orgConfig } = useQuery({
+    queryKey: ["public-org-config", selectedOrgId],
+    enabled: !!selectedOrgId,
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("organizations")
+        .select("booking_minimum_amount, booking_per_guest_rate, booking_hourly_rate, booking_deposit_percent")
+        .eq("id", selectedOrgId!)
+        .single();
+      if (error) throw error;
+      return data as any;
+    },
+  });
+
   const [selectedTrailer, setSelectedTrailer] = useState<string>(preselectedTrailerId || "");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string>("");
