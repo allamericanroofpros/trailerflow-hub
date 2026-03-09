@@ -2,6 +2,9 @@ import { AppLayout } from "@/components/layout/AppLayout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
 import { RevenueByTypeChart, TrailerPerformanceChart } from "@/components/dashboard/Charts";
 import { AdvancedAnalyticsPlaceholder } from "@/components/dashboard/AdvancedAnalyticsGate";
+import { TodaySnapshot } from "@/components/dashboard/TodaySnapshot";
+import { NextEventCard } from "@/components/dashboard/NextEventCard";
+import { StripeStatusChip } from "@/components/dashboard/StripeStatusChip";
 import { SetupWizard } from "@/components/onboarding/SetupWizard";
 import { useOnboardingStatus } from "@/hooks/useOnboardingStatus";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +25,6 @@ import {
   CalendarDays,
   Sparkles,
   ArrowRight,
-  AlertTriangle,
   Loader2,
   ShoppingCart,
 } from "lucide-react";
@@ -59,11 +61,9 @@ export default function Dashboard() {
     const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
     const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    // Revenue from completed orders in last 30 days
     const recentOrders = orders?.filter(o => new Date(o.created_at) >= thirtyDaysAgo) || [];
     const actualRevenue = recentOrders.reduce((sum, o) => sum + (o.total || 0), 0);
 
-    // Revenue from transactions
     const recentIncome = transactions?.filter(t => t.type === "income" && new Date(t.transaction_date) >= thirtyDaysAgo) || [];
     const recentExpenses = transactions?.filter(t => t.type === "expense" && new Date(t.transaction_date) >= thirtyDaysAgo) || [];
     const totalIncome = recentIncome.reduce((sum, t) => sum + t.amount, 0);
@@ -71,7 +71,6 @@ export default function Dashboard() {
     const totalRevenue = actualRevenue || totalIncome;
     const profitMargin = totalRevenue > 0 ? ((totalRevenue - totalExpenses) / totalRevenue * 100) : 0;
 
-    // Forecasted revenue from confirmed/tentative events
     const upcomingEvents = grouped
       ? [...(grouped.confirmed || []), ...(grouped.tentative || [])].filter(e => e.event_date && new Date(e.event_date) >= now)
       : [];
@@ -80,22 +79,17 @@ export default function Dashboard() {
       return sum + avg;
     }, 0);
 
-    // Trailer utilization
     const activeTrailers = trailers?.filter(t => t.status === "active").length || 0;
     const trailersWithEvents = new Set(
       Object.values(grouped || {}).flat().filter(e => e.trailer_id && e.event_date && new Date(e.event_date) >= thirtyDaysAgo).map(e => e.trailer_id)
     ).size;
     const utilization = activeTrailers > 0 ? Math.round((trailersWithEvents / activeTrailers) * 100) : 0;
 
-    // Pending bookings
     const pendingBookings = bookings?.filter(b => b.status === "pending").length || 0;
-
-    // Events in next 7 days
     const eventsNext7 = Object.values(grouped || {}).flat().filter(e =>
       e.event_date && new Date(e.event_date) >= now && new Date(e.event_date) <= sevenDaysFromNow
     ).length;
 
-    // Pipeline counts
     const pipelineCounts = {
       lead: grouped?.lead?.length || 0,
       applied: grouped?.applied?.length || 0,
@@ -118,10 +112,14 @@ export default function Dashboard() {
   const totalPipeline = pipelineStages.reduce((s, p) => s + p.count, 0) || 1;
   const firstName = profile?.full_name?.split(" ")[0] || "there";
 
+  // Time-aware greeting
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+
   const actionItems = [
     { label: "Pending Bookings", count: metrics.pendingBookings, icon: Clock, color: "text-warning", href: "/bookings" },
     { label: "Active Trailers", count: trailers?.filter(t => t.status === "active").length || 0, icon: Truck, color: "text-primary", href: "/trailers" },
-    { label: "Events Next 7 Days", count: metrics.eventsNext7, icon: CalendarDays, color: "text-info", href: "/calendar" },
+    { label: "Events This Week", count: metrics.eventsNext7, icon: CalendarDays, color: "text-info", href: "/calendar" },
   ];
 
   if (eventsLoading) {
@@ -137,15 +135,18 @@ export default function Dashboard() {
   return (
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
-        <div className="flex items-center justify-between">
+        {/* Header with CTA */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Dashboard</h1>
-            <p className="text-sm text-muted-foreground mt-1">Welcome back, {firstName}. Here's your business at a glance.</p>
+            <h1 className="text-2xl font-bold tracking-tight">{greeting}, {firstName} 👋</h1>
+            <p className="text-sm text-muted-foreground mt-1">
+              {profile?.business_name ? `Here's how ${profile.business_name} is doing.` : "Here's your business at a glance."}
+            </p>
           </div>
           {canView("pos") && (
             <button
               onClick={() => navigate("/pos")}
-              className="flex items-center gap-3 rounded-2xl bg-primary px-8 py-4 text-primary-foreground shadow-lg hover:bg-primary/90 active:scale-95 transition-all touch-manipulation group"
+              className="flex items-center gap-3 rounded-2xl bg-primary px-6 sm:px-8 py-4 text-primary-foreground shadow-lg hover:bg-primary/90 active:scale-95 transition-all touch-manipulation group w-full sm:w-auto justify-center"
             >
               <ShoppingCart className="h-6 w-6 group-hover:scale-110 transition-transform" />
               <span className="text-lg font-black tracking-tight">Open for Business</span>
@@ -153,13 +154,42 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Setup Wizard */}
+        {/* Setup Wizard (first-run) */}
         {!isComplete && !wizardDismissed && (
           <SetupWizard completedSteps={completedSteps} onDismiss={() => setWizardDismissed(true)} />
         )}
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {/* Stripe Connect status (shows when not fully connected) */}
+        <StripeStatusChip />
+
+        {/* Today at a Glance — live shift metrics */}
+        <TodaySnapshot />
+
+        {/* Next Event + Quick Actions row */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <NextEventCard />
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-1 gap-3">
+            {actionItems.map((item) => (
+              <button
+                key={item.label}
+                onClick={() => navigate(item.href)}
+                className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-card text-left hover:shadow-card-hover transition-shadow touch-manipulation active:scale-[0.98]"
+              >
+                <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-secondary ${item.color} shrink-0`}>
+                  <item.icon className="h-5 w-5" />
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-card-foreground">{item.label}</p>
+                  <p className="text-2xl font-bold text-card-foreground">{item.count}</p>
+                </div>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* 30-Day Overview */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <MetricCard
             title="Forecasted Revenue"
             value={metrics.forecastedRevenue > 0 ? `$${metrics.forecastedRevenue.toLocaleString()}` : "—"}
@@ -173,8 +203,9 @@ export default function Dashboard() {
             icon={<DollarSign className="h-5 w-5" />}
           />
           <MetricCard
-            title="Trailer Utilization"
+            title="Utilization"
             value={`${metrics.utilization}%`}
+            subtitle="Trailer activity"
             icon={<Truck className="h-5 w-5" />}
           />
           <MetricCard
@@ -184,27 +215,7 @@ export default function Dashboard() {
           />
         </div>
 
-        {/* Action Items */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-          {actionItems.map((item) => (
-            <button
-              key={item.label}
-              onClick={() => navigate(item.href)}
-              className="flex items-center gap-4 rounded-xl border border-border bg-card p-4 shadow-card text-left hover:shadow-card-hover transition-shadow"
-            >
-              <div className={`flex h-10 w-10 items-center justify-center rounded-lg bg-secondary ${item.color}`}>
-                <item.icon className="h-5 w-5" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-card-foreground">{item.label}</p>
-                <p className="text-2xl font-bold text-card-foreground">{item.count}</p>
-              </div>
-              <ArrowRight className="h-4 w-4 text-muted-foreground" />
-            </button>
-          ))}
-        </div>
-
-        {/* Bottom: Charts + Pipeline */}
+        {/* Pipeline + Charts */}
         <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
           <button
             onClick={() => navigate("/events")}
@@ -240,18 +251,18 @@ export default function Dashboard() {
           )}
         </div>
 
-        {/* Quick Access Buttons */}
+        {/* Quick Access */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <button
             onClick={() => navigate("/orders-queue")}
-            className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-card text-left hover:shadow-card-hover transition-shadow"
+            className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-card text-left hover:shadow-card-hover transition-shadow touch-manipulation active:scale-[0.98]"
           >
             <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <ShoppingCart className="h-6 w-6" />
             </div>
             <div>
               <h3 className="text-sm font-semibold text-card-foreground">Orders & Queue</h3>
-              <p className="text-xs text-muted-foreground mt-0.5">View active orders and history — ideal for a second screen</p>
+              <p className="text-xs text-muted-foreground mt-0.5">View active orders — great for a second screen</p>
             </div>
             <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto" />
           </button>
@@ -259,14 +270,14 @@ export default function Dashboard() {
           {ent.aiDiscovery && (
             <button
               onClick={() => navigate("/discover")}
-              className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-card text-left hover:shadow-card-hover transition-shadow"
+              className="flex items-center gap-4 rounded-xl border border-border bg-card p-5 shadow-card text-left hover:shadow-card-hover transition-shadow touch-manipulation active:scale-[0.98]"
             >
               <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
                 <Sparkles className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-card-foreground">Discover New Events</h3>
-                <p className="text-xs text-muted-foreground mt-0.5">AI-powered event search for your trailers</p>
+                <h3 className="text-sm font-semibold text-card-foreground">Find New Events</h3>
+                <p className="text-xs text-muted-foreground mt-0.5">AI-powered event discovery for your trailers</p>
               </div>
               <ArrowRight className="h-4 w-4 text-muted-foreground ml-auto" />
             </button>
