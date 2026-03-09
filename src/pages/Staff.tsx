@@ -23,6 +23,153 @@ import { claudeNonStreaming } from "@/hooks/useClaudeAI";
 const DAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const TIME_SLOTS = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, "0")}:00`);
 
+type AISuggestion = { staffName: string; staffId: string; eventName: string; eventId: string; reason: string };
+
+function AIScheduleSuggestion({
+  staff,
+  events,
+  assignments,
+  orgId,
+  onAssign,
+}: {
+  staff: any[];
+  events: any[];
+  assignments: any[];
+  orgId: string | null;
+  onAssign: (staffId: string, eventId: string) => void;
+}) {
+  const [loading, setLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState<AISuggestion[]>([]);
+  const [applied, setApplied] = useState<Set<string>>(new Set());
+
+  const handleSuggest = async () => {
+    if (!staff.length || !events.length) {
+      toast.error("Add staff and events first before requesting AI suggestions.");
+      return;
+    }
+
+    setLoading(true);
+    setSuggestions([]);
+    setApplied(new Set());
+
+    try {
+      const activeStaff = staff.filter((s) => s.status === "active");
+      const upcomingEvents = events.filter((e) => e.event_date && new Date(e.event_date) >= new Date());
+      const alreadyAssigned = assignments.map((a: any) => `${a.staff_id}:${a.event_id}`);
+
+      const staffSummary = activeStaff.map((s) => {
+        const avail = (s.availability && typeof s.availability === "object" && !Array.isArray(s.availability))
+          ? Object.entries(s.availability as Record<string, { start: string; end: string }>)
+              .map(([day, times]) => `${day} ${times.start}-${times.end}`)
+              .join(", ")
+          : "No availability set";
+        return `- ${s.name} (id:${s.id}, rate:$${s.hourly_rate || 0}/hr, availability: ${avail})`;
+      }).join("\n");
+
+      const eventSummary = upcomingEvents.slice(0, 15).map((e) =>
+        `- ${e.name} (id:${e.id}, date:${e.event_date}, ${e.start_time || "TBD"}-${e.end_time || "TBD"}, stage:${e.stage})`
+      ).join("\n");
+
+      const assignedSummary = alreadyAssigned.length > 0
+        ? `Already assigned (staff_id:event_id): ${alreadyAssigned.join(", ")}`
+        : "No existing assignments.";
+
+      const prompt = `You are a scheduling assistant for a food truck business. Given the staff and upcoming events below, suggest optimal staff-to-event assignments. Consider availability (day of week), avoid double-booking, and balance workload.
+
+STAFF:
+${staffSummary}
+
+UPCOMING EVENTS:
+${eventSummary}
+
+${assignedSummary}
+
+Return ONLY a JSON array of suggestions. Each object must have exactly these fields:
+{"staffName":"...","staffId":"...","eventName":"...","eventId":"...","reason":"one sentence why"}
+
+Return 3-8 suggestions. Only suggest unassigned pairings. If no good matches exist, return an empty array [].`;
+
+      const result = await claudeNonStreaming("scheduling", [
+        { role: "user", content: prompt },
+      ], { org_id: orgId });
+
+      // Parse JSON from response
+      const jsonMatch = result.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]) as AISuggestion[];
+        // Validate staff/event IDs exist
+        const validSuggestions = parsed.filter((s) =>
+          staff.some((st) => st.id === s.staffId) && events.some((e) => e.id === s.eventId)
+        );
+        setSuggestions(validSuggestions);
+        if (validSuggestions.length === 0) {
+          toast.info("No scheduling suggestions found. All staff may already be assigned, or availability doesn't match upcoming events.");
+        }
+      } else {
+        toast.info("AI couldn't generate suggestions for current data. Try adding more events or staff availability.");
+      }
+    } catch (e: any) {
+      console.error("AI scheduling error:", e);
+      toast.error(e.message || "Failed to get AI suggestions");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleApply = (s: AISuggestion) => {
+    onAssign(s.staffId, s.eventId);
+    setApplied((prev) => new Set([...prev, `${s.staffId}:${s.eventId}`]));
+  };
+
+  return (
+    <div className="rounded-xl border border-primary/20 bg-primary/5 p-6 shadow-card">
+      <div className="flex items-center gap-2 mb-2">
+        <Sparkles className="h-4 w-4 text-primary" />
+        <h3 className="text-sm font-semibold text-card-foreground">AI Schedule Assistant</h3>
+      </div>
+      <p className="text-xs text-muted-foreground mb-3">
+        Based on staff availability and upcoming events, AI will suggest optimal assignments. Review and apply with one click.
+      </p>
+      <Button size="sm" className="gap-1.5" onClick={handleSuggest} disabled={loading}>
+        {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+        {loading ? "Analyzing..." : "Suggest Schedule"}
+      </Button>
+
+      {suggestions.length > 0 && (
+        <div className="mt-4 space-y-2">
+          {suggestions.map((s, i) => {
+            const key = `${s.staffId}:${s.eventId}`;
+            const isApplied = applied.has(key);
+            return (
+              <div key={i} className="flex items-center justify-between rounded-lg border border-border bg-background p-3">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-card-foreground">
+                    {s.staffName} → {s.eventName}
+                  </p>
+                  <p className="text-xs text-muted-foreground truncate">{s.reason}</p>
+                </div>
+                <Button
+                  size="sm"
+                  variant={isApplied ? "ghost" : "default"}
+                  className="gap-1 ml-2 shrink-0"
+                  disabled={isApplied}
+                  onClick={() => handleApply(s)}
+                >
+                  {isApplied ? (
+                    <><CheckCircle className="h-3.5 w-3.5 text-success" /> Applied</>
+                  ) : (
+                    <><Plus className="h-3.5 w-3.5" /> Assign</>
+                  )}
+                </Button>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 export default function Staff() {
   const { user } = useAuth();
   const { isOwner, canManage } = useRoleAccess();
