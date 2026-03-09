@@ -756,6 +756,9 @@ export default function AdminUsers() {
                       <DropdownMenuItem onClick={() => toggleBan.mutate({ user_id: u.user_id, banned: u.banned })}>
                         {u.banned ? <><Shield className="h-4 w-4 mr-2" />Enable</> : <><ShieldOff className="h-4 w-4 mr-2" />Disable</>}
                       </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => impersonateUser.mutate(u.user_id)} disabled={impersonateUser.isPending}>
+                        <LogIn className="h-4 w-4 mr-2" />Impersonate
+                      </DropdownMenuItem>
                       <DropdownMenuSeparator />
                       <DropdownMenuItem
                         className="text-destructive focus:text-destructive"
