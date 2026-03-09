@@ -70,6 +70,18 @@ export default function PublicBooking() {
   });
 
 
+  const [selectedTrailer, setSelectedTrailer] = useState<string>(preselectedTrailerId || "");
+  const [currentDate, setCurrentDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState<string>("");
+  const [step, setStep] = useState<"select" | "form" | "success">("select");
+  const [submitting, setSubmitting] = useState(false);
+
+  const [form, setForm] = useState({
+    client_name: "", client_email: "", client_phone: "", event_name: "",
+    location: "", guest_count: "", service_package: "", notes: "",
+    start_time: "", end_time: "", event_type: "", budget_range: "",
+  });
+
   // Fetch org pricing config for selected trailer
   const selectedOrgId = trailers?.find(t => t.id === selectedTrailer)?.org_id;
   const { data: orgConfig } = useQuery({
@@ -84,18 +96,6 @@ export default function PublicBooking() {
       if (error) throw error;
       return data as any;
     },
-  });
-
-  const [selectedTrailer, setSelectedTrailer] = useState<string>(preselectedTrailerId || "");
-  const [currentDate, setCurrentDate] = useState(new Date());
-  const [selectedDate, setSelectedDate] = useState<string>("");
-  const [step, setStep] = useState<"select" | "form" | "success">("select");
-  const [submitting, setSubmitting] = useState(false);
-
-  const [form, setForm] = useState({
-    client_name: "", client_email: "", client_phone: "", event_name: "",
-    location: "", guest_count: "", service_package: "", notes: "",
-    start_time: "", end_time: "", event_type: "", budget_range: "",
   });
 
   const year = currentDate.getFullYear();
