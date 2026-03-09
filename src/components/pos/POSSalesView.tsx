@@ -158,7 +158,7 @@ const POSSalesView = forwardRef<HTMLDivElement>(function POSSalesView(_props, re
                   <p className="text-sm font-bold text-card-foreground truncate">{item.name}</p>
                   <p className="text-xs text-muted-foreground">{item.qty} sold</p>
                 </div>
-                <p className="text-base font-black text-card-foreground">${item.revenue.toFixed(2)}</p>
+                <p className="text-base font-black text-card-foreground">${item.revenue.toFixed(1)}</p>
               </div>
             ))}
             {todayStats.topItems.length === 0 && (

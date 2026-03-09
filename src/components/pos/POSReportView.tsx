@@ -191,7 +191,7 @@ const POSReportView = forwardRef<HTMLDivElement>(function POSReportView(_props, 
                   <div className="flex items-center justify-between mb-1">
                     <span className="text-sm font-bold text-card-foreground truncate flex-1">{item.name}</span>
                     <span className="text-xs text-muted-foreground ml-2">{item.qty} sold</span>
-                    <span className="text-sm font-black text-card-foreground ml-3">${item.revenue.toFixed(2)}</span>
+                    <span className="text-sm font-black text-card-foreground ml-3">${item.revenue.toFixed(1)}</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
                     <div
