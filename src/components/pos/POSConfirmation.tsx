@@ -136,7 +136,7 @@ export default function POSConfirmation({
             )}
             <div className="flex justify-between text-lg font-black text-card-foreground pt-2 border-t-2 border-border">
               <span>Total</span>
-              <span>${total.toFixed(2)}</span>
+              <span>${total.toFixed(1)}</span>
             </div>
           </div>
 
