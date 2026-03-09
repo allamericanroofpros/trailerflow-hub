@@ -175,7 +175,6 @@
     background: var(--gradient-accent);
   }
 
-  /* Keep backward compat */
   .gradient-warm {
     background: var(--gradient-brand);
   }
@@ -191,7 +190,6 @@
     background-clip: text;
   }
 
-  /* Keep backward compat */
   .text-gradient-warm {
     background: var(--gradient-accent);
     -webkit-background-clip: text;
@@ -202,5 +200,34 @@
   .scrollbar-thin {
     scrollbar-width: thin;
     scrollbar-color: hsl(var(--border)) transparent;
+  }
+
+  /* Polished hover utilities */
+  .card-hover {
+    @apply transition-all duration-200 ease-out;
+  }
+  .card-hover:hover {
+    @apply shadow-card-hover -translate-y-0.5;
+  }
+
+  .nav-item-hover {
+    @apply transition-all duration-150 ease-out;
+  }
+  .nav-item-hover:hover {
+    @apply translate-x-0.5;
+  }
+
+  .btn-press {
+    @apply transition-transform duration-100 ease-out;
+  }
+  .btn-press:active {
+    @apply scale-[0.97];
+  }
+
+  .icon-hover {
+    @apply transition-transform duration-200 ease-out;
+  }
+  .icon-hover:hover {
+    @apply scale-110;
   }
 }

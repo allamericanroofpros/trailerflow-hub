@@ -19,7 +19,7 @@ export function MetricCard({ title, value, change, trend = "neutral", icon, subt
           <p className="text-sm font-medium text-muted-foreground">{title}</p>
           <p className="text-2xl font-bold tracking-tight text-card-foreground">{value}</p>
         </div>
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-primary">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-primary icon-hover">
           {icon}
         </div>
       </div>
