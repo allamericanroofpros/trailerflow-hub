@@ -203,7 +203,7 @@ const POSEndOfDay = forwardRef<HTMLDivElement, { onClose: () => void; openingCas
                       <div className="flex items-center gap-2 text-sm text-muted-foreground">
                         <p.icon className="h-4 w-4" /> {p.label}
                       </div>
-                      <span className="text-sm font-bold text-card-foreground">${p.value.toFixed(2)}</span>
+                      <span className="text-sm font-bold text-card-foreground">${p.value.toFixed(1)}</span>
                     </div>
                   ))}
                 </div>
