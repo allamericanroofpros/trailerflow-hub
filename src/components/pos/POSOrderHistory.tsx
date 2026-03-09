@@ -303,7 +303,7 @@ export default function POSOrderHistory() {
                   {Number(selectedOrder.tip) > 0 && (
                     <div className="flex justify-between text-sm text-success">
                       <span>Tip</span>
-                      <span>${Number(selectedOrder.tip).toFixed(2)}</span>
+                      <span>${Number(selectedOrder.tip).toFixed(1)}</span>
                     </div>
                   )}
                   {Number(selectedOrder.surcharge_amount) > 0 && (
