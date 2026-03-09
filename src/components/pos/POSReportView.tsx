@@ -139,8 +139,8 @@ const POSReportView = forwardRef<HTMLDivElement>(function POSReportView(_props, 
         {[
           { label: "Orders", value: report.orderCount },
           { label: "Items Sold", value: report.totalItemsSold },
-          { label: "Tips Collected", value: `$${report.totalTips.toFixed(2)}` },
-          { label: "Tax Collected", value: `$${report.totalTax.toFixed(2)}` },
+          { label: "Tips Collected", value: `$${report.totalTips.toFixed(1)}` },
+          { label: "Tax Collected", value: `$${report.totalTax.toFixed(1)}` },
         ].map((m) => (
           <div key={m.label} className="rounded-2xl border-2 border-border bg-card p-4">
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">{m.label}</p>
