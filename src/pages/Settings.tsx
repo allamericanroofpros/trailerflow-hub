@@ -193,6 +193,9 @@ export default function SettingsPage() {
       setBookingDepositPercent(String(org.booking_deposit_percent ?? 25));
       setBookingMinNoticeDays(String(org.booking_min_notice_days ?? 7));
       setBookingPackages(Array.isArray(org.booking_service_packages) ? org.booking_service_packages : []);
+      setBookingMinimumAmount(String(org.booking_minimum_amount ?? 0));
+      setBookingPerGuestRate(String(org.booking_per_guest_rate ?? 0));
+      setBookingHourlyRate(String(org.booking_hourly_rate ?? 0));
       setPaymentSettingsLoaded(true);
     }
   }, [currentOrg, paymentSettingsLoaded]);
