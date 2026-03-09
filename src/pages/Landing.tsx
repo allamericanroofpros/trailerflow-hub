@@ -41,6 +41,7 @@ const plans = [
     price: "$0",
     period: "forever",
     highlight: false,
+    planKey: "free",
     features: [
       "1 trailer",
       "2 staff accounts",
@@ -54,6 +55,7 @@ const plans = [
     price: "$29",
     period: "/month",
     highlight: false,
+    planKey: "starter",
     features: [
       "Everything in Free",
       "AI Chat assistant",
@@ -67,6 +69,7 @@ const plans = [
     price: "$79",
     period: "/month",
     highlight: true,
+    planKey: "pro",
     features: [
       "Everything in Starter",
       "Unlimited trailers & staff",
@@ -81,6 +84,7 @@ const plans = [
     price: "$199",
     period: "/month",
     highlight: false,
+    planKey: "enterprise",
     features: [
       "Everything in Pro",
       "Multi-org management",
@@ -221,7 +225,7 @@ export default function Landing() {
                   variant={plan.highlight ? "default" : "outline"}
                   asChild
                 >
-                  <Link to="/signup">
+                  <Link to={`/signup?plan=${plan.planKey}`}>
                     {plan.price === "$0" ? "Get Started" : "Start Free Trial"}
                     <ChevronRight className="ml-1 h-4 w-4" />
                   </Link>
