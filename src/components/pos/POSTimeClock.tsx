@@ -384,7 +384,7 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-card-foreground truncate">{(c as any).staff_members?.name || "Staff"}</p>
                     <p className="text-xs text-muted-foreground">
-                      {formatDuration(c.hours)} · ${c.cost.toFixed(2)}
+                      {formatDuration(c.hours)} · ${c.cost.toFixed(1)}
                     </p>
                   </div>
                   <p className="text-xs font-bold text-primary">${Number(c.hourly_rate).toFixed(0)}/hr</p>
