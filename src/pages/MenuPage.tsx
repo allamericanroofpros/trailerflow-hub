@@ -612,7 +612,7 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
                 <div>
                   <Label className="text-xs text-muted-foreground">Ingredient Cost (auto)</Label>
                   <div className="mt-1 h-10 flex items-center rounded-md border border-border bg-muted/50 px-3 text-sm font-semibold text-foreground">
-                    ${ingredientCost.toFixed(2)}
+                    ${ingredientCost.toFixed(1)}
                   </div>
                 </div>
                 <div>
