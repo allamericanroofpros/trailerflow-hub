@@ -457,7 +457,7 @@ export default function PublicBooking() {
                         <span className="font-bold text-primary text-lg">${pricing.typical}</span>
                       </div>
                     </div>
-                    <p className="text-[10px] text-muted-foreground mt-3">* Final pricing discussed after booking confirmation. Estimates based on event duration and typical service rates.</p>
+                    <p className="text-[10px] text-muted-foreground mt-3">* Estimate based on your {pricing.basis} and our average service rates. Final pricing confirmed after review.</p>
                   </div>
                 )}
               </div>
