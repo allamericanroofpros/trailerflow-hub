@@ -331,7 +331,7 @@ export default function POSTimeClock({ eventId, trailerId }: Props) {
                     {formatDuration((now.getTime() - new Date(matchedClock.clock_in).getTime()) / 3600000)}
                   </p>
                   <p className="text-sm font-bold text-warning mt-1">
-                    ${((now.getTime() - new Date(matchedClock.clock_in).getTime()) / 3600000 * Number(matchedClock.hourly_rate)).toFixed(2)} earned
+                    ${((now.getTime() - new Date(matchedClock.clock_in).getTime()) / 3600000 * Number(matchedClock.hourly_rate)).toFixed(1)} earned
                   </p>
                 </div>
 
