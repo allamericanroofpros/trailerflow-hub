@@ -105,7 +105,7 @@ const POSSalesView = forwardRef<HTMLDivElement>(function POSSalesView(_props, re
                 <XAxis dataKey="label" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} />
                 <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} axisLine={false} tickLine={false} tickFormatter={(v) => `$${v}`} width={50} />
                 <Tooltip
-                  formatter={(value: number) => [`$${value.toFixed(2)}`, "Revenue"]}
+                  formatter={(value: number) => [`$${value.toFixed(1)}`, "Revenue"]}
                   contentStyle={{ borderRadius: 12, border: "2px solid hsl(var(--border))", background: "hsl(var(--card))", fontSize: 13, fontWeight: 700 }}
                 />
                 <Bar dataKey="revenue" radius={[6, 6, 0, 0]}>
