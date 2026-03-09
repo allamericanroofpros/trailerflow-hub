@@ -56,7 +56,7 @@ export default function PublicBooking() {
   const [form, setForm] = useState({
     client_name: "", client_email: "", client_phone: "", event_name: "",
     location: "", guest_count: "", service_package: "", notes: "",
-    start_time: "", end_time: "",
+    start_time: "", end_time: "", event_type: "", budget_range: "",
   });
 
   const year = currentDate.getFullYear();
