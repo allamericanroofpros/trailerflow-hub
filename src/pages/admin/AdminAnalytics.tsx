@@ -3,10 +3,9 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { useMemo } from "react";
-import { format, subDays, startOfDay, eachDayOfInterval } from "date-fns";
+import { format, subDays, eachDayOfInterval } from "date-fns";
 
 export default function AdminAnalytics() {
-  // Org growth: count of orgs by creation date
   const { data: orgs } = useQuery({
     queryKey: ["admin_analytics_orgs"],
     queryFn: async () => {
@@ -15,7 +14,6 @@ export default function AdminAnalytics() {
     },
   });
 
-  // User growth
   const { data: profiles } = useQuery({
     queryKey: ["admin_analytics_profiles"],
     queryFn: async () => {
@@ -24,7 +22,6 @@ export default function AdminAnalytics() {
     },
   });
 
-  // Order volume
   const { data: orders } = useQuery({
     queryKey: ["admin_analytics_orders"],
     queryFn: async () => {
@@ -34,7 +31,6 @@ export default function AdminAnalytics() {
     },
   });
 
-  // Revenue
   const { data: transactions } = useQuery({
     queryKey: ["admin_analytics_transactions"],
     queryFn: async () => {
@@ -54,20 +50,15 @@ export default function AdminAnalytics() {
       const day = format(new Date(o.created_at), "yyyy-MM-dd");
       byDay[day] = (byDay[day] || 0) + 1;
     });
-    // Build cumulative from earliest
-    const allDays = Object.keys(byDay).sort();
-    const result: { date: string; count: number }[] = [];
-    // Get count before our 30-day window
     const windowStart = format(last30Days[0], "yyyy-MM-dd");
     orgs.forEach(o => {
       if (format(new Date(o.created_at), "yyyy-MM-dd") < windowStart) cumulative++;
     });
-    last30Days.forEach(d => {
+    return last30Days.map(d => {
       const key = format(d, "yyyy-MM-dd");
       cumulative += byDay[key] || 0;
-      result.push({ date: format(d, "MMM d"), count: cumulative });
+      return { date: format(d, "MMM d"), count: cumulative };
     });
-    return result;
   }, [orgs, last30Days]);
 
   const userGrowth = useMemo(() => {
@@ -119,6 +110,7 @@ export default function AdminAnalytics() {
     });
   }, [transactions, last30Days]);
 
+  const tooltipStyle = { fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))", background: "hsl(var(--card))", color: "hsl(var(--card-foreground))" };
   const chartStyle = "rounded-xl border border-border bg-card p-4 sm:p-6";
 
   return (
@@ -139,7 +131,7 @@ export default function AdminAnalytics() {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="date" tick={{ fontSize: 10 }} className="text-muted-foreground" />
                   <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }} />
+                  <Tooltip contentStyle={tooltipStyle} />
                   <Area type="monotone" dataKey="count" stroke="hsl(var(--primary))" fill="hsl(var(--primary) / 0.15)" strokeWidth={2} name="Total Orgs" />
                 </AreaChart>
               </ResponsiveContainer>
@@ -155,8 +147,8 @@ export default function AdminAnalytics() {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }} />
-                  <Area type="monotone" dataKey="count" stroke="hsl(210, 70%, 50%)" fill="hsl(210, 70%, 50%, 0.15)" strokeWidth={2} name="Total Users" />
+                  <Tooltip contentStyle={tooltipStyle} />
+                  <Area type="monotone" dataKey="count" stroke="hsl(var(--info))" fill="hsl(var(--info) / 0.15)" strokeWidth={2} name="Total Users" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>
@@ -171,7 +163,7 @@ export default function AdminAnalytics() {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 10 }} allowDecimals={false} />
-                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }} />
+                  <Tooltip contentStyle={tooltipStyle} />
                   <Bar dataKey="orders" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Orders" />
                 </BarChart>
               </ResponsiveContainer>
@@ -187,9 +179,9 @@ export default function AdminAnalytics() {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-border" />
                   <XAxis dataKey="date" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 10 }} />
-                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 8, border: "1px solid hsl(var(--border))" }} formatter={(v: number) => `$${v.toFixed(1)}`} />
-                  <Bar dataKey="income" fill="hsl(142, 70%, 45%)" radius={[4, 4, 0, 0]} name="Income" />
-                  <Bar dataKey="expense" fill="hsl(0, 70%, 55%)" radius={[4, 4, 0, 0]} name="Expenses" />
+                  <Tooltip contentStyle={tooltipStyle} formatter={(v: number) => `$${v.toFixed(2)}`} />
+                  <Bar dataKey="income" fill="hsl(var(--success))" radius={[4, 4, 0, 0]} name="Income" />
+                  <Bar dataKey="expense" fill="hsl(var(--destructive))" radius={[4, 4, 0, 0]} name="Expenses" />
                 </BarChart>
               </ResponsiveContainer>
             </div>

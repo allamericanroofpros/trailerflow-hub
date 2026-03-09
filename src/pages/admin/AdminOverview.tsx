@@ -1,8 +1,8 @@
 import { AdminLayout } from "./AdminLayout";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Building2, Users, ShoppingCart, DollarSign, UserPlus, Truck, Clock } from "lucide-react";
-import { format, formatDistanceToNow } from "date-fns";
+import { Building2, Users, ShoppingCart, DollarSign, UserPlus, Clock } from "lucide-react";
+import { formatDistanceToNow } from "date-fns";
 
 type ActivityItem = {
   id: string;
@@ -11,7 +11,7 @@ type ActivityItem = {
   detail: string;
   time: string;
   icon: typeof Building2;
-  color: string;
+  colorClass: string;
 };
 
 export default function AdminOverview() {
@@ -29,7 +29,6 @@ export default function AdminOverview() {
     },
   });
 
-  // Activity feed: recent orgs, users, orders
   const { data: activity } = useQuery({
     queryKey: ["admin_activity_feed"],
     queryFn: async () => {
@@ -48,7 +47,7 @@ export default function AdminOverview() {
         detail: o.name,
         time: o.created_at,
         icon: Building2,
-        color: "text-primary bg-primary/10",
+        colorClass: "text-primary bg-primary/10",
       }));
 
       recentUsers.data?.forEach(u => items.push({
@@ -58,17 +57,17 @@ export default function AdminOverview() {
         detail: u.full_name || "Unnamed user",
         time: u.created_at,
         icon: UserPlus,
-        color: "text-blue-600 bg-blue-100",
+        colorClass: "text-info bg-info/10",
       }));
 
       recentOrders.data?.forEach(o => items.push({
         id: `order-${o.id}`,
         type: "order_placed",
         title: `Order #${o.order_number}`,
-        detail: `$${Number(o.total).toFixed(1)}`,
+        detail: `$${Number(o.total).toFixed(2)}`,
         time: o.created_at,
         icon: ShoppingCart,
-        color: "text-emerald-600 bg-emerald-100",
+        colorClass: "text-success bg-success/10",
       }));
 
       return items.sort((a, b) => new Date(b.time).getTime() - new Date(a.time).getTime()).slice(0, 20);
@@ -76,10 +75,10 @@ export default function AdminOverview() {
   });
 
   const cards = [
-    { label: "Organizations", value: stats?.orgCount ?? "—", icon: Building2, color: "text-primary" },
-    { label: "Total Users", value: stats?.userCount ?? "—", icon: Users, color: "text-blue-600" },
-    { label: "Total Orders", value: stats?.orderCount ?? "—", icon: ShoppingCart, color: "text-emerald-600" },
-    { label: "Platform Revenue", value: stats ? `$${stats.totalRevenue.toLocaleString()}` : "—", icon: DollarSign, color: "text-amber-600" },
+    { label: "Organizations", value: stats?.orgCount ?? "—", icon: Building2, colorClass: "text-primary bg-primary/10" },
+    { label: "Total Users", value: stats?.userCount ?? "—", icon: Users, colorClass: "text-info bg-info/10" },
+    { label: "Total Orders", value: stats?.orderCount ?? "—", icon: ShoppingCart, colorClass: "text-success bg-success/10" },
+    { label: "Platform Revenue", value: stats ? `$${stats.totalRevenue.toLocaleString()}` : "—", icon: DollarSign, colorClass: "text-warning bg-warning/10" },
   ];
 
   return (
@@ -94,7 +93,7 @@ export default function AdminOverview() {
           {cards.map((card) => (
             <div key={card.label} className="rounded-xl border border-border bg-card p-3 sm:p-5 shadow-sm">
               <div className="flex items-center gap-2 sm:gap-3">
-                <div className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg bg-secondary ${card.color}`}>
+                <div className={`flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-lg ${card.colorClass}`}>
                   <card.icon className="h-4 w-4 sm:h-5 sm:w-5" />
                 </div>
                 <div className="min-w-0">
@@ -117,7 +116,7 @@ export default function AdminOverview() {
             <div className="space-y-1">
               {activity.map((item) => (
                 <div key={item.id} className="flex items-center gap-3 py-2.5 px-2 rounded-lg hover:bg-muted/30 transition-colors">
-                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.color}`}>
+                  <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${item.colorClass}`}>
                     <item.icon className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0">

@@ -20,18 +20,19 @@ import {
 } from "@/components/ui/select";
 import { format, formatDistanceToNow } from "date-fns";
 
-const statusColors: Record<string, string> = {
-  open: "text-blue-600 bg-blue-100",
-  in_progress: "text-amber-600 bg-amber-100",
-  resolved: "text-emerald-600 bg-emerald-100",
-  closed: "text-muted-foreground bg-muted",
+// Use semantic token-friendly status/priority indicators
+const statusConfig: Record<string, { label: string; colorClass: string }> = {
+  open: { label: "Open", colorClass: "text-warning bg-warning/10" },
+  in_progress: { label: "In Progress", colorClass: "text-info bg-info/10" },
+  resolved: { label: "Resolved", colorClass: "text-success bg-success/10" },
+  closed: { label: "Closed", colorClass: "text-muted-foreground bg-muted" },
 };
 
-const priorityColors: Record<string, string> = {
-  low: "text-muted-foreground border-border",
-  medium: "text-amber-600 border-amber-300",
-  high: "text-destructive border-destructive/30",
-  urgent: "text-destructive bg-destructive/10",
+const priorityConfig: Record<string, { label: string; colorClass: string }> = {
+  low: { label: "Low", colorClass: "text-muted-foreground border-border" },
+  medium: { label: "Medium", colorClass: "text-warning border-warning/30" },
+  high: { label: "High", colorClass: "text-destructive border-destructive/30" },
+  urgent: { label: "Urgent", colorClass: "text-destructive bg-destructive/10" },
 };
 
 const statuses = ["open", "in_progress", "resolved", "closed"];
@@ -92,8 +93,8 @@ function TicketDetail({ ticketId, onBack }: { ticketId: string; onBack: () => vo
           <h1 className="text-xl font-bold truncate">{ticket?.subject || "..."}</h1>
           <div className="flex items-center gap-2 mt-0.5">
             {ticket && <>
-              <Badge className={`text-[10px] capitalize ${statusColors[ticket.status]}`}>{ticket.status.replace("_", " ")}</Badge>
-              <Badge variant="outline" className={`text-[10px] capitalize ${priorityColors[ticket.priority]}`}>{ticket.priority}</Badge>
+              <Badge className={`text-[10px] capitalize ${statusConfig[ticket.status]?.colorClass}`}>{statusConfig[ticket.status]?.label || ticket.status}</Badge>
+              <Badge variant="outline" className={`text-[10px] capitalize ${priorityConfig[ticket.priority]?.colorClass}`}>{ticket.priority}</Badge>
               <Badge variant="outline" className="text-[10px] capitalize">{ticket.category.replace("_", " ")}</Badge>
             </>}
           </div>
@@ -156,7 +157,6 @@ export default function AdminSupport() {
   const [showCreate, setShowCreate] = useState(false);
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
-  // Create form
   const [newSubject, setNewSubject] = useState("");
   const [newDesc, setNewDesc] = useState("");
   const [newOrgId, setNewOrgId] = useState("");
@@ -182,7 +182,8 @@ export default function AdminSupport() {
       if (!newSubject.trim()) throw new Error("Subject required");
       const { error } = await supabase.from("support_tickets").insert({
         subject: newSubject.trim(), description: newDesc.trim() || null,
-        org_id: newOrgId || null, reporter_user_id: user?.id || null,
+        org_id: newOrgId && newOrgId !== "none" ? newOrgId : null,
+        reporter_user_id: user?.id || null,
         priority: newPriority, category: newCategory,
       });
       if (error) throw error;
@@ -244,13 +245,13 @@ export default function AdminSupport() {
           ) : (
             filtered?.map((t: any) => (
               <div key={t.id} onClick={() => setSelectedId(t.id)} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 sm:p-4 cursor-pointer hover:bg-muted/30 transition-all">
-                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${statusColors[t.status] || "bg-muted"}`}>
+                <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${statusConfig[t.status]?.colorClass || "bg-muted"}`}>
                   {t.status === "open" ? <AlertTriangle className="h-4 w-4" /> : t.status === "resolved" ? <CheckCircle className="h-4 w-4" /> : <Clock className="h-4 w-4" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="font-semibold text-foreground text-sm truncate">{t.subject}</span>
-                    <Badge variant="outline" className={`text-[10px] capitalize ${priorityColors[t.priority]}`}>{t.priority}</Badge>
+                    <Badge variant="outline" className={`text-[10px] capitalize ${priorityConfig[t.priority]?.colorClass}`}>{t.priority}</Badge>
                     <Badge variant="outline" className="text-[10px] capitalize">{t.category.replace("_", " ")}</Badge>
                   </div>
                   <div className="flex items-center gap-3 mt-0.5 text-xs text-muted-foreground">

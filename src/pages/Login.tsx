@@ -66,7 +66,7 @@ export default function Login() {
           </p>
           <p>
             Don't have an account?{" "}
-            <Link to="/landing" className="text-primary hover:underline">Sign up</Link>
+            <Link to="/signup" className="text-primary hover:underline">Sign up</Link>
           </p>
         </div>
       </div>
