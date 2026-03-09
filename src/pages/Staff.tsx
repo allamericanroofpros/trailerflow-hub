@@ -310,6 +310,7 @@ export default function Staff() {
           email: accountForm.email.trim().toLowerCase(),
           password: accountForm.password,
           role: accountForm.role,
+          organization_id: orgId,
         },
       });
       if (res.error) throw new Error(res.error.message || "Failed to create account");

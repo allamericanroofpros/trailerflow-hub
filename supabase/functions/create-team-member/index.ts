@@ -38,7 +38,22 @@ Deno.serve(async (req) => {
       throw new Error("Only owners can create team accounts");
     }
 
-    const { email, password, full_name, role } = await req.json();
+    const { email, password, full_name, role, organization_id } = await req.json();
+    if (!organization_id) {
+      throw new Error("Missing required field: organization_id");
+    }
+
+    // Verify caller is a member (owner) of this org
+    const { data: callerMembership } = await adminClient
+      .from("organization_members")
+      .select("role")
+      .eq("user_id", caller.id)
+      .eq("org_id", organization_id)
+      .single();
+    
+    if (!callerMembership || callerMembership.role !== "owner") {
+      throw new Error("You must be an owner of this organization");
+    }
     if (!email || !password || !full_name || !role) {
       throw new Error("Missing required fields: email, password, full_name, role");
     }
@@ -69,11 +84,17 @@ Deno.serve(async (req) => {
         .eq("user_id", userId);
     }
 
+    // Add user to the organization
+    await adminClient
+      .from("organization_members")
+      .upsert({ org_id: organization_id, user_id: userId, role }, { onConflict: "org_id,user_id" });
+
     // Auto-link: if a staff_members entry has matching email, set user_id
     await adminClient
       .from("staff_members")
       .update({ user_id: userId })
       .eq("email", email)
+      .eq("org_id", organization_id)
       .is("user_id", null);
 
     return new Response(
