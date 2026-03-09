@@ -113,7 +113,7 @@ export default function POSConfirmation({
               tax > 0 && (
                 <div className="flex justify-between text-xs text-muted-foreground/70 italic">
                   <span>Includes {taxLabel || "Tax"}</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span>${tax.toFixed(1)}</span>
                 </div>
               )
             ) : (
