@@ -206,13 +206,13 @@ export function AppSidebar() {
         })}
       </nav>
 
-      {/* Super admin link + Sign out & collapse */}
-      <div className="border-t border-sidebar-border">
+      {/* Footer actions */}
+      <div className="mt-auto border-t border-sidebar-border">
         {role === "super_admin" && (
           <NavLink
             to="/admin"
             className={cn(
-              "flex w-full items-center gap-3 px-6 py-3 text-sm font-medium text-amber-400 hover:text-amber-300 transition-colors",
+              "flex w-full items-center gap-3 px-6 py-3 text-sm font-medium text-sidebar-primary hover:bg-sidebar-accent transition-colors",
               collapsed && "justify-center px-3"
             )}
           >
@@ -221,20 +221,24 @@ export function AppSidebar() {
           </NavLink>
         )}
         <button
+          onClick={() => setCollapsed(!collapsed)}
+          className={cn(
+            "flex w-full items-center gap-3 px-6 py-3 text-sm font-medium text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
+            collapsed && "justify-center px-3"
+          )}
+        >
+          {collapsed ? <ChevronRight className="h-4 w-4 shrink-0" /> : <ChevronLeft className="h-4 w-4 shrink-0" />}
+          {!collapsed && <span>Collapse</span>}
+        </button>
+        <button
           onClick={() => signOut()}
           className={cn(
-            "flex w-full items-center gap-3 px-6 py-3 text-sm font-medium text-sidebar-muted hover:text-sidebar-accent-foreground transition-colors",
+            "flex w-full items-center gap-3 px-6 py-3 text-sm font-medium text-sidebar-muted hover:bg-sidebar-accent hover:text-sidebar-accent-foreground transition-colors",
             collapsed && "justify-center px-3"
           )}
         >
           <LogOut className="h-4 w-4 shrink-0" />
           {!collapsed && <span>Sign Out</span>}
-        </button>
-        <button
-          onClick={() => setCollapsed(!collapsed)}
-          className="flex w-full items-center justify-center p-3 text-sidebar-muted hover:text-sidebar-accent-foreground transition-colors"
-        >
-          {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
         </button>
       </div>
     </aside>
