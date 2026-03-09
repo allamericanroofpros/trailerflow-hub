@@ -24,10 +24,10 @@ export function useOnboardingStatus() {
       menu: (menuItems?.length || 0) > 0,
       inventory: (inventory?.length || 0) > 0,
       staff: (staff?.length || 0) > 0,
-      bookings: (bookings?.length || 0) > 0,
+      bookings: org?.bookings_enabled === true,
       stripe: stripeStatus === "connected",
     };
-  }, [trailers, menuItems, inventory, staff, bookings, currentOrg, stripeStatus]);
+  }, [trailers, menuItems, inventory, staff, currentOrg, stripeStatus]);
 
   const completedCount = Object.values(completedSteps).filter(Boolean).length;
   const totalSteps = Object.keys(completedSteps).length;

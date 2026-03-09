@@ -21,7 +21,7 @@ const STEPS: SetupStep[] = [
   { id: "stripe", title: "Connect Payments", description: "Link Stripe so you can accept card payments.", icon: Zap, route: "/settings?section=payments", checkKey: "stripe" },
   { id: "inventory", title: "Track Your Inventory", description: "Know exactly what you have on hand.", icon: Package, route: "/inventory", checkKey: "inventory" },
   { id: "staff", title: "Add Your Crew", description: "Invite team members and assign roles.", icon: Users, route: "/staff", checkKey: "staff" },
-  { id: "bookings", title: "Enable Bookings", description: "Let clients request catering online.", icon: ClipboardList, route: "/bookings", checkKey: "bookings" },
+  { id: "bookings", title: "Enable Bookings", description: "Let clients request catering online.", icon: ClipboardList, route: "/settings?section=bookings", checkKey: "bookings" },
 ];
 
 interface SetupWizardProps {
