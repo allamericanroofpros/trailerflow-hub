@@ -119,10 +119,10 @@ const POSReportView = forwardRef<HTMLDivElement>(function POSReportView(_props, 
       {/* Revenue Summary */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: "Gross Revenue", value: `$${report.grossRevenue.toFixed(2)}`, icon: DollarSign, accent: "text-primary" },
-          { label: "Net Revenue", value: `$${report.netRevenue.toFixed(2)}`, icon: TrendingUp, accent: "text-success" },
+          { label: "Gross Revenue", value: `$${report.grossRevenue.toFixed(1)}`, icon: DollarSign, accent: "text-primary" },
+          { label: "Net Revenue", value: `$${report.netRevenue.toFixed(1)}`, icon: TrendingUp, accent: "text-success" },
           { label: "Rev / Hour", value: `$${report.revenuePerHour.toFixed(0)}`, icon: Clock, accent: "text-primary" },
-          { label: "Avg Ticket", value: `$${report.avgTicket.toFixed(2)}`, icon: Receipt, accent: "text-primary" },
+          { label: "Avg Ticket", value: `$${report.avgTicket.toFixed(1)}`, icon: Receipt, accent: "text-primary" },
         ].map((kpi) => (
           <div key={kpi.label} className="rounded-2xl border-2 border-border bg-card p-4">
             <div className="flex items-center gap-2 mb-1.5">
