@@ -80,10 +80,10 @@ const POSSalesView = forwardRef<HTMLDivElement>(function POSSalesView(_props, re
       {/* KPI Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[
-          { label: "Today's Revenue", value: `$${todayStats.totalRevenue.toFixed(2)}`, icon: DollarSign, accent: "text-primary" },
+          { label: "Today's Revenue", value: `$${todayStats.totalRevenue.toFixed(1)}`, icon: DollarSign, accent: "text-primary" },
           { label: "Orders", value: todayStats.todayOrders.length.toString(), icon: Receipt, accent: "text-primary" },
-          { label: "Avg Ticket", value: `$${todayStats.avgTicket.toFixed(2)}`, icon: TrendingUp, accent: "text-primary" },
-          { label: "Tips", value: `$${todayStats.totalTips.toFixed(2)}`, icon: DollarSign, accent: "text-success" },
+          { label: "Avg Ticket", value: `$${todayStats.avgTicket.toFixed(1)}`, icon: TrendingUp, accent: "text-primary" },
+          { label: "Tips", value: `$${todayStats.totalTips.toFixed(1)}`, icon: DollarSign, accent: "text-success" },
         ].map((kpi) => (
           <div key={kpi.label} className="rounded-2xl border-2 border-border bg-card p-4 md:p-5">
             <div className="flex items-center gap-2 mb-2">
