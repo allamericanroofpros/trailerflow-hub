@@ -49,7 +49,7 @@ const processStripePayment = async (amount: number, orgId?: string | null): Prom
 };
 
 export default function POSCheckoutFlow({
-  cart, subtotal, tax, total, surchargeSettings, onComplete, onCancel, isPending,
+  cart, subtotal, tax, total, orgId, surchargeSettings, onComplete, onCancel, isPending,
 }: CheckoutProps) {
   const [step, setStep] = useState<Step>("payment");
   const [tipType, setTipType] = useState<"percent" | "dollar">("percent");
