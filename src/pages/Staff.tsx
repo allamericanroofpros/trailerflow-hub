@@ -46,7 +46,7 @@ export default function Staff() {
       const userIds = members.map((m) => m.user_id);
       const { data: profiles } = await supabase.from("profiles").select("user_id, full_name, phone, avatar_url").in("user_id", userIds);
       // Get staff_members to find trailer assignments
-      const { data: staffRows } = await supabase.from("staff_members").select("user_id, name").eq("org_id", orgId!).not("user_id", "is", null);
+      const { data: staffRows } = await supabase.from("staff_members").select("id, user_id, name").eq("org_id", orgId!).not("user_id", "is", null);
       // Get trailers for the org
       const { data: trailers } = await supabase.from("trailers").select("id, name").eq("org_id", orgId!);
       // Get event_staff → events to find trailer associations per staff
