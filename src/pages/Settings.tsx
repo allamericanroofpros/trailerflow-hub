@@ -14,6 +14,58 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import { useOrg } from "@/contexts/OrgContext";
 
+function AppearanceSettings() {
+  const [theme, setTheme] = useState(() => localStorage.getItem("vf_theme") || "light");
+  const [compact, setCompact] = useState(() => localStorage.getItem("vf_compact") === "true");
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(() => localStorage.getItem("vf_sidebar_collapsed") === "true");
+
+  const applyTheme = (t: string) => {
+    setTheme(t);
+    localStorage.setItem("vf_theme", t);
+    document.documentElement.classList.toggle("dark", t === "dark");
+    toast.success(`Theme set to ${t}`);
+  };
+
+  const toggleCompact = (val: boolean) => {
+    setCompact(val);
+    localStorage.setItem("vf_compact", val ? "true" : "false");
+    document.documentElement.classList.toggle("compact", val);
+    toast.success(val ? "Compact mode enabled" : "Compact mode disabled");
+  };
+
+  const toggleSidebar = (val: boolean) => {
+    setSidebarCollapsed(val);
+    localStorage.setItem("vf_sidebar_collapsed", val ? "true" : "false");
+    toast.success(val ? "Sidebar will start collapsed" : "Sidebar will start expanded");
+  };
+
+  return (
+    <div className="space-y-4 max-w-lg">
+      <div className="flex items-center justify-between py-3 border-b border-border">
+        <div><p className="text-sm font-medium text-card-foreground">Theme</p><p className="text-xs text-muted-foreground">Choose your preferred color scheme</p></div>
+        <div className="flex gap-1">
+          {["light", "dark"].map((t) => (
+            <button
+              key={t}
+              onClick={() => applyTheme(t)}
+              className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${theme === t ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground hover:bg-muted"}`}
+            >
+              {t.charAt(0).toUpperCase() + t.slice(1)}
+            </button>
+          ))}
+        </div>
+      </div>
+      <label className="flex items-center justify-between py-3 border-b border-border cursor-pointer">
+        <div><p className="text-sm font-medium text-card-foreground">Compact Mode</p><p className="text-xs text-muted-foreground">Use a denser layout for more information</p></div>
+        <Switch checked={compact} onCheckedChange={toggleCompact} />
+      </label>
+      <label className="flex items-center justify-between py-3 cursor-pointer">
+        <div><p className="text-sm font-medium text-card-foreground">Sidebar Collapsed by Default</p><p className="text-xs text-muted-foreground">Start with the sidebar minimized</p></div>
+        <Switch checked={sidebarCollapsed} onCheckedChange={toggleSidebar} />
+      </label>
+    </div>
+  );
+}
 
 const baseSections = [
   { id: "profile", title: "Profile", description: "Manage your account details and preferences.", icon: User },
