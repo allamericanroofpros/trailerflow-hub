@@ -8,7 +8,7 @@ import { DemoBanner } from "./OrgSwitcher";
 import {
   HelpCircle, LayoutDashboard, CalendarRange, ClipboardList, Settings,
   MoreHorizontal, X, UtensilsCrossed, Package, Users, Truck, Calendar,
-  DollarSign, BarChart3, Wrench, Clock, Compass, Shield,
+  DollarSign, BarChart3, Wrench, Clock, Compass, Shield, LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
