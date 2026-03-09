@@ -72,8 +72,8 @@ const sidebarEntries: SidebarEntry[] = [
   { title: "Settings", url: "/settings", icon: Settings, viewKey: "settings" },
 ];
 
-export function AppSidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+export function AppSidebar({ defaultCollapsed = false }: { defaultCollapsed?: boolean }) {
+  const [collapsed, setCollapsed] = useState(defaultCollapsed);
   const [mgmtOpen, setMgmtOpen] = useState(false);
   const location = useLocation();
   const { signOut } = useAuth();
