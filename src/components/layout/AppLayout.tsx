@@ -8,7 +8,7 @@ import { DemoBanner } from "./OrgSwitcher";
 import {
   HelpCircle, LayoutDashboard, CalendarRange, ClipboardList, Settings,
   MoreHorizontal, X, UtensilsCrossed, Package, Users, Truck, Calendar,
-  DollarSign, BarChart3, Wrench, Clock, Compass, Shield,
+  DollarSign, BarChart3, Wrench, Clock, Compass, Shield, LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -163,6 +163,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
                 <span>Admin Panel</span>
               </NavLink>
             )}
+            <div className="border-t border-border mt-3 pt-3">
+              <button
+                onClick={() => { setMoreOpen(false); signOut(); }}
+                className="flex w-full items-center gap-3 rounded-xl p-3 text-sm font-medium text-destructive hover:bg-destructive/10 transition-all"
+              >
+                <LogOut className="h-5 w-5" />
+                <span>Sign Out</span>
+              </button>
+            </div>
           </SheetContent>
         </Sheet>
       </div>
