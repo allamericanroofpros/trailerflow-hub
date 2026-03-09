@@ -376,6 +376,12 @@ export default function SettingsPage() {
                           </div>
                         )}
                       </div>
+
+                      {/* Stripe Connect Section */}
+                      <div className="border-t border-border pt-5 mt-5">
+                        <StripeConnectSettings />
+                      </div>
+
                       <Button onClick={() => saveSurcharge.mutate()} disabled={saveSurcharge.isPending}>
                         {saveSurcharge.isPending ? "Saving..." : "Save Payment Settings"}
                       </Button>
