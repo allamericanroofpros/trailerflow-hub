@@ -129,29 +129,72 @@ export default function PublicBooking() {
 
   const trailer = trailers?.find(t => t.id === selectedTrailer);
 
-  // Pricing estimate — uses guest count as primary driver when available
+  // Pricing estimate — uses org-configured rates as primary, falls back to trailer averages
   const getPricingEstimate = () => {
     if (!trailer) return null;
-    const ticket = Number(trailer.avg_ticket) || 0;
-    if (!ticket) return null;
 
+    const minimum = Number(orgConfig?.booking_minimum_amount) || 0;
+    const perGuest = Number(orgConfig?.booking_per_guest_rate) || 0;
+    const hourlyRate = Number(orgConfig?.booking_hourly_rate) || 0;
     const guests = parseInt(form.guest_count) || 0;
-    const custPerHr = Number(trailer.avg_customers_per_hour) || 0;
     const hours = form.start_time && form.end_time
       ? Math.max(1, (parseInt(form.end_time.split(":")[0]) * 60 + parseInt(form.end_time.split(":")[1]) - parseInt(form.start_time.split(":")[0]) * 60 - parseInt(form.start_time.split(":")[1])) / 60)
       : 0;
 
-    if (guests > 0) {
-      // Guest-based: assume ~60-80% of guests buy, at avg ticket
-      const estimatedBuyers = guests * 0.7;
-      const baseRevenue = estimatedBuyers * ticket;
-      return { min: Math.round(baseRevenue * 0.75), max: Math.round(baseRevenue * 1.2), typical: Math.round(baseRevenue), basis: "guest count" as const };
+    // If operator has set pricing rates, use those
+    if (perGuest > 0 || hourlyRate > 0) {
+      let estimate = 0;
+      const parts: string[] = [];
+
+      if (perGuest > 0 && guests > 0) {
+        estimate += perGuest * guests;
+        parts.push(`${guests} guests × $${perGuest}`);
+      }
+      if (hourlyRate > 0 && hours > 0) {
+        estimate += hourlyRate * hours;
+        parts.push(`${hours.toFixed(1)}h × $${hourlyRate}/hr`);
+      }
+
+      // Apply minimum
+      const finalEstimate = Math.max(estimate, minimum);
+      if (finalEstimate === 0 && minimum > 0) {
+        return { min: minimum, max: minimum, typical: minimum, basis: "minimum booking" as const, breakdown: [`Minimum: $${minimum}`] };
+      }
+      if (finalEstimate === 0) return null;
+
+      return {
+        min: Math.round(finalEstimate * 0.9),
+        max: Math.round(finalEstimate * 1.1),
+        typical: Math.round(finalEstimate),
+        basis: "your event details" as const,
+        breakdown: parts.length > 0 ? [...parts, ...(finalEstimate > estimate ? [`Minimum applied: $${minimum}`] : [])] : undefined,
+      };
     }
 
+    // Fallback: trailer average ticket × guests
+    const ticket = Number(trailer.avg_ticket) || 0;
+    if (!ticket) {
+      // No pricing data at all — just show minimum if set
+      if (minimum > 0) {
+        return { min: minimum, max: minimum, typical: minimum, basis: "minimum booking" as const, breakdown: [`Minimum: $${minimum}`] };
+      }
+      return null;
+    }
+
+    if (guests > 0) {
+      const estimatedBuyers = guests * 0.7;
+      const baseRevenue = Math.max(estimatedBuyers * ticket, minimum);
+      return { min: Math.round(baseRevenue * 0.75), max: Math.round(baseRevenue * 1.2), typical: Math.round(baseRevenue), basis: "guest estimate" as const };
+    }
+
+    const custPerHr = Number(trailer.avg_customers_per_hour) || 0;
     if (hours > 0 && custPerHr > 0) {
-      // Time-based fallback
-      const revenue = ticket * custPerHr * hours;
+      const revenue = Math.max(ticket * custPerHr * hours, minimum);
       return { min: Math.round(revenue * 0.6), max: Math.round(revenue * 1.1), typical: Math.round(revenue * 0.85), basis: "event duration" as const };
+    }
+
+    if (minimum > 0) {
+      return { min: minimum, max: minimum, typical: minimum, basis: "minimum booking" as const, breakdown: [`Starts at $${minimum}`] };
     }
 
     return null;
