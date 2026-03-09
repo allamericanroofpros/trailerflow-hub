@@ -47,7 +47,13 @@ export function TodaySnapshot() {
     // Find peak hour
     const peakHour = hourlyData.reduce((max, h) => h.revenue > max.revenue ? h : max, { hour: 0, label: "", revenue: 0 });
 
-    return { totalRevenue, orderCount: todayOrders.length, avgTicket, totalTips, topItems, hourlyData, peakHour };
+    // Cash vs Card
+    const cashOrders = todayOrders.filter(o => o.payment_method === "cash");
+    const cardOrders = todayOrders.filter(o => o.payment_method === "card" || o.payment_method === "digital");
+    const cashTotal = cashOrders.reduce((s, o) => s + Number(o.total), 0);
+    const cardTotal = cardOrders.reduce((s, o) => s + Number(o.total), 0);
+
+    return { totalRevenue, orderCount: todayOrders.length, avgTicket, totalTips, topItems, hourlyData, peakHour, cashTotal, cardTotal, cashCount: cashOrders.length, cardCount: cardOrders.length };
   }, [orders]);
 
   if (!stats) return null;
