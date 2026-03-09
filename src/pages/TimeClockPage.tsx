@@ -72,8 +72,8 @@ export default function TimeClockPage() {
               <DollarSign className="h-4 w-4 text-warning" />
               <span className="text-xs font-semibold text-muted-foreground uppercase">Labor Cost</span>
             </div>
-            <p className="text-2xl font-bold text-warning">${totalCost.toFixed(2)}</p>
-            <p className="text-[10px] text-muted-foreground">Tips: ${totalTips.toFixed(2)}</p>
+            <p className="text-2xl font-bold text-warning">${totalCost.toFixed(1)}</p>
+            <p className="text-[10px] text-muted-foreground">Tips: ${totalTips.toFixed(1)}</p>
           </div>
         </div>
 
