@@ -276,7 +276,7 @@ export default function POSOrderHistory() {
                           <span className="text-muted-foreground ml-1">({item.notes})</span>
                         )}
                       </span>
-                      <span className="font-bold">${(item.unit_price * item.quantity).toFixed(2)}</span>
+                      <span className="font-bold">${(item.unit_price * item.quantity).toFixed(1)}</span>
                     </div>
                   ))}
                 </div>
