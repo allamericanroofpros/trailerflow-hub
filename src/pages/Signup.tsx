@@ -1,12 +1,11 @@
-import { useState, useEffect } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
-import { ChevronLeft, ChevronRight, Check, Crown } from "lucide-react";
-import { TIERS, type TierKey } from "@/config/tiers";
+import { ChevronLeft, ChevronRight, Check, Crown, Flame } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
-import { UpsellCard } from "@/components/signup/UpsellCard";
+import { useFoundersStatus } from "@/hooks/useFoundersStatus";
 
 const VENDOR_TYPES = [
   "Food Truck",
@@ -29,19 +28,9 @@ const USE_CASES = [
 
 const TEAM_SIZES = ["Just me", "2-3", "4-7", "8-15", "16+"];
 
-const PLAN_LABELS: Record<string, { name: string; price: string }> = {
-  free: { name: "Free", price: "$0" },
-  starter: { name: "Starter", price: "$29/mo" },
-  pro: { name: "Pro", price: "$79/mo" },
-  enterprise: { name: "Enterprise", price: "$199/mo" },
-};
-
 export default function Signup() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const selectedPlan = searchParams.get("plan") || "free";
-  const planInfo = PLAN_LABELS[selectedPlan] || PLAN_LABELS.free;
-  const isPaid = selectedPlan !== "free";
+  const { foundersEnabled, foundersRemaining, foundersMonthlyPrice, loading: foundersLoading } = useFoundersStatus();
 
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -67,6 +56,10 @@ export default function Signup() {
   const totalSteps = 3;
   const progress = (step / totalSteps) * 100;
 
+  // Determine which plan they'll get
+  const planLabel = foundersEnabled && foundersRemaining > 0 ? "Founders" : "Pro";
+  const planPrice = foundersEnabled && foundersRemaining > 0 ? `$${foundersMonthlyPrice}/mo` : "$79/mo";
+
   const validateStep1 = () => {
     if (!fullName.trim()) { toast.error("Full name is required"); return false; }
     if (!email.trim()) { toast.error("Email is required"); return false; }
@@ -91,32 +84,6 @@ export default function Signup() {
     setStep(step + 1);
   };
 
-  const redirectToStripe = async () => {
-    try {
-      const tier = TIERS[selectedPlan as TierKey];
-      if (!tier) throw new Error("Invalid plan");
-
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) throw new Error("Not authenticated");
-
-      const { data, error } = await supabase.functions.invoke("create-checkout", {
-        body: {
-          price_id: tier.price_id,
-          plan_tier: selectedPlan,
-        },
-      });
-
-      if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-      }
-    } catch (err: any) {
-      console.error("Stripe redirect error:", err);
-      toast.error("Could not start checkout. You can upgrade from Settings later.");
-      navigate("/");
-    }
-  };
-
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validateStep3()) return;
@@ -136,7 +103,7 @@ export default function Signup() {
           team_size: teamSize,
           primary_use_case: useCase,
           referral_source: referral || null,
-          selected_plan: selectedPlan,
+          selected_plan: foundersEnabled ? "founders" : "pro",
         },
       },
     });
@@ -147,30 +114,10 @@ export default function Signup() {
       return;
     }
 
-    if (isPaid) {
-      // For paid plans: show confirmation then redirect to Stripe
-      setSent(true);
-      toast.success("Account created! Redirecting to payment...");
-    } else {
-      setSent(true);
-      toast.success("Check your email to confirm your account!");
-    }
+    setSent(true);
+    toast.success("Check your email to confirm your account!");
     setLoading(false);
   };
-
-  // After signup, if paid plan, attempt Stripe redirect once session is ready
-  useEffect(() => {
-    if (!sent || !isPaid) return;
-
-    const timer = setTimeout(async () => {
-      const { data } = await supabase.auth.getSession();
-      if (data.session) {
-        await redirectToStripe();
-      }
-    }, 1500);
-
-    return () => clearTimeout(timer);
-  }, [sent, isPaid]);
 
   if (sent) {
     return (
@@ -179,24 +126,10 @@ export default function Signup() {
           <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/10">
             <Check className="h-8 w-8 text-primary" />
           </div>
-          {isPaid ? (
-            <>
-              <h1 className="text-2xl font-bold text-foreground">Account created!</h1>
-              <p className="text-sm text-muted-foreground">
-                Redirecting you to Stripe to complete your <strong>{planInfo.name}</strong> subscription...
-              </p>
-              <p className="text-xs text-muted-foreground">
-                If you're not redirected, check your email to confirm your account first, then upgrade from Settings.
-              </p>
-            </>
-          ) : (
-            <>
-              <h1 className="text-2xl font-bold text-foreground">Check your email</h1>
-              <p className="text-sm text-muted-foreground">
-                We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account and start setting up {businessName}.
-              </p>
-            </>
-          )}
+          <h1 className="text-2xl font-bold text-foreground">Check your email</h1>
+          <p className="text-sm text-muted-foreground">
+            We sent a confirmation link to <strong>{email}</strong>. Click it to activate your account and start setting up {businessName}.
+          </p>
           <Link to="/login" className="text-sm text-primary hover:underline">Back to login</Link>
         </div>
       </div>
@@ -215,16 +148,27 @@ export default function Signup() {
           </p>
         </div>
 
-        {/* Selected plan badge */}
+        {/* Plan badge */}
         <div className="flex items-center justify-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm">
-            <Crown className="h-3.5 w-3.5 text-primary" />
-            <span className="font-medium text-foreground">{planInfo.name} Plan</span>
-            <span className="text-muted-foreground">·</span>
-            <span className="font-semibold text-primary">{planInfo.price}</span>
-            <Link to="/landing#pricing" className="text-xs text-muted-foreground hover:text-foreground transition-colors ml-1">
-              Change
-            </Link>
+            {foundersEnabled && foundersRemaining > 0 ? (
+              <>
+                <Flame className="h-3.5 w-3.5 text-orange-500" />
+                <span className="font-medium text-foreground">{planLabel} Plan</span>
+                <span className="text-muted-foreground">·</span>
+                <span className="font-semibold text-primary">{planPrice}</span>
+                <span className="text-xs text-orange-500 font-bold ml-1">
+                  {foundersRemaining} spots left
+                </span>
+              </>
+            ) : (
+              <>
+                <Crown className="h-3.5 w-3.5 text-primary" />
+                <span className="font-medium text-foreground">{planLabel} Plan</span>
+                <span className="text-muted-foreground">·</span>
+                <span className="font-semibold text-primary">{planPrice}</span>
+              </>
+            )}
           </div>
         </div>
 
@@ -353,13 +297,23 @@ export default function Signup() {
               className="flex-1 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
               {step < totalSteps ? (
                 <>Continue <ChevronRight className="h-4 w-4" /></>
-              ) : loading ? "Creating account..." : isPaid ? `Start 30-Day Free Trial` : "Start Free Plan"}
+              ) : loading ? "Creating account..." : "Activate Account"}
             </button>
           </div>
         </form>
 
-        {/* Contextual upsell */}
-        <UpsellCard step={step} trailerCount={trailerCount} teamSize={teamSize} />
+        {/* Founders remaining indicator */}
+        {foundersEnabled && foundersRemaining > 0 && (
+          <div className="rounded-xl border border-orange-500/20 bg-orange-500/5 p-4 text-center space-y-1">
+            <div className="flex items-center justify-center gap-2">
+              <Flame className="h-4 w-4 text-orange-500" />
+              <span className="text-sm font-bold text-foreground">Founders Pricing — {foundersRemaining} of 100 spots remaining</span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Enterprise features at ${foundersMonthlyPrice}/mo — <strong>locked for life</strong>. Once they're gone, they're gone.
+            </p>
+          </div>
+        )}
 
         <p className="text-center text-sm text-muted-foreground">
           Already have an account?{" "}

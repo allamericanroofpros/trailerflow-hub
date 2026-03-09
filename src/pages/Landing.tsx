@@ -4,9 +4,12 @@ import { Button } from "@/components/ui/button";
 import {
   ShoppingCart, BarChart3, CalendarRange, Truck, Users, Package,
   UtensilsCrossed, Wrench, Clock, Compass, Check, ArrowRight,
-  Star, Zap, Shield, ChevronRight, Play, TrendingUp, Award,
+  Star, Zap, Shield, ChevronRight, Play, TrendingUp, Award, Flame,
 } from "lucide-react";
 import vfLogo from "@/assets/vf-monogram.png";
+import { useFoundersStatus } from "@/hooks/useFoundersStatus";
+import { FOUNDERS_TIER, TIERS } from "@/config/tiers";
+import { useState } from "react";
 
 /* ─── Feature data ─── */
 const features = [
@@ -34,69 +37,8 @@ const steps = [
 const stats = [
   { value: "2 min", label: "Average setup time" },
   { value: "3×", label: "Faster end-of-day close" },
-  { value: "$0", label: "Setup cost — start free" },
+  { value: "$29", label: "Founders pricing/mo" },
   { value: "10+", label: "Tools in one platform" },
-];
-
-/* ─── Pricing tiers ─── */
-const plans = [
-  {
-    name: "Free",
-    price: "$0",
-    period: "forever",
-    highlight: false,
-    planKey: "free",
-    features: [
-      "1 trailer",
-      "2 staff accounts",
-      "Full POS system",
-      "Menu & inventory basics",
-      "Booking system",
-    ],
-  },
-  {
-    name: "Starter",
-    price: "$29",
-    period: "/month",
-    highlight: false,
-    planKey: "starter",
-    features: [
-      "Everything in Free",
-      "AI Chat assistant",
-      "5 staff accounts",
-      "Basic reports & analytics",
-      "Email support",
-    ],
-  },
-  {
-    name: "Pro",
-    price: "$79",
-    period: "/month",
-    highlight: true,
-    planKey: "pro",
-    features: [
-      "Everything in Starter",
-      "Unlimited trailers & staff",
-      "AI Forecasting & Discovery",
-      "Fleet Overview & advanced analytics",
-      "Time clock & labor tracking",
-      "Priority support",
-    ],
-  },
-  {
-    name: "Enterprise",
-    price: "$199",
-    period: "/month",
-    highlight: false,
-    planKey: "enterprise",
-    features: [
-      "Everything in Pro",
-      "Multi-org management",
-      "Custom API access",
-      "White-label receipts",
-      "Dedicated account manager",
-    ],
-  },
 ];
 
 /* ─── Testimonials ─── */
@@ -116,12 +58,17 @@ const jsonLd = {
   "operatingSystem": "Web",
   "offers": {
     "@type": "Offer",
-    "price": "0",
+    "price": "29",
     "priceCurrency": "USD",
   },
 };
 
 export default function Landing() {
+  const { foundersEnabled, foundersRemaining, foundersMonthlyPrice, foundersAnnualPrice } = useFoundersStatus();
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "annual">("monthly");
+
+  const showFounders = foundersEnabled && foundersRemaining > 0;
+
   return (
     <div className="min-h-screen bg-background text-foreground">
       <Helmet>
@@ -129,7 +76,7 @@ export default function Landing() {
         <meta name="description" content="Run your food truck like a real business. POS, inventory, events, team management, and AI-powered insights — all in one platform for mobile vendors." />
         <link rel="canonical" href="https://trailerflow-hub.lovable.app/landing" />
         <meta property="og:title" content="VendorFlow — Food Truck & Mobile Vendor Management" />
-        <meta property="og:description" content="All-in-one platform for food trucks, trailers, and mobile vendors. Start free today." />
+        <meta property="og:description" content="All-in-one platform for food trucks, trailers, and mobile vendors. Start today." />
         <meta property="og:type" content="website" />
         <script type="application/ld+json">{JSON.stringify(jsonLd)}</script>
       </Helmet>
@@ -152,7 +99,7 @@ export default function Landing() {
               <Link to="/login">Log In</Link>
             </Button>
             <Button asChild>
-              <Link to="/signup">Start Free <ArrowRight className="ml-1 h-4 w-4" /></Link>
+              <Link to="/signup">Get Started <ArrowRight className="ml-1 h-4 w-4" /></Link>
             </Button>
           </div>
         </div>
@@ -163,10 +110,18 @@ export default function Landing() {
         <div className="absolute inset-0 -z-10 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(hsl(var(--primary)) 1px, transparent 1px)", backgroundSize: "24px 24px" }} />
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-24 sm:py-32 lg:py-40">
           <div className="mx-auto max-w-3xl text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-muted-foreground">
-              <Zap className="h-3.5 w-3.5 text-accent" />
-              Built for mobile food vendors
-            </div>
+            {showFounders && (
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 text-sm font-semibold text-orange-600 dark:text-orange-400">
+                <Flame className="h-3.5 w-3.5" />
+                Founders pricing — {foundersRemaining} of 100 spots left
+              </div>
+            )}
+            {!showFounders && (
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-muted-foreground">
+                <Zap className="h-3.5 w-3.5 text-accent" />
+                Built for mobile food vendors
+              </div>
+            )}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1]">
               Run your food truck like a{" "}
               <span className="text-gradient-brand">real business</span>
@@ -176,13 +131,18 @@ export default function Landing() {
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" className="text-base px-8 h-12" asChild>
-                <Link to="/signup">Start Your 30-Day Free Trial <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/signup">
+                  {showFounders ? "Claim Founders Pricing" : "Get Started"}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
               </Button>
               <Button size="lg" variant="outline" className="text-base px-8 h-12" asChild>
                 <a href="#how-it-works"><Play className="mr-2 h-4 w-4" />See How It Works</a>
               </Button>
             </div>
-            <p className="mt-4 text-sm text-muted-foreground">No credit card required · Cancel anytime</p>
+            {showFounders && (
+              <p className="mt-4 text-sm text-muted-foreground">Enterprise features at ${foundersMonthlyPrice}/mo — <strong>price locked for life</strong></p>
+            )}
           </div>
         </div>
       </section>
@@ -254,55 +214,161 @@ export default function Landing() {
       {/* ── Pricing ── */}
       <section id="pricing" className="border-b border-border/60">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
-          <div className="text-center mb-16">
+          <div className="text-center mb-10">
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Simple, transparent pricing</h2>
             <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto">
-              Every paid plan includes a 30-day free trial. No contracts, cancel anytime.
+              No free trials, no hidden fees. Pick a plan and start running your business today.
             </p>
           </div>
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {plans.map((plan) => (
-              <div
-                key={plan.name}
-                className={`relative rounded-xl border p-6 shadow-card card-hover flex flex-col ${
-                  plan.highlight
-                    ? "border-primary bg-card ring-2 ring-primary/20"
-                    : "border-border bg-card"
-                }`}
-              >
-                {plan.highlight && (
-                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-bold text-primary-foreground">
-                    Most Popular
-                  </div>
-                )}
-                <h3 className="text-lg font-bold">{plan.name}</h3>
-                <div className="mt-3 flex items-baseline gap-1">
-                  <span className="text-3xl font-extrabold tracking-tight">{plan.price}</span>
-                  <span className="text-sm text-muted-foreground">{plan.period}</span>
+
+          {/* Billing toggle */}
+          <div className="flex items-center justify-center gap-3 mb-10">
+            <button
+              onClick={() => setBillingInterval("monthly")}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                billingInterval === "monthly"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingInterval("annual")}
+              className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
+                billingInterval === "annual"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-secondary text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Annual <span className="text-xs opacity-75">(2 months free)</span>
+            </button>
+          </div>
+
+          <div className={`grid gap-6 ${showFounders ? "sm:grid-cols-2 lg:grid-cols-3" : "sm:grid-cols-2 max-w-3xl mx-auto"}`}>
+            {/* Founders card */}
+            {showFounders && (
+              <div className="relative rounded-xl border-2 border-orange-500/40 p-6 shadow-card card-hover flex flex-col bg-gradient-to-b from-orange-500/5 to-card ring-2 ring-orange-500/20">
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-orange-500 px-3 py-0.5 text-xs font-bold text-white">
+                  First 100 Only
                 </div>
-                <ul className="mt-6 flex-1 space-y-2.5">
-                  {plan.features.map((f) => (
+                <div className="flex items-center gap-2 mb-1">
+                  <Flame className="h-5 w-5 text-orange-500" />
+                  <h3 className="text-lg font-bold">Founders</h3>
+                </div>
+                <p className="text-xs text-muted-foreground mb-3">Enterprise features — price locked for life</p>
+                <div className="mt-1 flex items-baseline gap-1">
+                  <span className="text-3xl font-extrabold tracking-tight">
+                    ${billingInterval === "monthly" ? foundersMonthlyPrice : foundersAnnualPrice}
+                  </span>
+                  <span className="text-sm text-muted-foreground">
+                    /{billingInterval === "monthly" ? "mo" : "yr"}
+                  </span>
+                </div>
+                {billingInterval === "annual" && (
+                  <p className="text-xs text-orange-600 dark:text-orange-400 font-medium mt-1">
+                    Save ${foundersMonthlyPrice * 2}/yr (2 months free)
+                  </p>
+                )}
+                <div className="mt-2 mb-4 inline-flex items-center gap-1.5 rounded-full bg-orange-500/10 px-3 py-1 text-xs font-bold text-orange-600 dark:text-orange-400">
+                  <Shield className="h-3 w-3" />
+                  LOCKED FOR LIFE
+                </div>
+                <ul className="mt-2 flex-1 space-y-2.5">
+                  {FOUNDERS_TIER.features.map((f) => (
                     <li key={f} className="flex items-start gap-2 text-sm">
-                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-orange-500" />
                       <span>{f}</span>
                     </li>
                   ))}
                 </ul>
-                <Button
-                  className="mt-6 w-full"
-                  variant={plan.highlight ? "default" : "outline"}
-                  asChild
-                >
-                  <Link to={`/signup?plan=${plan.planKey}`}>
-                    {plan.price === "$0" ? "Get Started Free" : "Start 30-Day Trial"}
+                <p className="text-xs text-muted-foreground mt-4 mb-3 text-center font-medium">
+                  {foundersRemaining} of 100 spots remaining
+                </p>
+                <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white" asChild>
+                  <Link to="/signup">
+                    Claim Founders Spot
                     <ChevronRight className="ml-1 h-4 w-4" />
                   </Link>
                 </Button>
               </div>
-            ))}
+            )}
+
+            {/* Pro */}
+            <div className={`relative rounded-xl border p-6 shadow-card card-hover flex flex-col ${!showFounders ? "border-primary ring-2 ring-primary/20 bg-card" : "border-border bg-card"}`}>
+              {!showFounders && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 rounded-full bg-primary px-3 py-0.5 text-xs font-bold text-primary-foreground">
+                  Most Popular
+                </div>
+              )}
+              <h3 className="text-lg font-bold">Pro</h3>
+              <div className="mt-3 flex items-baseline gap-1">
+                <span className="text-3xl font-extrabold tracking-tight">
+                  ${billingInterval === "monthly" ? TIERS.pro.price : TIERS.pro.annualPrice}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  /{billingInterval === "monthly" ? "mo" : "yr"}
+                </span>
+              </div>
+              {billingInterval === "annual" && (
+                <p className="text-xs text-primary font-medium mt-1">
+                  Save ${TIERS.pro.price * 2}/yr (2 months free)
+                </p>
+              )}
+              <ul className="mt-6 flex-1 space-y-2.5">
+                {TIERS.pro.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button
+                className="mt-6 w-full"
+                variant={!showFounders ? "default" : "outline"}
+                asChild
+              >
+                <Link to="/signup">
+                  Get Pro
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
+
+            {/* Enterprise */}
+            <div className="relative rounded-xl border border-border p-6 shadow-card card-hover flex flex-col bg-card">
+              <h3 className="text-lg font-bold">Enterprise</h3>
+              <div className="mt-3 flex items-baseline gap-1">
+                <span className="text-3xl font-extrabold tracking-tight">
+                  ${billingInterval === "monthly" ? TIERS.enterprise.price : TIERS.enterprise.annualPrice}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  /{billingInterval === "monthly" ? "mo" : "yr"}
+                </span>
+              </div>
+              {billingInterval === "annual" && (
+                <p className="text-xs text-primary font-medium mt-1">
+                  Save ${TIERS.enterprise.price * 2}/yr (2 months free)
+                </p>
+              )}
+              <ul className="mt-6 flex-1 space-y-2.5">
+                {TIERS.enterprise.features.map((f) => (
+                  <li key={f} className="flex items-start gap-2 text-sm">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
+                    <span>{f}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button className="mt-6 w-full" variant="outline" asChild>
+                <Link to="/signup">
+                  Get Enterprise
+                  <ChevronRight className="ml-1 h-4 w-4" />
+                </Link>
+              </Button>
+            </div>
           </div>
           <p className="text-center text-sm text-muted-foreground mt-8">
-            All plans include the full POS, menu management, inventory tracking, and booking system. <Link to="/signup" className="text-primary hover:underline">Start free today →</Link>
+            All plans include the full POS, menu management, inventory tracking, and booking system.
           </p>
         </div>
       </section>
@@ -345,48 +411,41 @@ export default function Landing() {
       <section aria-label="Call to action">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-20 sm:py-28">
           <div className="mx-auto max-w-2xl text-center">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-muted-foreground">
-              <Award className="h-3.5 w-3.5 text-accent" />
-              Join hundreds of vendors
-            </div>
+            {showFounders ? (
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-orange-500/30 bg-orange-500/10 px-4 py-1.5 text-sm font-semibold text-orange-600 dark:text-orange-400">
+                <Flame className="h-3.5 w-3.5" />
+                {foundersRemaining} Founders spots remaining
+              </div>
+            ) : (
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card px-4 py-1.5 text-sm font-medium text-muted-foreground">
+                <Award className="h-3.5 w-3.5 text-accent" />
+                Join hundreds of vendors
+              </div>
+            )}
             <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight">Ready to level up your food truck?</h2>
             <p className="mt-4 text-lg text-muted-foreground">
               Join hundreds of mobile vendors using VendorFlow to save time, make more money, and stress less.
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" className="text-base px-8 h-12" asChild>
-                <Link to="/signup">Start Free — No Credit Card <ArrowRight className="ml-2 h-4 w-4" /></Link>
+                <Link to="/signup">
+                  {showFounders ? "Claim Founders Pricing" : "Get Started"}
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Link>
               </Button>
-              <Button size="lg" variant="outline" className="text-base px-8 h-12" asChild>
-                <Link to="/login">Sign In <TrendingUp className="ml-2 h-4 w-4" /></Link>
-              </Button>
-            </div>
-            <div className="mt-6 flex items-center justify-center gap-6 text-sm text-muted-foreground">
-              <span className="flex items-center gap-1.5"><Shield className="h-4 w-4" /> Secure payments</span>
-              <span className="flex items-center gap-1.5"><Zap className="h-4 w-4" /> Setup in 2 minutes</span>
-              <span className="flex items-center gap-1.5"><Check className="h-4 w-4" /> Cancel anytime</span>
             </div>
           </div>
         </div>
       </section>
 
       {/* ── Footer ── */}
-      <footer className="border-t border-border/60 bg-card">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-2">
-              <img src={vfLogo} alt="VendorFlow" className="h-6 w-6 rounded" />
-              <span className="text-sm font-bold">VendorFlow</span>
-            </div>
-            <nav className="flex gap-6" aria-label="Footer navigation">
-              <a href="#features" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Features</a>
-              <a href="#pricing" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Pricing</a>
-              <Link to="/signup" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Sign Up</Link>
-              <Link to="/login" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Login</Link>
-              <Link to="/book" className="text-xs text-muted-foreground hover:text-foreground transition-colors">Book a Vendor</Link>
-            </nav>
-            <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} VendorFlow. All rights reserved.</p>
+      <footer className="border-t border-border/60">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-2.5">
+            <img src={vfLogo} alt="VendorFlow" className="h-6 w-6 rounded" />
+            <span className="text-sm font-bold">VendorFlow</span>
           </div>
+          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} VendorFlow. All rights reserved.</p>
         </div>
       </footer>
     </div>

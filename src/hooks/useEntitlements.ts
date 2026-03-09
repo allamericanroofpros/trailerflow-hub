@@ -17,7 +17,7 @@ export function useEntitlements(): EntitlementState {
   const { data: trailers } = useTrailers();
   const { data: staff } = useStaffMembers();
 
-  const plan = (currentOrg?.plan || "free") as PlanKey;
+  const plan = (currentOrg?.plan || "pro") as PlanKey;
   const ent = getEntitlements(plan);
   const trailerCount = trailers?.length ?? 0;
   const staffCount = staff?.length ?? 0;

@@ -1,11 +1,12 @@
 import { AppLayout } from "@/components/layout/AppLayout";
-import { Settings as SettingsIcon, User, Bell, Truck, CreditCard, Shield, Palette, ArrowRight, Users, Loader2, Monitor, Check, ExternalLink, Receipt, ChevronDown, ClipboardList, X } from "lucide-react";
+import { Settings as SettingsIcon, User, Bell, Truck, CreditCard, Shield, Palette, ArrowRight, Users, Loader2, Monitor, Check, ExternalLink, Receipt, ChevronDown, ClipboardList, X, Flame } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useSubscription } from "@/hooks/useSubscription";
-import { TIERS, TierKey } from "@/config/tiers";
+import { TIERS, TierKey, FOUNDERS_TIER } from "@/config/tiers";
+import { useFoundersStatus } from "@/hooks/useFoundersStatus";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Input } from "@/components/ui/input";
@@ -64,6 +65,107 @@ function AppearanceSettings() {
         <div><p className="text-sm font-medium text-card-foreground">Sidebar Collapsed by Default</p><p className="text-xs text-muted-foreground">Start with the sidebar minimized</p></div>
         <Switch checked={sidebarCollapsed} onCheckedChange={toggleSidebar} />
       </label>
+    </div>
+  );
+}
+
+function BillingSection({ subLoading, subscribed, tier, subscriptionEnd, cancelAtPeriodEnd, startCheckout, openPortal, checkSubscription, refreshOrg, currentOrg }: any) {
+  const { foundersEnabled, foundersRemaining, foundersMonthlyPrice } = useFoundersStatus();
+  const [billingInterval, setBillingInterval] = useState<"monthly" | "annual">("monthly");
+  const isFounder = (currentOrg as any)?.is_founder === true;
+  const founderNumber = (currentOrg as any)?.founder_number;
+  const currentPlan = currentOrg?.plan || "pro";
+
+  if (subLoading) {
+    return (
+      <div className="flex items-center gap-2 py-8 justify-center text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" /> Checking subscription...
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      {/* Founder badge */}
+      {isFounder && (
+        <div className="rounded-lg border-2 border-orange-500/30 bg-orange-500/5 p-4 mb-5">
+          <div className="flex items-center gap-2 mb-1">
+            <Flame className="h-4 w-4 text-orange-500" />
+            <span className="text-sm font-bold text-foreground">Founders Plan #{founderNumber}</span>
+            <span className="rounded-full bg-orange-500/10 px-2.5 py-0.5 text-[10px] font-bold text-orange-600 dark:text-orange-400 uppercase tracking-wider">
+              Locked for Life
+            </span>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            Enterprise features at ${foundersMonthlyPrice}/mo — your price never changes.
+          </p>
+        </div>
+      )}
+
+      {/* Current plan status */}
+      {subscribed && subscriptionEnd && (
+        <div className={`rounded-lg border p-3 mb-5 ${cancelAtPeriodEnd ? "bg-destructive/5 border-destructive/20" : "bg-primary/5 border-primary/20"}`}>
+          <p className="text-xs text-muted-foreground">
+            Current plan: <span className="font-semibold text-primary capitalize">{currentPlan}</span>
+            {cancelAtPeriodEnd
+              ? <>{" · "}<span className="text-destructive font-semibold">Cancels {new Date(subscriptionEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span></>
+              : <>{" · "}Renews {new Date(subscriptionEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</>
+            }
+          </p>
+        </div>
+      )}
+
+      {/* Billing interval toggle */}
+      <div className="flex items-center gap-3 mb-5">
+        <button
+          onClick={() => setBillingInterval("monthly")}
+          className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
+            billingInterval === "monthly" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+          }`}
+        >
+          Monthly
+        </button>
+        <button
+          onClick={() => setBillingInterval("annual")}
+          className={`rounded-full px-4 py-1.5 text-xs font-medium transition-colors ${
+            billingInterval === "annual" ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"
+          }`}
+        >
+          Annual <span className="opacity-75">(2 months free)</span>
+        </button>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {(Object.entries(TIERS) as [TierKey, typeof TIERS[TierKey]][]).map(([key, t]) => {
+          const isCurrent = currentPlan === key || (subscribed && tier === key);
+          const displayPrice = billingInterval === "monthly" ? t.price : t.annualPrice;
+          return (
+            <div key={key} className={`relative rounded-xl border p-5 transition-all ${isCurrent ? "border-primary ring-2 ring-primary/20 bg-primary/5" : "border-border bg-background hover:border-primary/40"}`}>
+              {isCurrent && <span className="absolute -top-2.5 left-4 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-bold text-primary-foreground uppercase tracking-wider">Your Plan</span>}
+              <h4 className="text-sm font-bold text-foreground capitalize">{t.name}</h4>
+              <div className="mt-2 mb-1">
+                <span className="text-3xl font-extrabold text-foreground">${displayPrice}</span>
+                <span className="text-sm text-muted-foreground">/{billingInterval === "monthly" ? "mo" : "yr"}</span>
+              </div>
+              {billingInterval === "annual" && (
+                <p className="text-xs text-primary font-medium mb-3">Save ${t.price * 2}/yr</p>
+              )}
+              <ul className="space-y-2 mb-5">{t.features.map((f) => <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground"><Check className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />{f}</li>)}</ul>
+              {isCurrent || isFounder ? (
+                <Button variant="outline" size="sm" className="w-full" disabled>{isFounder ? "Founders Plan Active" : "Current Plan"}</Button>
+              ) : (
+                <Button size="sm" className="w-full" variant={key === "pro" ? "default" : "outline"} onClick={async () => { try { await startCheckout(t.price_id); } catch (e: any) { toast.error(e.message || "Checkout failed"); } }}>
+                  {subscribed ? `Switch to ${t.name}` : `Get ${t.name}`}
+                </Button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+      <div className="mt-4 flex items-center justify-between">
+        <Button variant="ghost" size="sm" onClick={() => { checkSubscription(); refreshOrg(); toast.success("Subscription status refreshed"); }}>Refresh Status</Button>
+        {subscribed && <Button variant="outline" size="sm" onClick={async () => { try { await openPortal(); } catch { toast.error("Could not open billing portal"); } }}><ExternalLink className="h-3.5 w-3.5 mr-1.5" />Manage Subscription</Button>}
+      </div>
     </div>
   );
 }
@@ -541,50 +643,18 @@ export default function SettingsPage() {
 
                   {/* Billing */}
                   {s.id === "billing" && (
-                    <div>
-                      {subLoading ? (
-                        <div className="flex items-center gap-2 py-8 justify-center text-muted-foreground">
-                          <Loader2 className="h-4 w-4 animate-spin" /> Checking subscription...
-                        </div>
-                      ) : (
-                        <>
-                          {subscribed && subscriptionEnd && (
-                            <div className={`rounded-lg border p-3 mb-5 ${cancelAtPeriodEnd ? "bg-destructive/5 border-destructive/20" : "bg-primary/5 border-primary/20"}`}>
-                              <p className="text-xs text-muted-foreground">
-                                Current plan: <span className="font-semibold text-primary capitalize">{tier || "Active"}</span>
-                                {cancelAtPeriodEnd
-                                  ? <>{" · "}<span className="text-destructive font-semibold">Cancels {new Date(subscriptionEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</span></>
-                                  : <>{" · "}Renews {new Date(subscriptionEnd).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}</>
-                                }
-                              </p>
-                            </div>
-                          )}
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                            {(Object.entries(TIERS) as [TierKey, typeof TIERS[TierKey]][]).map(([key, t]) => {
-                              const isCurrent = subscribed && tier === key;
-                              return (
-                                <div key={key} className={`relative rounded-xl border p-5 transition-all ${isCurrent ? "border-primary ring-2 ring-primary/20 bg-primary/5" : "border-border bg-background hover:border-primary/40"} ${key === "pro" && !isCurrent ? "ring-1 ring-primary/10" : ""}`}>
-                                  {key === "pro" && !isCurrent && <span className="absolute -top-2.5 left-4 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-bold text-primary-foreground uppercase tracking-wider">Most Popular</span>}
-                                  {isCurrent && <span className="absolute -top-2.5 left-4 rounded-full bg-primary px-2.5 py-0.5 text-[10px] font-bold text-primary-foreground uppercase tracking-wider">Your Plan</span>}
-                                  <h4 className="text-sm font-bold text-foreground capitalize">{t.name}</h4>
-                                  <div className="mt-2 mb-4"><span className="text-3xl font-extrabold text-foreground">${t.price}</span><span className="text-sm text-muted-foreground">/mo</span></div>
-                                  <ul className="space-y-2 mb-5">{t.features.map((f) => <li key={f} className="flex items-start gap-2 text-xs text-muted-foreground"><Check className="h-3.5 w-3.5 text-primary shrink-0 mt-0.5" />{f}</li>)}</ul>
-                                  {isCurrent ? <Button variant="outline" size="sm" className="w-full" disabled>Current Plan</Button> : (
-                                    <Button size="sm" className="w-full" variant={key === "pro" ? "default" : "outline"} onClick={async () => { try { await startCheckout(t.price_id); } catch (e: any) { toast.error(e.message || "Checkout failed"); } }}>
-                                      {subscribed ? `Switch to ${t.name}` : `Get ${t.name}`}
-                                    </Button>
-                                  )}
-                                </div>
-                              );
-                            })}
-                          </div>
-                          <div className="mt-4 flex items-center justify-between">
-                            <Button variant="ghost" size="sm" onClick={() => { checkSubscription(); refreshOrg(); toast.success("Subscription status refreshed"); }}>Refresh Status</Button>
-                            {subscribed && <Button variant="outline" size="sm" onClick={async () => { try { await openPortal(); } catch { toast.error("Could not open billing portal"); } }}><ExternalLink className="h-3.5 w-3.5 mr-1.5" />Manage Subscription</Button>}
-                          </div>
-                        </>
-                      )}
-                    </div>
+                    <BillingSection
+                      subLoading={subLoading}
+                      subscribed={subscribed}
+                      tier={tier}
+                      subscriptionEnd={subscriptionEnd}
+                      cancelAtPeriodEnd={cancelAtPeriodEnd}
+                      startCheckout={startCheckout}
+                      openPortal={openPortal}
+                      checkSubscription={checkSubscription}
+                      refreshOrg={refreshOrg}
+                      currentOrg={currentOrg}
+                    />
                   )}
 
                   {/* Security */}

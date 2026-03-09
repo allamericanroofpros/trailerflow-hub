@@ -1,25 +1,27 @@
 /**
  * Centralized plan entitlements — single source of truth for limits & feature flags.
- * All gating logic reads from here.
  *
- * PLAN MATRIX:
- * ┌──────────────┬──────┬─────────┬─────┬────────────┐
- * │ Feature      │ Free │ Starter │ Pro │ Enterprise │
- * ├──────────────┼──────┼─────────┼─────┼────────────┤
- * │ Trailers     │  1   │   1     │ ∞   │     ∞      │
- * │ Staff        │  2   │   5     │ ∞   │     ∞      │
- * │ AI Discovery │  ✗   │   ✗     │ ✓   │     ✓      │
- * │ AI Forecast  │  ✗   │   ✗     │ ✓   │     ✓      │
- * │ AI Chat      │  ✗   │   ✓     │ ✓   │     ✓      │
- * │ Fleet View   │  ✗   │   ✗     │ ✓   │     ✓      │
- * │ Adv.Analytics│  ✗   │   ✗     │ ✓   │     ✓      │
- * │ Multi-Org    │  ✗   │   ✗     │ ✗   │     ✓      │
- * │ Integrations │  ✗   │   ✗     │ ✗   │     ✓      │
- * │ White-Label  │  ✗   │   ✗     │ ✗   │     ✓      │
- * └──────────────┴──────┴─────────┴─────┴────────────┘
+ * PLAN MATRIX (Beta):
+ * ┌──────────────┬──────────┬─────┬────────────┐
+ * │ Feature      │ Founders │ Pro │ Enterprise │
+ * ├──────────────┼──────────┼─────┼────────────┤
+ * │ Trailers     │    ∞     │ ∞   │     ∞      │
+ * │ Staff        │    ∞     │ ∞   │     ∞      │
+ * │ AI Discovery │    ✓     │ ✓   │     ✓      │
+ * │ AI Forecast  │    ✓     │ ✓   │     ✓      │
+ * │ AI Chat      │    ✓     │ ✓   │     ✓      │
+ * │ Fleet View   │    ✓     │ ✓   │     ✓      │
+ * │ Adv.Analytics│    ✓     │ ✓   │     ✓      │
+ * │ Multi-Org    │    ✓     │ ✗   │     ✓      │
+ * │ Integrations │    ✓     │ ✗   │     ✓      │
+ * │ White-Label  │    ✓     │ ✗   │     ✓      │
+ * └──────────────┴──────────┴─────┴────────────┘
+ *
+ * Free / Starter are hidden during beta.
+ * Founders = Enterprise features at $29/mo (first 100 orgs, locked for life).
  */
 
-export type PlanKey = "free" | "starter" | "pro" | "enterprise";
+export type PlanKey = "free" | "starter" | "pro" | "enterprise" | "founders";
 
 export interface PlanEntitlements {
   label: string;
@@ -30,7 +32,6 @@ export interface PlanEntitlements {
   aiForecasting: boolean;
   fleetOverview: boolean;
   advancedAnalytics: boolean;
-  /** Reserved for future enterprise-only features */
   multiOrgManagement: boolean;
   customIntegrations: boolean;
   whiteLabelReceipts: boolean;
@@ -63,6 +64,19 @@ export const PLAN_ENTITLEMENTS: Record<PlanKey, PlanEntitlements> = {
     customIntegrations: false,
     whiteLabelReceipts: false,
   },
+  founders: {
+    label: "Founders",
+    maxTrailers: Infinity,
+    maxStaff: Infinity,
+    aiChat: true,
+    aiDiscovery: true,
+    aiForecasting: true,
+    fleetOverview: true,
+    advancedAnalytics: true,
+    multiOrgManagement: true,
+    customIntegrations: true,
+    whiteLabelReceipts: true,
+  },
   pro: {
     label: "Pro",
     maxTrailers: Infinity,
@@ -91,24 +105,22 @@ export const PLAN_ENTITLEMENTS: Record<PlanKey, PlanEntitlements> = {
   },
 };
 
-/** Safely resolve a plan string to entitlements, defaulting to free */
+/** Safely resolve a plan string to entitlements, defaulting to pro (no free during beta) */
 export function getEntitlements(plan: string | null | undefined): PlanEntitlements {
-  const key = (plan || "free") as PlanKey;
-  return PLAN_ENTITLEMENTS[key] ?? PLAN_ENTITLEMENTS.free;
+  const key = (plan || "pro") as PlanKey;
+  return PLAN_ENTITLEMENTS[key] ?? PLAN_ENTITLEMENTS.pro;
 }
 
 /** Suggested upgrade plan for a given plan */
 export function suggestedUpgrade(plan: string | null | undefined): PlanKey | null {
   switch (plan) {
-    case "free":
-      return "starter";
-    case "starter":
-      return "pro";
+    case "founders":
+      return null; // locked for life
     case "pro":
       return "enterprise";
     case "enterprise":
       return null;
     default:
-      return "starter";
+      return "pro";
   }
 }

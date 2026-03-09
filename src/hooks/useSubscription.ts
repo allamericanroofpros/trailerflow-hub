@@ -39,7 +39,8 @@ export function useSubscription() {
 
       if (org && org.subscription_status && org.subscription_status !== "inactive") {
         const isActive = ["active", "trialing"].includes(org.subscription_status);
-        const tier = (org.plan && org.plan !== "free" ? org.plan : null) as TierKey | null;
+        const planVal = org.plan || "pro";
+        const tier = (planVal !== "free" ? planVal : null) as TierKey | null;
         setState({
           subscribed: isActive,
           tier,
