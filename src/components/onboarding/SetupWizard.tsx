@@ -15,7 +15,7 @@ interface SetupStep {
 
 const STEPS: SetupStep[] = [
   { id: "trailer", title: "Add Your First Trailer", description: "Set up a trailer with its name, type, and details.", icon: Truck, route: "/trailers", checkKey: "trailers" },
-  { id: "tax", title: "Configure Tax & Surcharge", description: "Set your sales tax rate and optional card fee pass-through.", icon: Receipt, route: "/settings", checkKey: "tax" },
+  { id: "tax", title: "Configure Tax & Surcharge", description: "Set your sales tax rate and optional card fee pass-through.", icon: Receipt, route: "/settings?section=payments", checkKey: "tax" },
   { id: "menu", title: "Build Your Menu", description: "Add menu items with prices and categories.", icon: UtensilsCrossed, route: "/menu", checkKey: "menu" },
   { id: "inventory", title: "Set Up Inventory", description: "Track ingredients and supplies with par levels.", icon: Package, route: "/inventory", checkKey: "inventory" },
   { id: "staff", title: "Add Team Members", description: "Invite your crew and assign roles.", icon: Users, route: "/staff", checkKey: "staff" },
