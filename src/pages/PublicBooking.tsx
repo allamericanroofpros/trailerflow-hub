@@ -161,7 +161,7 @@ export default function PublicBooking() {
         trailer_id: selectedTrailer || null,
         service_package: form.service_package || null,
         guest_count: form.guest_count ? parseInt(form.guest_count) : null,
-        notes: form.notes || null,
+        notes: [form.event_type && `Event type: ${form.event_type}`, form.budget_range && `Budget: ${form.budget_range}`, form.notes].filter(Boolean).join("\n") || null,
         start_time: form.start_time || null,
         end_time: form.end_time || null,
         status: "pending",
