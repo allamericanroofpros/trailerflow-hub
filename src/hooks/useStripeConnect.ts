@@ -41,7 +41,7 @@ export function useStripeConnect() {
         .eq("is_active", true)
         .maybeSingle();
       if (error) throw error;
-      return data as ConnectAccount | null;
+      return (data as unknown) as ConnectAccount | null;
     },
   });
 
