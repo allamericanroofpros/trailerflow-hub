@@ -82,7 +82,7 @@ export default function POSCheckoutFlow({
     if (method === "card") {
       // Card → process payment first, then ask for tip
       setStep("processing");
-      const result = await processStripePayment(total);
+      const result = await processStripePayment(total, orgId);
       if (result.success) {
         setStep("tip");
       }
