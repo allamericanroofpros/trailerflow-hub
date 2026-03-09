@@ -285,7 +285,7 @@ export default function POSOrderHistory() {
                 <div className="border-t-2 border-border pt-3 space-y-1.5">
                   <div className="flex justify-between text-sm text-muted-foreground">
                     <span>Subtotal</span>
-                    <span>${Number(selectedOrder.subtotal).toFixed(2)}</span>
+                    <span>${Number(selectedOrder.subtotal).toFixed(1)}</span>
                   </div>
                   {selectedOrder.tax_inclusive ? (
                     Number(selectedOrder.tax) > 0 && (
