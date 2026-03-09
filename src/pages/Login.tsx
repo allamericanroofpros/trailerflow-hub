@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { BrandLogo } from "@/components/BrandLogo";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -24,9 +25,9 @@ export default function Login() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-6">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold tracking-tight text-foreground">VendorFlow</h1>
-          <p className="text-sm text-muted-foreground mt-1">Sign in to your account</p>
+        <div className="flex flex-col items-center gap-3">
+          <BrandLogo size="lg" />
+          <p className="text-sm text-muted-foreground">Sign in to your account</p>
         </div>
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
@@ -65,7 +66,7 @@ export default function Login() {
           </p>
           <p>
             Don't have an account?{" "}
-            <Link to="/signup" className="text-primary hover:underline">Sign up</Link>
+            <Link to="/landing" className="text-primary hover:underline">Sign up</Link>
           </p>
         </div>
       </div>
