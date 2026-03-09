@@ -172,7 +172,7 @@ const POSReportView = forwardRef<HTMLDivElement>(function POSReportView(_props, 
                   <div key={p.name} className="flex items-center gap-2">
                     <div className="h-3 w-3 rounded-full shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
                     <span className="text-sm font-bold text-card-foreground capitalize flex-1">{p.name}</span>
-                    <span className="text-sm font-black text-card-foreground">${p.value.toFixed(2)}</span>
+                    <span className="text-sm font-black text-card-foreground">${p.value.toFixed(1)}</span>
                   </div>
                 ))}
               </div>
