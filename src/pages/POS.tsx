@@ -358,7 +358,7 @@ export default function POS() {
             </button>
           </div>
           <p className="w-20 text-right text-base font-black text-card-foreground">
-            ${(item.price * item.quantity).toFixed(2)}
+            ${(item.price * item.quantity).toFixed(1)}
           </p>
         </motion.div>
       </div>
