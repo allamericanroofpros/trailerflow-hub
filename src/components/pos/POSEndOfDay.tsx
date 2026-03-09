@@ -226,7 +226,7 @@ const POSEndOfDay = forwardRef<HTMLDivElement, { onClose: () => void; openingCas
                 {/* Opening cash display */}
                 <div className="rounded-xl border-2 border-border bg-secondary/30 p-3 flex items-center justify-between">
                   <span className="text-sm font-bold text-muted-foreground">Opening Cash (from Start of Day)</span>
-                  <span className="text-lg font-black text-card-foreground">${openingCash.toFixed(2)}</span>
+                  <span className="text-lg font-black text-card-foreground">${openingCash.toFixed(1)}</span>
                 </div>
 
                 {/* Bills */}
