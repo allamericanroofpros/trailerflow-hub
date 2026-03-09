@@ -226,7 +226,7 @@ export default function Landing() {
                   asChild
                 >
                   <Link to={`/signup?plan=${plan.planKey}`}>
-                    {plan.price === "$0" ? "Get Started" : "Start Free Trial"}
+                    {plan.price === "$0" ? "Get Started" : "Start 30-Day Trial"}
                     <ChevronRight className="ml-1 h-4 w-4" />
                   </Link>
                 </Button>
