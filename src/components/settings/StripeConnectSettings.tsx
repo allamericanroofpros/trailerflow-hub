@@ -147,6 +147,19 @@ export function StripeConnectSettings() {
                 </p>
               </div>
             )}
+            {/* Platform fee */}
+            <div className="rounded-lg border border-border bg-background p-3">
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">
+                Platform Fee
+              </p>
+              <p className="text-sm font-semibold text-card-foreground flex items-center gap-1.5">
+                <Percent className="h-3.5 w-3.5 text-primary" />
+                {feeLabel}
+                <span className="text-[11px] font-normal text-muted-foreground ml-1">
+                  ({plan} plan)
+                </span>
+              </p>
+            </div>
           </div>
 
           {/* Requirements warning */}
