@@ -446,7 +446,7 @@ export default function PublicBooking() {
                       <DollarSign className="h-4 w-4 text-primary" />
                       <h3 className="text-sm font-bold text-foreground">Pricing Estimate</h3>
                     </div>
-                    <p className="text-xs text-muted-foreground mb-3">Based on a {estimatedHours.toFixed(1)}-hour event</p>
+                    <p className="text-xs text-muted-foreground mb-3">Based on {pricing.basis === "guest count" ? `~${form.guest_count} guests` : "event duration"}</p>
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
                         <span className="text-muted-foreground">Estimated Range</span>
