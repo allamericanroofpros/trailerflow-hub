@@ -7,6 +7,7 @@ interface HelpArticle {
   title: string;
   category: string;
   content: string;
+  route?: string;
 }
 
 const HELP_ARTICLES: HelpArticle[] = [
