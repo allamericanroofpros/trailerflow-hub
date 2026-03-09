@@ -191,9 +191,9 @@ export default function Dashboard() {
         {/* 30-Day Overview */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <MetricCard
-            title="Forecasted Revenue"
+            title="Pipeline Forecast"
             value={metrics.forecastedRevenue > 0 ? `$${metrics.forecastedRevenue.toLocaleString()}` : "—"}
-            subtitle="Upcoming events"
+            subtitle="Based on event estimates"
             icon={<TrendingUp className="h-5 w-5" />}
           />
           <MetricCard
