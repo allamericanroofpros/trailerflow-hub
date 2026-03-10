@@ -74,7 +74,7 @@ export default function Landing() {
       <Helmet>
         <title>VendorFlow — Food Truck & Mobile Vendor Management</title>
         <meta name="description" content="Run your food truck like a real business. POS, inventory, events, team management, and AI-powered insights — all in one platform for mobile vendors." />
-        <link rel="canonical" href="https://trailerflow-hub.lovable.app/landing" />
+        <link rel="canonical" href="https://getvendorflow.app/" />
         <meta property="og:title" content="VendorFlow — Food Truck & Mobile Vendor Management" />
         <meta property="og:description" content="All-in-one platform for food trucks, trailers, and mobile vendors. Start today." />
         <meta property="og:type" content="website" />

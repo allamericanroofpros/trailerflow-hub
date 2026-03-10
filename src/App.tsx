@@ -32,6 +32,8 @@ import PublicBooking from "./pages/PublicBooking";
 import FleetOverview from "./pages/FleetOverview";
 import OrdersQueue from "./pages/OrdersQueue";
 import TimeClockPage from "./pages/TimeClockPage";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminOrganizations from "./pages/admin/AdminOrganizations";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -39,6 +41,7 @@ import AdminAnalytics from "./pages/admin/AdminAnalytics";
 import AdminSettings from "./pages/admin/AdminSettings";
 import AdminAuditLog from "./pages/admin/AdminAuditLog";
 import AdminSupport from "./pages/admin/AdminSupport";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -51,7 +54,7 @@ const App = () => (
           <ImpersonationBanner />
           <BrowserRouter>
             <Routes>
-              {/* Public routes */}
+              <Route path="/" element={<Landing />} />
               <Route path="/landing" element={<Landing />} />
               <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<Signup />} />
@@ -59,8 +62,8 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/receipt/:orderId" element={<ReceiptPage />} />
               <Route path="/book" element={<PublicBooking />} />
-
-              {/* Super Admin routes */}
+              <Route path="/terms" element={<Terms />} />
+              <Route path="/privacy" element={<Privacy />} />
               <Route path="/admin" element={<SuperAdminRoute><AdminOverview /></SuperAdminRoute>} />
               <Route path="/super-admin" element={<SuperAdminRoute><AdminOverview /></SuperAdminRoute>} />
               <Route path="/admin/organizations" element={<SuperAdminRoute><AdminOrganizations /></SuperAdminRoute>} />
@@ -69,9 +72,7 @@ const App = () => (
               <Route path="/admin/settings" element={<SuperAdminRoute><AdminSettings /></SuperAdminRoute>} />
               <Route path="/admin/audit-log" element={<SuperAdminRoute><AdminAuditLog /></SuperAdminRoute>} />
               <Route path="/admin/support" element={<SuperAdminRoute><AdminSupport /></SuperAdminRoute>} />
-
-              {/* Protected routes */}
-              <Route path="/" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
               <Route path="/pos" element={<ProtectedRoute><POS /></ProtectedRoute>} />
               <Route path="/menu" element={<ProtectedRoute><MenuPage /></ProtectedRoute>} />
               <Route path="/inventory" element={<ProtectedRoute><InventoryPage /></ProtectedRoute>} />

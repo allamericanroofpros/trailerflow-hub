@@ -4,7 +4,7 @@ import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useEntitlements } from "@/hooks/useEntitlements";
 
 const routeToViewKey: Record<string, string> = {
-  "/": "dashboard",
+  "/dashboard": "dashboard",
   "/pos": "pos",
   "/menu": "menu",
   "/inventory": "inventory",
@@ -20,7 +20,6 @@ const routeToViewKey: Record<string, string> = {
   "/settings": "settings",
 };
 
-/** Routes that require a specific entitlement boolean to be true */
 const routeToEntitlement: Record<string, string> = {
   "/discover": "aiDiscovery",
   "/fleet": "fleetOverview",
@@ -40,20 +39,16 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
-  if (!session) {
-    return <Navigate to="/landing" replace />;
+    return <Navigate to="/login" replace />;
   }
 
-  // Role-based gating
   const viewKey = routeToViewKey[location.pathname];
-  if (viewKey && !canView(viewKey)) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
-  // Plan-based gating — redirect to dashboard (page will show upgrade banner if accessed directly)
   const entKey = routeToEntitlement[location.pathname];
   if (entKey && !(ent as any)[entKey]) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   return <>{children}</>;

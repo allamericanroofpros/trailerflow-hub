@@ -41,7 +41,7 @@ const OrgContext = createContext<OrgContextType>({
 
 export const useOrg = () => useContext(OrgContext);
 
-const ORG_KEY = "traileros_current_org";
+const ORG_KEY = "vendorflow_current_org";
 
 export function OrgProvider({ children }: { children: ReactNode }) {
   const { user, role: globalRole } = useAuth();
