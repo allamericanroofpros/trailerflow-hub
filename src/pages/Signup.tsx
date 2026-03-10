@@ -279,7 +279,7 @@ export default function Signup() {
                 <input type="checkbox" checked={agreeTerms} onChange={(e) => setAgreeTerms(e.target.checked)}
                   className="mt-0.5 rounded border-border text-primary h-4 w-4" />
                 <span className="text-sm text-muted-foreground">
-                  I agree to the <span className="text-primary">Terms of Service</span> and <span className="text-primary">Privacy Policy</span>
+                  I agree to the <Link to="/terms" target="_blank" className="text-primary hover:underline font-medium">Terms of Service</Link> and <Link to="/privacy" target="_blank" className="text-primary hover:underline font-medium">Privacy Policy</Link>
                 </span>
               </label>
             </>

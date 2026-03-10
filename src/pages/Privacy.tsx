@@ -7,7 +7,7 @@ export default function Privacy() {
         <div className='mx-auto flex h-16 max-w-4xl items-center justify-between px-4 sm:px-6'>
           <Link to='/' className='flex items-center gap-2.5'>
             <BrandLogo size='sm' />
-            <span className='text-lg font-extrabold tracking-tight'>VendorFlow</span>
+            
           </Link>
           <Link to='/signup' className='text-sm text-primary hover:underline'>Back to signup</Link>
         </div>

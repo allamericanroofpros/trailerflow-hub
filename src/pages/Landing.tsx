@@ -84,7 +84,7 @@ export default function Landing() {
       {/* ── Navbar ── */}
       <header className="sticky top-0 z-50 border-b border-border/60 bg-background/80 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link to="/landing" className="flex items-center gap-2.5">
+          <Link to="/" className="flex items-center gap-2.5">
             <img src={vfLogo} alt="VendorFlow logo" className="h-8 w-8 rounded-lg" />
             <span className="text-lg font-extrabold tracking-tight">VendorFlow</span>
           </Link>
@@ -445,7 +445,7 @@ export default function Landing() {
             <img src={vfLogo} alt="VendorFlow" className="h-6 w-6 rounded" />
             <span className="text-sm font-bold">VendorFlow</span>
           </div>
-          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} VendorFlow. All rights reserved.</p>
+          <p className="text-xs text-muted-foreground">© {new Date().getFullYear()} VendorFlow.{" "}<Link to="/terms" className="underline hover:text-white/80">Terms</Link>{" · "}<Link to="/privacy" className="underline hover:text-white/80">Privacy</Link></p>
         </div>
       </footer>
     </div>
