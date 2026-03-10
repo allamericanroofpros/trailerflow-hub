@@ -39,10 +39,12 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
+  if (!session) {
     return <Navigate to="/login" replace />;
   }
 
   const viewKey = routeToViewKey[location.pathname];
+  if (viewKey && !canView(viewKey)) {
     return <Navigate to="/dashboard" replace />;
   }
 
