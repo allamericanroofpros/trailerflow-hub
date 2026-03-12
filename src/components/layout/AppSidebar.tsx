@@ -49,7 +49,7 @@ type SidebarEntry = NavItem | NavGroup;
 const isGroup = (entry: SidebarEntry): entry is NavGroup => "children" in entry;
 
 const sidebarEntries: SidebarEntry[] = [
-  { title: "Dashboard", url: "/", icon: LayoutDashboard, viewKey: "dashboard" },
+  { title: "Dashboard", url: "/dashboard", icon: LayoutDashboard, viewKey: "dashboard" },
   { title: "Menu", url: "/menu", icon: UtensilsCrossed, viewKey: "menu" },
   { title: "Inventory", url: "/inventory", icon: Package, viewKey: "inventory" },
   { title: "Team", url: "/staff", icon: Users, viewKey: "staff" },
