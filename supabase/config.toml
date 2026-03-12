@@ -32,3 +32,9 @@ verify_jwt = false
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.stripe-terminal-connection-token]
+verify_jwt = false
+
+[functions.stripe-create-payment-intent]
+verify_jwt = false
