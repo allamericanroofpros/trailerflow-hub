@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
 
 const corsHeaders = {
@@ -62,13 +62,19 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
-    if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
+    const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
+    if (!ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is not configured");
 
     const { messages, system, stream = true, max_tokens = 2048, feature, context } = await req.json();
 
     // ─── AUTH & IDENTITY ───
     const authHeader = req.headers.get("Authorization");
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Missing authorization header" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     let callerUserId: string | null = null;
     let callerRole: string | null = null;
     let isSuperAdmin = false;
@@ -78,38 +84,39 @@ serve(async (req) => {
     const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    if (authHeader) {
-      const callerClient = createClient(supabaseUrl, anonKey, {
-        global: { headers: { Authorization: authHeader } },
+    const callerClient = createClient(supabaseUrl, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const { data: { user } } = await callerClient.auth.getUser();
+    if (!user) {
+      return new Response(JSON.stringify({ error: "Authentication failed" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
-      const { data: { user } } = await callerClient.auth.getUser();
-      if (user) {
-        callerUserId = user.id;
-        const adminClient = createClient(supabaseUrl, serviceKey);
-
-        // Check super admin
-        const { data: roleData } = await adminClient
-          .from("user_roles")
-          .select("role")
-          .eq("user_id", user.id)
-          .single();
-        callerRole = roleData?.role || "staff";
-        isSuperAdmin = callerRole === "super_admin";
-
-        // Get org plan
-        const ctxOrgId = context?.org_id;
-        if (ctxOrgId) {
-          const { data: orgData } = await adminClient
-            .from("organizations")
-            .select("plan")
-            .eq("id", ctxOrgId)
-            .single();
-          orgPlan = orgData?.plan || "free";
-        }
-      }
     }
 
-    const ctxOrgId = context?.org_id || null;
+    callerUserId = user.id;
+    const adminClient = createClient(supabaseUrl, serviceKey);
+
+    // Check super admin
+    const { data: roleData } = await adminClient
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", user.id)
+      .single();
+    callerRole = roleData?.role || "staff";
+    isSuperAdmin = callerRole === "super_admin";
+
+    // Get org plan
+    const ctxOrgId = context?.org_id;
+    if (ctxOrgId) {
+      const { data: orgData } = await adminClient
+        .from("organizations")
+        .select("plan")
+        .eq("id", ctxOrgId)
+        .single();
+      orgPlan = orgData?.plan || "free";
+    }
+
     const ctxTrailerId = context?.trailer_id || null;
     const ctxModule = context?.module || null;
 
@@ -162,50 +169,111 @@ serve(async (req) => {
 - Scope: INTERNAL ADMIN — You may analyze cross-org patterns, usage, churn risk, and support trends.`;
     }
 
-    const body: Record<string, unknown> = {
-      model: "google/gemini-3-flash-preview",
-      messages: [
-        { role: "system", content: systemPrompt },
-        ...messages,
-      ],
+    // Build Anthropic API request — system goes in top-level field, not in messages
+    const anthropicMessages = (messages || [])
+      .filter((m: { role: string }) => m.role === "user" || m.role === "assistant")
+      .map((m: { role: string; content: string }) => ({ role: m.role, content: m.content }));
+
+    const anthropicBody: Record<string, unknown> = {
+      model: "claude-sonnet-4-5",
+      max_tokens: max_tokens,
+      system: systemPrompt,
+      messages: anthropicMessages,
       stream,
     };
 
-    const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
+    const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${LOVABLE_API_KEY}`,
+        "x-api-key": ANTHROPIC_API_KEY,
+        "anthropic-version": "2023-06-01",
         "Content-Type": "application/json",
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify(anthropicBody),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("AI gateway error:", response.status, errText);
+      console.error("Anthropic API error:", response.status, errText);
       if (response.status === 429) {
         return new Response(JSON.stringify({ error: "Rate limit exceeded. Please try again later." }), {
           status: 429, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
-      if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "AI credits depleted. Please add funds in Settings → Workspace → Usage." }), {
-          status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-      return new Response(JSON.stringify({ error: "AI gateway error" }), {
+      return new Response(JSON.stringify({ error: "AI service error" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     if (stream) {
-      return new Response(response.body, {
+      // Transform Anthropic SSE stream to OpenAI-compatible format for the frontend
+      const anthropicStream = response.body!;
+      const { readable, writable } = new TransformStream();
+      const writer = writable.getWriter();
+      const encoder = new TextEncoder();
+
+      (async () => {
+        const reader = anthropicStream.getReader();
+        const decoder = new TextDecoder();
+        let buffer = "";
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+            buffer += decoder.decode(value, { stream: true });
+
+            let newlineIndex: number;
+            while ((newlineIndex = buffer.indexOf("\n")) !== -1) {
+              let line = buffer.slice(0, newlineIndex);
+              buffer = buffer.slice(newlineIndex + 1);
+              if (line.endsWith("\r")) line = line.slice(0, -1);
+
+              if (!line.startsWith("data: ")) continue;
+              const jsonStr = line.slice(6).trim();
+              if (!jsonStr || jsonStr === "[DONE]") continue;
+
+              try {
+                const event = JSON.parse(jsonStr);
+
+                if (event.type === "content_block_delta" && event.delta?.type === "text_delta") {
+                  // Convert to OpenAI-compatible SSE chunk
+                  const chunk = {
+                    choices: [{ delta: { content: event.delta.text } }],
+                  };
+                  await writer.write(encoder.encode(`data: ${JSON.stringify(chunk)}\n\n`));
+                } else if (event.type === "message_stop") {
+                  await writer.write(encoder.encode("data: [DONE]\n\n"));
+                }
+              } catch {
+                // partial JSON, skip
+              }
+            }
+          }
+          // Ensure [DONE] is sent
+          await writer.write(encoder.encode("data: [DONE]\n\n"));
+        } catch (err) {
+          console.error("Stream transform error:", err);
+        } finally {
+          writer.close();
+        }
+      })();
+
+      return new Response(readable, {
         headers: { ...corsHeaders, "Content-Type": "text/event-stream" },
       });
     }
 
+    // Non-streaming: transform Anthropic response to OpenAI-compatible shape
     const data = await response.json();
-    return new Response(JSON.stringify(data), {
+    const textContent = data.content
+      ?.filter((block: { type: string }) => block.type === "text")
+      .map((block: { text: string }) => block.text)
+      .join("") || "";
+
+    return new Response(JSON.stringify({
+      choices: [{ message: { content: textContent } }],
+    }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch (e) {
