@@ -32,8 +32,13 @@ serve(async (req) => {
       });
     }
 
-    // Retrieve the final status
-    const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+    // Retrieve current status
+    let paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
+
+    // For Terminal payments with manual capture, capture the payment
+    if (paymentIntent.status === "requires_capture") {
+      paymentIntent = await stripe.paymentIntents.capture(paymentIntentId);
+    }
 
     return new Response(
       JSON.stringify({

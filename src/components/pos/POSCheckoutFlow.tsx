@@ -1,11 +1,18 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   DollarSign, CreditCard, Banknote, Smartphone, ArrowLeft,
-  Loader2, Percent,
+  Loader2, Percent, CheckCircle2, XCircle, Wifi,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { useStripeTerminal } from "@/hooks/useStripeTerminal";
+import type { ErrorResponse } from "@stripe/terminal-js";
+
+function isErrorResponse(result: unknown): result is ErrorResponse {
+  return typeof result === "object" && result !== null && "error" in result;
+}
 
 type CartItem = {
   menu_item_id: string;
@@ -33,20 +40,9 @@ type CheckoutProps = {
 };
 
 type Step = "payment" | "tip" | "cash" | "processing" | "card-done";
+type CardStatus = "connecting" | "present-card" | "processing" | "confirming" | "approved" | "declined";
 
 const tipPresets = [0, 15, 18, 20, 25];
-
-import { supabase } from "@/integrations/supabase/client";
-
-const processStripePayment = async (amount: number, orgId?: string | null): Promise<{ success: boolean; chargeId?: string; paymentIntentId?: string }> => {
-  const { data, error } = await supabase.functions.invoke("create-payment-intent", {
-    body: { amount, description: "POS Sale", org_id: orgId },
-  });
-  if (error || data?.error) {
-    throw new Error(data?.error || error?.message || "Payment failed");
-  }
-  return { success: true, chargeId: data.paymentIntentId, paymentIntentId: data.paymentIntentId };
-};
 
 export default function POSCheckoutFlow({
   cart, subtotal, tax, total, orgId, surchargeSettings, onComplete, onCancel, isPending,
@@ -57,6 +53,25 @@ export default function POSCheckoutFlow({
   const [tipDollar, setTipDollar] = useState("");
   const [cashTendered, setCashTendered] = useState("");
   const [selectedPayment, setSelectedPayment] = useState<"cash" | "card" | "digital" | null>(null);
+  const [cardStatus, setCardStatus] = useState<CardStatus>("connecting");
+  const [cardError, setCardError] = useState<string | null>(null);
+  const [paymentIntentId, setPaymentIntentId] = useState<string | null>(null);
+
+  const {
+    terminal,
+    connectReader,
+    connectedReader,
+    isConnecting,
+    error: terminalError,
+    initTerminal,
+  } = useStripeTerminal();
+
+  // Auto-connect to reader on mount
+  useEffect(() => {
+    if (!connectedReader && !isConnecting) {
+      connectReader();
+    }
+  }, []);
 
   // Calculate surcharge for card payments
   const calcSurchargeAmount = (method: "cash" | "card" | "digital" | null): number => {
@@ -77,15 +92,74 @@ export default function POSCheckoutFlow({
   const currentTotal = selectedPayment === "card" ? total + surchargeAmount + tipAmount : total;
   const changeDue = Number(cashTendered) - total;
 
+  const processCardPayment = async () => {
+    setCardError(null);
+    setCardStatus("connecting");
+    setStep("processing");
+
+    try {
+      // Ensure terminal is connected
+      let activeTerminal = terminal;
+      if (!activeTerminal) {
+        activeTerminal = await initTerminal();
+      }
+      if (!connectedReader) {
+        await connectReader();
+      }
+
+      // Create a Terminal-specific PaymentIntent via our edge function
+      setCardStatus("connecting");
+      const { data: piData, error: piError } = await supabase.functions.invoke(
+        "stripe-create-payment-intent",
+        { body: { amount: total, currency: "usd", org_id: orgId } }
+      );
+      if (piError || piData?.error) {
+        throw new Error(piData?.error || piError?.message || "Failed to create payment");
+      }
+
+      const clientSecret: string = piData.client_secret;
+      const piId: string = piData.payment_intent_id;
+      setPaymentIntentId(piId);
+
+      // Collect payment method from the reader
+      setCardStatus("present-card");
+
+      // Re-get terminal in case it was initialized during connectReader
+      const term = terminal ?? await initTerminal();
+
+      const collectResult = await term.collectPaymentMethod(clientSecret, {
+        config_override: { skip_tipping: true },
+      });
+      if (isErrorResponse(collectResult)) {
+        throw new Error(collectResult.error.message);
+      }
+
+      // Process the payment on the reader
+      setCardStatus("processing");
+      const processResult = await term.processPayment(collectResult.paymentIntent);
+      if (isErrorResponse(processResult)) {
+        const declineCode = processResult.error.decline_code;
+        throw new Error(
+          declineCode
+            ? `Card declined: ${declineCode}`
+            : processResult.error.message
+        );
+      }
+
+      // Payment processed — move to tip step
+      setCardStatus("approved");
+      setStep("tip");
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Card payment failed";
+      setCardError(msg);
+      setCardStatus("declined");
+    }
+  };
+
   const handlePaymentSelect = async (method: "cash" | "card" | "digital") => {
     setSelectedPayment(method);
     if (method === "card") {
-      // Card → process payment first, then ask for tip
-      setStep("processing");
-      const result = await processStripePayment(total, orgId);
-      if (result.success) {
-        setStep("tip");
-      }
+      await processCardPayment();
     } else if (method === "cash") {
       setStep("cash");
     } else {
@@ -97,12 +171,34 @@ export default function POSCheckoutFlow({
 
   const handleTipComplete = async () => {
     setStep("processing");
-    await onComplete({
-      paymentMethod: "card",
-      tip: tipAmount,
-      surchargeAmount: surchargeAmount > 0 ? surchargeAmount : undefined,
-      surchargeLabel: surchargeAmount > 0 ? surchargeSettings?.label : undefined,
-    });
+    setCardStatus("confirming");
+
+    try {
+      // Call confirm-payment to capture and apply tip
+      if (paymentIntentId) {
+        const { data, error } = await supabase.functions.invoke("confirm-payment", {
+          body: {
+            paymentIntentId,
+            tipAmount: tipAmount > 0 ? tipAmount : undefined,
+          },
+        });
+        if (error || data?.error) {
+          throw new Error(data?.error || error?.message || "Failed to confirm payment");
+        }
+      }
+
+      setCardStatus("approved");
+      await onComplete({
+        paymentMethod: "card",
+        tip: tipAmount,
+        surchargeAmount: surchargeAmount > 0 ? surchargeAmount : undefined,
+        surchargeLabel: surchargeAmount > 0 ? surchargeSettings?.label : undefined,
+      });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to confirm payment";
+      setCardError(msg);
+      setCardStatus("declined");
+    }
   };
 
   const handleCashComplete = async () => {
@@ -130,6 +226,15 @@ export default function POSCheckoutFlow({
       case "cash": return () => setStep("payment");
       default: return onCancel;
     }
+  };
+
+  const cardStatusDisplay: Record<CardStatus, { icon: typeof Loader2; text: string; color: string }> = {
+    connecting: { icon: Wifi, text: "Connecting to reader...", color: "text-primary" },
+    "present-card": { icon: CreditCard, text: "Present card on reader", color: "text-amber-500" },
+    processing: { icon: Loader2, text: "Processing payment...", color: "text-primary" },
+    confirming: { icon: Loader2, text: "Confirming payment...", color: "text-primary" },
+    approved: { icon: CheckCircle2, text: "Payment approved", color: "text-success" },
+    declined: { icon: XCircle, text: cardError || "Payment declined", color: "text-destructive" },
   };
 
   return (
@@ -175,17 +280,31 @@ export default function POSCheckoutFlow({
                 )}
               </div>
 
+              {/* Reader status indicator */}
+              <div className={`flex items-center justify-center gap-2 text-xs font-semibold ${
+                connectedReader ? "text-success" : isConnecting ? "text-muted-foreground" : terminalError ? "text-destructive" : "text-muted-foreground"
+              }`}>
+                <div className={`h-2 w-2 rounded-full ${
+                  connectedReader ? "bg-success" : isConnecting ? "bg-muted-foreground animate-pulse" : "bg-destructive"
+                }`} />
+                {connectedReader
+                  ? "Reader connected"
+                  : isConnecting
+                    ? "Connecting reader..."
+                    : terminalError || "Reader not connected"}
+              </div>
+
               <div className="space-y-3">
                 {[
                   { method: "cash" as const, icon: Banknote, label: "Cash", desc: "Accept cash payment" },
-                  { method: "card" as const, icon: CreditCard, label: "Card", desc: "Credit or debit card (Stripe)" },
+                  { method: "card" as const, icon: CreditCard, label: "Card", desc: "Credit or debit card (Stripe Terminal)" },
                   { method: "digital" as const, icon: Smartphone, label: "Digital", desc: "Apple Pay, Google Pay, Venmo" },
                 ].map(({ method, icon: Icon, label, desc }) => (
                   <button
                     key={method}
                     onClick={() => handlePaymentSelect(method)}
-                    disabled={isPending}
-                    className="w-full flex items-center gap-4 rounded-2xl border-2 border-border bg-background p-5 hover:border-primary/40 hover:shadow-md active:scale-[0.98] transition-all touch-manipulation text-left"
+                    disabled={isPending || (method === "card" && !connectedReader)}
+                    className="w-full flex items-center gap-4 rounded-2xl border-2 border-border bg-background p-5 hover:border-primary/40 hover:shadow-md active:scale-[0.98] transition-all touch-manipulation text-left disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10 text-primary">
                       <Icon className="h-7 w-7" />
@@ -359,7 +478,7 @@ export default function POSCheckoutFlow({
             </motion.div>
           )}
 
-          {/* ── PROCESSING ── */}
+          {/* ── PROCESSING (card terminal status) ── */}
           {step === "processing" && (
             <motion.div
               key="processing"
@@ -367,10 +486,37 @@ export default function POSCheckoutFlow({
               animate={{ scale: 1, opacity: 1 }}
               className="p-12 flex flex-col items-center justify-center"
             >
-              <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-              <p className="text-lg font-black text-card-foreground">Processing payment...</p>
-              {selectedPayment === "card" && (
-                <p className="text-sm text-muted-foreground mt-2">Connecting to Stripe...</p>
+              {selectedPayment === "card" ? (() => {
+                const status = cardStatusDisplay[cardStatus];
+                const StatusIcon = status.icon;
+                const isSpinning = cardStatus === "connecting" || cardStatus === "processing" || cardStatus === "confirming";
+                const isPresentCard = cardStatus === "present-card";
+                return (
+                  <>
+                    <StatusIcon className={`h-12 w-12 mb-4 ${status.color} ${isSpinning ? "animate-spin" : ""} ${isPresentCard ? "animate-pulse" : ""}`} />
+                    <p className={`text-lg font-black ${status.color}`}>{status.text}</p>
+                    {isPresentCard && (
+                      <p className="text-sm text-muted-foreground mt-2">Tap, insert, or swipe</p>
+                    )}
+                    {cardStatus === "declined" && (
+                      <Button
+                        variant="outline"
+                        className="mt-4"
+                        onClick={() => {
+                          setCardError(null);
+                          setStep("payment");
+                        }}
+                      >
+                        Try Again
+                      </Button>
+                    )}
+                  </>
+                );
+              })() : (
+                <>
+                  <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
+                  <p className="text-lg font-black text-card-foreground">Processing payment...</p>
+                </>
               )}
             </motion.div>
           )}
