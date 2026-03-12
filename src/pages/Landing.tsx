@@ -1,15 +1,17 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { Button } from "@/components/ui/button";
 import {
   ShoppingCart, BarChart3, CalendarRange, Truck, Users, Package,
   UtensilsCrossed, Wrench, Clock, Compass, Check, ArrowRight,
-  Star, Zap, Shield, ChevronRight, Play, TrendingUp, Award, Flame,
+  Star, Zap, Shield, ChevronRight, Play, TrendingUp, Award, Flame, Loader2,
 } from "lucide-react";
 import vfLogo from "@/assets/vf-monogram.png";
 import { useFoundersStatus } from "@/hooks/useFoundersStatus";
 import { FOUNDERS_TIER, TIERS } from "@/config/tiers";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 /* ─── Feature data ─── */
 const features = [
@@ -66,8 +68,47 @@ const jsonLd = {
 export default function Landing() {
   const { foundersEnabled, foundersRemaining, foundersMonthlyPrice, foundersAnnualPrice } = useFoundersStatus();
   const [billingInterval, setBillingInterval] = useState<"monthly" | "annual">("monthly");
+  const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   const showFounders = foundersEnabled && foundersRemaining > 0;
+
+  const handleCheckout = async (priceId: string, label: string) => {
+    setCheckoutLoading(label);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/signup");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke("create-checkout-session", {
+        body: { priceId, billingInterval },
+      });
+
+      if (error || data?.error) {
+        throw new Error(data?.error || error?.message || "Failed to create checkout session");
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error("No checkout URL returned");
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Checkout failed";
+      toast.error(msg);
+    } finally {
+      setCheckoutLoading(null);
+    }
+  };
+
+  const getPriceId = (tier: "pro" | "enterprise") => {
+    if (billingInterval === "annual" && TIERS[tier].annual_price_id) {
+      return TIERS[tier].annual_price_id;
+    }
+    return TIERS[tier].price_id;
+  };
 
   return (
     <div className="min-h-screen bg-background text-foreground">
@@ -131,7 +172,7 @@ export default function Landing() {
             </p>
             <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" className="text-base px-8 h-12" asChild>
-                <Link to="/signup">
+                <Link to={showFounders ? "/signup?plan=founders" : "/signup"}>
                   {showFounders ? "Claim Founders Pricing" : "Get Started"}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
@@ -285,11 +326,16 @@ export default function Landing() {
                 <p className="text-xs text-muted-foreground mt-4 mb-3 text-center font-medium">
                   {foundersRemaining} of 100 spots remaining
                 </p>
-                <Button className="w-full bg-orange-500 hover:bg-orange-600 text-white" asChild>
-                  <Link to="/signup">
-                    Claim Founders Spot
-                    <ChevronRight className="ml-1 h-4 w-4" />
-                  </Link>
+                <Button
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white"
+                  disabled={checkoutLoading === "founders"}
+                  onClick={() => handleCheckout(getPriceId("pro"), "founders")}
+                >
+                  {checkoutLoading === "founders" ? (
+                    <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading...</>
+                  ) : (
+                    <>Claim Founders Spot<ChevronRight className="ml-1 h-4 w-4" /></>
+                  )}
                 </Button>
               </div>
             )}
@@ -326,12 +372,14 @@ export default function Landing() {
               <Button
                 className="mt-6 w-full"
                 variant={!showFounders ? "default" : "outline"}
-                asChild
+                disabled={checkoutLoading === "pro"}
+                onClick={() => handleCheckout(getPriceId("pro"), "pro")}
               >
-                <Link to="/signup">
-                  Get Pro
-                  <ChevronRight className="ml-1 h-4 w-4" />
-                </Link>
+                {checkoutLoading === "pro" ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading...</>
+                ) : (
+                  <>Get Pro<ChevronRight className="ml-1 h-4 w-4" /></>
+                )}
               </Button>
             </div>
 
@@ -359,11 +407,17 @@ export default function Landing() {
                   </li>
                 ))}
               </ul>
-              <Button className="mt-6 w-full" variant="outline" asChild>
-                <Link to="/signup">
-                  Get Enterprise
-                  <ChevronRight className="ml-1 h-4 w-4" />
-                </Link>
+              <Button
+                className="mt-6 w-full"
+                variant="outline"
+                disabled={checkoutLoading === "enterprise"}
+                onClick={() => handleCheckout(getPriceId("enterprise"), "enterprise")}
+              >
+                {checkoutLoading === "enterprise" ? (
+                  <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading...</>
+                ) : (
+                  <>Get Enterprise<ChevronRight className="ml-1 h-4 w-4" /></>
+                )}
               </Button>
             </div>
           </div>
@@ -428,7 +482,7 @@ export default function Landing() {
             </p>
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
               <Button size="lg" className="text-base px-8 h-12" asChild>
-                <Link to="/signup">
+                <Link to={showFounders ? "/signup?plan=founders" : "/signup"}>
                   {showFounders ? "Claim Founders Pricing" : "Get Started"}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Link>
