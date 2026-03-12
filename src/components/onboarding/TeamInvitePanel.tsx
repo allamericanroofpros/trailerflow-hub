@@ -2,14 +2,31 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useOrgId } from "@/hooks/useOrgId";
+import { useOrg } from "@/contexts/OrgContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { UserPlus, Mail, Clock, Check, X, RefreshCw, Trash2 } from "lucide-react";
 
+async function sendInviteEmail(params: {
+  invitee_email: string;
+  org_name: string;
+  inviter_name: string;
+  role: string;
+  invite_id: string;
+}) {
+  const { data, error } = await supabase.functions.invoke("send-team-invite", {
+    body: params,
+  });
+  if (error || data?.error) {
+    console.error("[TeamInvitePanel] Email send failed:", data?.error || error?.message);
+  }
+}
+
 export function TeamInvitePanel() {
   const orgId = useOrgId();
+  const { currentOrg } = useOrg();
   const { user } = useAuth();
   const qc = useQueryClient();
   const [email, setEmail] = useState("");
@@ -40,13 +57,22 @@ export function TeamInvitePanel() {
       );
       if (existing) throw new Error("This email already has a pending invite");
 
-      const { error } = await supabase.from("team_invites").insert({
+      const { data: insertedData, error } = await supabase.from("team_invites").insert({
         org_id: orgId,
         email: email.trim().toLowerCase(),
         role: role as any,
         invited_by: user.id,
-      });
+      }).select().single();
       if (error) throw error;
+
+      // Send invite email (fire-and-forget — don't block on email delivery)
+      sendInviteEmail({
+        invitee_email: email.trim().toLowerCase(),
+        org_name: currentOrg?.name ?? "Your Team",
+        inviter_name: user.user_metadata?.full_name || user.email || "A team member",
+        role,
+        invite_id: insertedData.id,
+      });
     },
     onSuccess: () => {
       toast.success(`Invite sent to ${email}`);
@@ -69,15 +95,24 @@ export function TeamInvitePanel() {
   });
 
   const resendInvite = useMutation({
-    mutationFn: async (id: string) => {
+    mutationFn: async (invite: any) => {
       const { error } = await supabase
         .from("team_invites")
         .update({ created_at: new Date().toISOString(), expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() })
-        .eq("id", id);
+        .eq("id", invite.id);
       if (error) throw error;
+
+      // Re-send the email
+      sendInviteEmail({
+        invitee_email: invite.email,
+        org_name: currentOrg?.name ?? "Your Team",
+        inviter_name: user?.user_metadata?.full_name || user?.email || "A team member",
+        role: invite.role,
+        invite_id: invite.id,
+      });
     },
     onSuccess: () => {
-      toast.success("Invite refreshed");
+      toast.success("Invite resent");
       qc.invalidateQueries({ queryKey: ["team_invites"] });
     },
     onError: (e: any) => toast.error(e.message),
@@ -157,7 +192,7 @@ export function TeamInvitePanel() {
                 {invite.status === "pending" && (
                   <>
                     <button
-                      onClick={() => resendInvite.mutate(invite.id)}
+                      onClick={() => resendInvite.mutate(invite)}
                       className="p-1 text-muted-foreground hover:text-foreground"
                       title="Resend invite"
                     >
