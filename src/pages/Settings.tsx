@@ -69,6 +69,69 @@ function AppearanceSettings() {
   );
 }
 
+const NOTIFICATION_KEYS = [
+  { key: "new_bookings", label: "New booking requests", desc: "Get notified when a client submits a booking" },
+  { key: "event_reminders", label: "Event reminders", desc: "Reminders 24h before scheduled events" },
+  { key: "maintenance_alerts", label: "Maintenance alerts", desc: "When maintenance tasks are due or overdue" },
+  { key: "staff_conflicts", label: "Staff scheduling conflicts", desc: "Alerts when staff availability conflicts arise" },
+] as const;
+
+type NotificationPrefs = Record<string, boolean>;
+
+function NotificationPreferences() {
+  const { user } = useAuth();
+  const [prefs, setPrefs] = useState<NotificationPrefs>({});
+  const [saving, setSaving] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  useEffect(() => {
+    const saved = user?.user_metadata?.notification_preferences as NotificationPrefs | undefined;
+    const initial: NotificationPrefs = {};
+    for (const n of NOTIFICATION_KEYS) {
+      initial[n.key] = saved?.[n.key] ?? true;
+    }
+    setPrefs(initial);
+    setLoaded(true);
+  }, [user]);
+
+  const handleSave = async () => {
+    setSaving(true);
+    const { error } = await supabase.auth.updateUser({
+      data: { notification_preferences: prefs },
+    });
+    if (error) {
+      toast.error("Failed to save: " + error.message);
+    } else {
+      toast.success("Notification preferences saved");
+    }
+    setSaving(false);
+  };
+
+  if (!loaded) return null;
+
+  return (
+    <div className="space-y-4 max-w-lg">
+      {NOTIFICATION_KEYS.map((n) => (
+        <label key={n.key} className="flex items-center justify-between py-3 border-b border-border last:border-0 cursor-pointer">
+          <div>
+            <p className="text-sm font-medium text-card-foreground">{n.label}</p>
+            <p className="text-xs text-muted-foreground">{n.desc}</p>
+          </div>
+          <input
+            type="checkbox"
+            checked={prefs[n.key] ?? true}
+            onChange={(e) => setPrefs((prev) => ({ ...prev, [n.key]: e.target.checked }))}
+            className="rounded border-border text-primary h-4 w-4"
+          />
+        </label>
+      ))}
+      <Button onClick={handleSave} disabled={saving}>
+        {saving ? "Saving..." : "Save Preferences"}
+      </Button>
+    </div>
+  );
+}
+
 function BillingSection({ subLoading, subscribed, tier, subscriptionEnd, cancelAtPeriodEnd, startCheckout, openPortal, checkSubscription, refreshOrg, currentOrg }: any) {
   const { foundersEnabled, foundersRemaining, foundersMonthlyPrice } = useFoundersStatus();
   const [billingInterval, setBillingInterval] = useState<"monthly" | "annual">("monthly");
@@ -622,23 +685,7 @@ export default function SettingsPage() {
                   )}
                   {/* Notifications */}
                   {s.id === "notifications" && (
-                    <div className="space-y-4 max-w-lg">
-                      {[
-                        { label: "New booking requests", desc: "Get notified when a client submits a booking" },
-                        { label: "Event reminders", desc: "Reminders 24h before scheduled events" },
-                        { label: "Maintenance alerts", desc: "When maintenance tasks are due or overdue" },
-                        { label: "Staff scheduling conflicts", desc: "Alerts when staff availability conflicts arise" },
-                      ].map((n) => (
-                        <label key={n.label} className="flex items-center justify-between py-3 border-b border-border last:border-0 cursor-pointer">
-                          <div>
-                            <p className="text-sm font-medium text-card-foreground">{n.label}</p>
-                            <p className="text-xs text-muted-foreground">{n.desc}</p>
-                          </div>
-                          <input type="checkbox" defaultChecked className="rounded border-border text-primary h-4 w-4" />
-                        </label>
-                      ))}
-                      <Button onClick={() => toast.success("Notification preferences saved")}>Save Preferences</Button>
-                    </div>
+                    <NotificationPreferences />
                   )}
 
                   {/* Billing */}

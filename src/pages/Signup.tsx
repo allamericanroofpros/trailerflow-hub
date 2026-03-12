@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import { ChevronLeft, ChevronRight, Check, Crown, Flame } from "lucide-react";
 import { BrandLogo } from "@/components/BrandLogo";
 import { useFoundersStatus } from "@/hooks/useFoundersStatus";
+import { TIERS } from "@/config/tiers";
 
 const VENDOR_TYPES = [
   "Food Truck",
@@ -30,6 +31,7 @@ const TEAM_SIZES = ["Just me", "2-3", "4-7", "8-15", "16+"];
 
 export default function Signup() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { foundersEnabled, foundersRemaining, foundersMonthlyPrice, loading: foundersLoading } = useFoundersStatus();
 
   const [step, setStep] = useState(1);
@@ -58,7 +60,7 @@ export default function Signup() {
 
   // Determine which plan they'll get
   const planLabel = foundersEnabled && foundersRemaining > 0 ? "Founders" : "Pro";
-  const planPrice = foundersEnabled && foundersRemaining > 0 ? `$${foundersMonthlyPrice}/mo` : "$79/mo";
+  const planPrice = foundersEnabled && foundersRemaining > 0 ? `$${foundersMonthlyPrice}/mo` : `$${TIERS.pro.price}/mo`;
 
   const validateStep1 = () => {
     if (!fullName.trim()) { toast.error("Full name is required"); return false; }
@@ -114,7 +116,9 @@ export default function Signup() {
       return;
     }
 
-    setSent(true);
+    const plan = searchParams.get("plan");
+      if (plan) localStorage.setItem("vf_pending_plan", plan);
+      setSent(true);
     toast.success("Check your email to confirm your account!");
     setLoading(false);
   };

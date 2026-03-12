@@ -10,6 +10,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient, useQuery, useMutation } from "@tanstack/react-query";
+import { TIERS, FOUNDERS_TIER } from "@/config/tiers";
 
 type PlatformConfig = Record<string, any>;
 
@@ -259,10 +260,9 @@ function DefaultSurchargeSection({ config, saveConfig }: { config: PlatformConfi
 // ─── Plan Entitlements Overview ───
 function PlanEntitlementsSection() {
   const plans = [
-    { name: "Free", price: "$0/mo", trailers: "1", staff: "2", ai: "—", fleet: "—", analytics: "—" },
-    { name: "Starter", price: "$29/mo", trailers: "1", staff: "5", ai: "Chat", fleet: "—", analytics: "—" },
-    { name: "Pro", price: "$79/mo", trailers: "∞", staff: "∞", ai: "Full", fleet: "✓", analytics: "✓" },
-    { name: "Enterprise", price: "$199/mo", trailers: "∞", staff: "∞", ai: "Full", fleet: "✓", analytics: "✓" },
+    { name: FOUNDERS_TIER.name, price: `$${FOUNDERS_TIER.price}/mo`, trailers: "∞", staff: "∞", ai: "Full", fleet: "✓", analytics: "✓" },
+    { name: TIERS.pro.name, price: `$${TIERS.pro.price}/mo`, trailers: "∞", staff: "∞", ai: "Full", fleet: "✓", analytics: "✓" },
+    { name: TIERS.enterprise.name, price: `$${TIERS.enterprise.price}/mo`, trailers: "∞", staff: "∞", ai: "Full", fleet: "✓", analytics: "✓" },
   ];
 
   return (
