@@ -3,11 +3,12 @@ import { motion } from "framer-motion";
 import { QRCodeSVG } from "qrcode.react";
 import {
   Check, X, Mail, MessageSquare, QrCode, Printer,
-  ArrowLeft, Copy, Share2,
+  ArrowLeft, Copy, Share2, Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 type ReceiptItem = {
   name: string;
@@ -30,16 +31,20 @@ type ConfirmationProps = {
   orderId: string;
   surchargeAmount?: number;
   surchargeLabel?: string;
+  businessName?: string;
+  cardLast4?: string;
   onDone: () => void;
 };
 
 export default function POSConfirmation({
   orderNumber, items, subtotal, tax, taxLabel, taxInclusive, tip, total,
-  paymentMethod, cashTendered, changeDue, orderId, surchargeAmount, surchargeLabel, onDone,
+  paymentMethod, cashTendered, changeDue, orderId, surchargeAmount, surchargeLabel,
+  businessName, cardLast4, onDone,
 }: ConfirmationProps) {
   const [receiptMode, setReceiptMode] = useState<null | "qr" | "email" | "sms">(null);
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
 
   const receiptUrl = `${window.location.origin}/receipt/${orderId}`;
 
@@ -53,10 +58,37 @@ export default function POSConfirmation({
       toast.error("Enter a valid email");
       return;
     }
-    // For now, copy link and inform — full email integration coming
-    navigator.clipboard.writeText(receiptUrl);
-    toast.success("Receipt link copied! Email delivery coming soon.");
-    setReceiptMode(null);
+    setSendingEmail(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-receipt-email", {
+        body: {
+          to: email.trim(),
+          orderNumber,
+          items,
+          subtotal,
+          tax,
+          taxLabel,
+          tip,
+          total,
+          paymentMethod,
+          cardLast4,
+          surchargeAmount,
+          surchargeLabel,
+          businessName,
+          receiptUrl,
+        },
+      });
+      if (error || data?.error) {
+        throw new Error(data?.error || error?.message || "Failed to send email");
+      }
+      toast.success("Receipt sent to " + email.trim());
+      setReceiptMode(null);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Failed to send email";
+      toast.error(msg);
+    } finally {
+      setSendingEmail(false);
+    }
   };
 
   const handleSmsReceipt = async () => {
@@ -220,8 +252,8 @@ export default function POSConfirmation({
                   onChange={(e) => setEmail(e.target.value)}
                   className="flex-1 rounded-xl border-2 h-12 text-base"
                 />
-                <Button onClick={handleEmailReceipt} className="h-12 px-5 rounded-xl font-bold">
-                  Send
+                <Button onClick={handleEmailReceipt} disabled={sendingEmail} className="h-12 px-5 rounded-xl font-bold">
+                  {sendingEmail ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send"}
                 </Button>
               </motion.div>
             )}

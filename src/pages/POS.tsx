@@ -4,6 +4,7 @@ import { useMenuItems } from "@/hooks/useMenuItems";
 import { useCreateOrder } from "@/hooks/useOrders";
 import { useActiveOrders, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { useOrgId } from "@/hooks/useOrgId";
+import { useOrg } from "@/contexts/OrgContext";
 import { useSurchargeSettings } from "@/hooks/useSurchargeSettings";
 import { useTaxSettings, calcTax, calcTotalWithTax } from "@/hooks/useTaxSettings";
 import { toast } from "sonner";
@@ -58,6 +59,7 @@ const categoryLabels: Record<string, string> = {
 
 export default function POS() {
   const orgId = useOrgId();
+  const { currentOrg } = useOrg();
   const surchargeSettings = useSurchargeSettings();
   const taxSettings = useTaxSettings();
   const navigate = useNavigate();
@@ -96,6 +98,7 @@ export default function POS() {
     subtotal: number; tax: number; taxLabel?: string; taxInclusive?: boolean; tip: number; total: number;
     paymentMethod: string; cashTendered?: number; changeDue?: number;
     orderId: string; surchargeAmount?: number; surchargeLabel?: string;
+    businessName?: string; cardLast4?: string;
   } | null>(null);
 
   const handleExitPOS = () => {
@@ -268,6 +271,7 @@ export default function POS() {
         orderId: (newOrder as any).id,
         surchargeAmount: surcharge,
         surchargeLabel: data.surchargeLabel,
+        businessName: currentOrg?.name ?? undefined,
       });
       setCart([]);
       setCustomerName("");
