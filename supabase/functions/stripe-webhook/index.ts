@@ -17,6 +17,10 @@ Deno.serve(async (req) => {
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
   const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
   if (!stripeKey) return new Response("STRIPE_SECRET_KEY not set", { status: 500 });
+  if (!webhookSecret) {
+    log("ERROR: STRIPE_WEBHOOK_SECRET not configured");
+    return new Response("Webhook secret not configured", { status: 500 });
+  }
 
   const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
   const supabase = createClient(
@@ -28,21 +32,15 @@ Deno.serve(async (req) => {
   const body = await req.text();
   let event: Stripe.Event;
 
-  // Verify signature if webhook secret is set
-  if (webhookSecret) {
-    const sig = req.headers.get("stripe-signature");
-    if (!sig) return new Response("Missing stripe-signature", { status: 400 });
-    try {
-      event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Unknown";
-      log("Signature verification failed", { error: msg });
-      return new Response(`Webhook signature verification failed: ${msg}`, { status: 400 });
-    }
-  } else {
-    // No secret configured — parse raw (dev mode)
-    log("WARNING: No STRIPE_WEBHOOK_SECRET set, skipping signature verification");
-    event = JSON.parse(body);
+  // Verify Stripe signature — always required
+  const sig = req.headers.get("stripe-signature");
+  if (!sig) return new Response("Missing stripe-signature", { status: 400 });
+  try {
+    event = await stripe.webhooks.constructEventAsync(body, sig, webhookSecret);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "Unknown";
+    log("Signature verification failed", { error: msg });
+    return new Response(`Webhook signature verification failed: ${msg}`, { status: 400 });
   }
 
   log("Event received", { type: event.type, id: event.id });
