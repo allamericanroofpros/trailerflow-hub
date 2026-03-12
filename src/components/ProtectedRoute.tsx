@@ -18,6 +18,8 @@ const routeToViewKey: Record<string, string> = {
   "/financials": "financials",
   "/maintenance": "maintenance",
   "/settings": "settings",
+  "/orders-queue": "pos",
+  "/time-clock": "staff",
 };
 
 const routeToEntitlement: Record<string, string> = {
