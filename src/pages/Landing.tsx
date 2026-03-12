@@ -329,7 +329,7 @@ export default function Landing() {
                 <Button
                   className="w-full bg-orange-500 hover:bg-orange-600 text-white"
                   disabled={checkoutLoading === "founders"}
-                  onClick={() => handleCheckout(getPriceId("pro"), "founders")}
+                  onClick={() => handleCheckout(FOUNDERS_TIER.price_id, "founders")}
                 >
                   {checkoutLoading === "founders" ? (
                     <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Loading...</>

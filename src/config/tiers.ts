@@ -4,7 +4,7 @@ export const TIERS = {
     price: 79,
     annualPrice: 790, // 10 months
     price_id: "price_1T8nuWEHIsr46VcJxMizsKl7",
-    annual_price_id: "", // TODO: create annual price in Stripe dashboard and add ID here
+    annual_price_id: "price_1TAH44CXvW6EawHamaG7QXUW",
     product_id: "prod_U71yhcJZEwTQZv",
     features: [
       "Unlimited trailers & staff",
@@ -21,7 +21,7 @@ export const TIERS = {
     price: 199,
     annualPrice: 1990, // 10 months
     price_id: "price_1T8nugEHIsr46VcJ6ugiRGFR",
-    annual_price_id: "", // TODO: create annual price in Stripe dashboard and add ID here
+    annual_price_id: "price_1TAEtmCXvW6EawHaPozbgWQC",
     product_id: "prod_U71y5TWZAmWkws",
     features: [
       "Everything in Pro",
@@ -41,6 +41,8 @@ export const FOUNDERS_TIER = {
   name: "Founders",
   price: 29,
   annualPrice: 290, // 10 months
+  product_id: "prod_U8YBZTWW1GV2Vi",
+  price_id: "price_1TAH5CCXvW6EawHaUJyQHJIu",
   features: [
     "Everything in Enterprise",
     "Unlimited trailers & staff",
