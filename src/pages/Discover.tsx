@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Calendar as CalendarPicker } from "@/components/ui/calendar";
 import { cn } from "@/lib/utils";
+import { SetupGate } from "@/components/shared/SetupGate";
 
 export default function Discover() {
   const ent = useEntitlements();
@@ -146,6 +147,7 @@ export default function Discover() {
   };
 
   return (
+    <SetupGate requires="trailers" href="/trailers" label="Add Your First Trailer">
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
         <div>
@@ -483,5 +485,6 @@ export default function Discover() {
         </div>
       </div>
     </AppLayout>
+    </SetupGate>
   );
 }

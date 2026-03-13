@@ -4,6 +4,7 @@ import { useState, useMemo } from "react";
 import { useEvents } from "@/hooks/useEvents";
 import { useTrailers } from "@/hooks/useTrailers";
 import { useBookings } from "@/hooks/useBookings";
+import { SetupGate } from "@/components/shared/SetupGate";
 
 const weekDays = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
@@ -83,6 +84,7 @@ export default function CalendarPage() {
   }, [events, bookings, month, year]);
 
   return (
+    <SetupGate requires="trailers" href="/trailers" label="Add Your First Trailer">
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between">
@@ -173,5 +175,6 @@ export default function CalendarPage() {
         )}
       </div>
     </AppLayout>
+    </SetupGate>
   );
 }

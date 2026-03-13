@@ -12,6 +12,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrgId } from "@/hooks/useOrgId";
 import { useAuth } from "@/contexts/AuthContext";
 import { format, isPast, isToday, addDays, parseISO } from "date-fns";
+import { SetupGate } from "@/components/shared/SetupGate";
 
 const STATUS_OPTIONS = [
   { value: "pending", label: "Pending", color: "bg-warning/10 text-warning", icon: Clock },
@@ -138,6 +139,7 @@ export default function Maintenance() {
   const isDueSoon = (r: any) => r.status !== "completed" && r.due_date && !isPast(parseISO(r.due_date)) && parseISO(r.due_date) <= addDays(new Date(), 3);
 
   return (
+    <SetupGate requires="trailers" href="/trailers" label="Add Your First Trailer">
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -388,5 +390,6 @@ export default function Maintenance() {
         </div>
       </div>
     </AppLayout>
+    </SetupGate>
   );
 }

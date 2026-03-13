@@ -21,6 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import { claudeNonStreaming } from "@/hooks/useClaudeAI";
 import { supabase } from "@/integrations/supabase/client";
+import { SetupGate } from "@/components/shared/SetupGate";
 
 const categories = [
   { value: "appetizer", label: "Appetizer" },
@@ -380,6 +381,7 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
     : "0.0";
 
   return (
+    <SetupGate requires="trailers" href="/trailers" label="Add Your First Trailer">
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -847,5 +849,6 @@ Suggest an optimal price for this item. Consider: ingredient cost, target margin
         </SheetContent>
       </Sheet>
     </AppLayout>
+    </SetupGate>
   );
 }

@@ -22,6 +22,7 @@ import { useEntitlements } from "@/hooks/useEntitlements";
 import { useRoleAccess } from "@/hooks/useRoleAccess";
 import { useNavigate } from "react-router-dom";
 import { format, subDays, subMonths, startOfMonth, endOfMonth, isWithinInterval } from "date-fns";
+import { SetupGate } from "@/components/shared/SetupGate";
 
 const PERIOD_OPTIONS = [
   { label: "7 Days", value: 7 },
@@ -206,6 +207,7 @@ export default function Financials() {
   const periodLabel = typeof period === "number" ? `${period}d` : period === "month" ? "MTD" : "All";
 
   return (
+    <SetupGate requires="trailers" href="/trailers" label="Add Your First Trailer">
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
         {/* Header */}
@@ -511,5 +513,6 @@ export default function Financials() {
         </div>
       </div>
     </AppLayout>
+    </SetupGate>
   );
 }

@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOrgId } from "@/hooks/useOrgId";
 import { useNavigate } from "react-router-dom";
+import { SetupGate } from "@/components/shared/SetupGate";
 
 export default function Bookings() {
   const orgId = useOrgId();
@@ -211,6 +212,7 @@ export default function Bookings() {
   }, [bookings]);
 
   return (
+    <SetupGate requires="bookings" href="/settings?section=bookings" label="Enable Bookings in Settings">
     <AppLayout>
       <div className="space-y-6 animate-fade-in">
         <div className="flex items-center justify-between flex-wrap gap-3">
@@ -437,5 +439,6 @@ export default function Bookings() {
         </div>
       </div>
     </AppLayout>
+    </SetupGate>
   );
 }

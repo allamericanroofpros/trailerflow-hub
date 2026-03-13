@@ -6,6 +6,7 @@ import { useEvents } from "@/hooks/useEvents";
 import { useTrailers } from "@/hooks/useTrailers";
 import { useMenuItems } from "@/hooks/useMenuItems";
 import { supabase } from "@/integrations/supabase/client";
+import { SetupGate } from "@/components/shared/SetupGate";
 import { toast } from "sonner";
 import {
   Package, AlertTriangle, Plus, ArrowDown, ArrowUp,
@@ -409,6 +410,7 @@ export default function Inventory() {
   };
 
   return (
+    <SetupGate requires="trailers" href="/trailers" label="Add Your First Trailer">
     <AppLayout>
       <div className="space-y-4 sm:space-y-6 animate-fade-in">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -775,5 +777,6 @@ export default function Inventory() {
         </Dialog>
       </div>
     </AppLayout>
+    </SetupGate>
   );
 }

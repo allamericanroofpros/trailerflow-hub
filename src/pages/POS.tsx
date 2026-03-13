@@ -29,6 +29,7 @@ import POSStartOfDay from "@/components/pos/POSStartOfDay";
 import POSTimeClock from "@/components/pos/POSTimeClock";
 import { useStaffByPin } from "@/hooks/useTimeClock";
 import { supabase } from "@/integrations/supabase/client";
+import { SetupGate } from "@/components/shared/SetupGate";
 
 type Modifier = {
   name: string;
@@ -474,6 +475,8 @@ export default function POS() {
   }
 
   return (
+    <SetupGate requires="trailers" href="/trailers" label="Add Your First Trailer">
+    <SetupGate requires="menu" href="/menu" label="Build Your Menu">
     <div className="fixed inset-0 z-50 flex flex-col bg-background select-none">
       {/* ── TOP BAR ── */}
       <header className="flex h-16 items-center justify-between border-b-2 border-border bg-card px-4 shrink-0">
@@ -974,5 +977,7 @@ export default function POS() {
         </DialogContent>
       </Dialog>
     </div>
+    </SetupGate>
+    </SetupGate>
   );
 }
