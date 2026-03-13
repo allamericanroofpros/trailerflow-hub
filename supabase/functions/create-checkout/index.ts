@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
       customerId = customers.data[0].id;
     }
 
-    const origin = req.headers.get("origin") || "http://localhost:3000";
+    const origin = req.headers.get("origin") || "https://www.getvendorflow.app";
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

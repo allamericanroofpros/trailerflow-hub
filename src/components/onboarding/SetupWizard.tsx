@@ -116,8 +116,8 @@ export function SetupWizard({ completedSteps, onDismiss }: SetupWizardProps) {
         })}
       </div>
 
-      {/* Demo data option */}
-      {completedCount < 3 && (
+      {/* Demo data option — show whenever setup is not complete */}
+      {(
         <div className="mt-4 pt-4 border-t border-border">
           <button
             onClick={handleLoadDemo}
