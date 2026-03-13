@@ -251,9 +251,13 @@ async function syncSubscription(
 function derivePlanFromPrice(priceId: string | null): string {
   // Maps Stripe price IDs to plan names — keep in sync with src/config/tiers.ts
   const map: Record<string, string> = {
-    price_1T8ntxEHIsr46VcJ3J4mPMEq: "starter",
-    price_1T8nuWEHIsr46VcJxMizsKl7: "pro",
-    price_1T8nugEHIsr46VcJ6ugiRGFR: "enterprise",
+    // Monthly
+    price_1TAH5CCXvW6EawHaUJyQHJIu: "founders",
+    price_1TAEtmCXvW6EawHaqDM6Na37: "pro",
+    price_1TAEtmCXvW6EawHaPozbgWQC: "enterprise",
+    // Annual
+    price_1TAH44CXvW6EawHamaG7QXUW: "pro",
+    price_1TAH30CXvW6EawHaj30zHdk3: "enterprise",
   };
   return priceId ? map[priceId] ?? "free" : "free";
 }

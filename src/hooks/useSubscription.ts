@@ -80,9 +80,9 @@ export function useSubscription() {
   const startCheckout = async (priceId: string) => {
     // Derive plan tier from price ID
     const tierMap: Record<string, string> = {
-      price_1T8ntxEHIsr46VcJ3J4mPMEq: "starter",
-      price_1T8nuWEHIsr46VcJxMizsKl7: "pro",
-      price_1T8nugEHIsr46VcJ6ugiRGFR: "enterprise",
+      price_1TAH5CCXvW6EawHaUJyQHJIu: "founders",
+      price_1TAEtmCXvW6EawHaqDM6Na37: "pro",
+      price_1TAEtmCXvW6EawHaPozbgWQC: "enterprise",
     };
     const { data, error } = await supabase.functions.invoke("create-checkout", {
       body: {

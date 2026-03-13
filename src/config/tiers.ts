@@ -3,7 +3,7 @@ export const TIERS = {
     name: "Pro",
     price: 79,
     annualPrice: 790, // 10 months
-    price_id: "price_1T8nuWEHIsr46VcJxMizsKl7",
+    price_id: "price_1TAEtmCXvW6EawHaqDM6Na37",
     annual_price_id: "price_1TAH44CXvW6EawHamaG7QXUW",
     product_id: "prod_U71yhcJZEwTQZv",
     features: [
@@ -20,8 +20,8 @@ export const TIERS = {
     name: "Enterprise",
     price: 199,
     annualPrice: 1990, // 10 months
-    price_id: "price_1T8nugEHIsr46VcJ6ugiRGFR",
-    annual_price_id: "price_1TAEtmCXvW6EawHaPozbgWQC",
+    price_id: "price_1TAEtmCXvW6EawHaPozbgWQC",
+    annual_price_id: "price_1TAH30CXvW6EawHaj30zHdk3",
     product_id: "prod_U71y5TWZAmWkws",
     features: [
       "Everything in Pro",

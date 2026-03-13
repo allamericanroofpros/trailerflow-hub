@@ -340,6 +340,21 @@ export default function SettingsPage() {
     }
   }, [activeSection, refreshOrg]);
 
+  // Auto-trigger checkout for pending plan from signup flow
+  useEffect(() => {
+    if (subLoading) return;
+    const pending = localStorage.getItem("vf_pending_plan");
+    if (!pending || subscribed) return;
+    localStorage.removeItem("vf_pending_plan");
+    const planPriceMap: Record<string, string> = {
+      founders: "price_1TAH5CCXvW6EawHaUJyQHJIu",
+      pro: "price_1TAEtmCXvW6EawHaqDM6Na37",
+      enterprise: "price_1TAEtmCXvW6EawHaPozbgWQC",
+    };
+    const priceId = planPriceMap[pending];
+    if (priceId) startCheckout(priceId);
+  }, [subLoading, subscribed, startCheckout]);
+
   const [paymentSettingsLoaded, setPaymentSettingsLoaded] = useState(false);
 
   useEffect(() => {

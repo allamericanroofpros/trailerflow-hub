@@ -117,8 +117,8 @@ export default function Signup() {
     }
 
     const plan = searchParams.get("plan");
-      if (plan) localStorage.setItem("vf_pending_plan", plan);
-      setSent(true);
+    localStorage.setItem("vf_pending_plan", plan ?? "founders");
+    setSent(true);
     toast.success("Check your email to confirm your account!");
     setLoading(false);
   };
