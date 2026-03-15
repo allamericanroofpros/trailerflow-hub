@@ -34,8 +34,9 @@ async function verifySuperAdmin(req: Request) {
   return { caller, adminClient };
 }
 
+// deno-lint-ignore no-explicit-any
 async function logAudit(
-  adminClient: ReturnType<typeof createClient>,
+  adminClient: any,
   actorId: string,
   action: string,
   targetType: string | null,
