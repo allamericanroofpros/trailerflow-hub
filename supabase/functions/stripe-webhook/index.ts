@@ -222,8 +222,9 @@ Deno.serve(async (req) => {
 
 // ─── Helpers ───
 
+// deno-lint-ignore no-explicit-any
 async function syncSubscription(
-  supabase: ReturnType<typeof createClient>,
+  supabase: any,
   sub: Stripe.Subscription
 ) {
   const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer?.id;

@@ -34,8 +34,9 @@ async function verifySuperAdmin(req: Request) {
   return { caller, adminClient };
 }
 
+// deno-lint-ignore no-explicit-any
 async function logAudit(
-  adminClient: ReturnType<typeof createClient>,
+  adminClient: any,
   actorId: string,
   action: string,
   targetType: string | null,
@@ -413,7 +414,7 @@ Deno.serve(async (req) => {
         const { data: allRoles } = await adminClient.from("user_roles").select("user_id");
 
         const profileUserIds = new Set(allProfiles?.map(p => p.user_id) || []);
-        const memberUserIds = new Set(allMembers?.data || []);
+        const memberUserIds = new Set(Array.isArray(allMembers) ? allMembers : []);
         const roleUserIds = new Set(allRoles?.map(r => r.user_id) || []);
         const authUserIds = allAuth?.users?.map(u => u.id) || [];
 
