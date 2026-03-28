@@ -15,7 +15,10 @@ export default function Login() {
     setLoading(true);
     const { error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) {
-      toast.error(error.message);
+      const isNetworkError = error.message?.toLowerCase().includes("fetch") ||
+        error.message?.toLowerCase().includes("network") ||
+        error.message?.toLowerCase().includes("connect");
+      toast.error(isNetworkError ? "Unable to connect. Please try again." : error.message);
     } else {
       navigate("/dashboard");
     }

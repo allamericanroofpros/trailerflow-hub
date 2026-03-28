@@ -95,7 +95,7 @@ export default function Signup() {
       email,
       password,
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: `${window.location.origin}/auth/callback`,
         data: {
           full_name: fullName,
           business_name: businessName,
@@ -111,7 +111,10 @@ export default function Signup() {
     });
 
     if (error) {
-      toast.error(error.message);
+      const isNetworkError = error.message?.toLowerCase().includes("fetch") ||
+        error.message?.toLowerCase().includes("network") ||
+        error.message?.toLowerCase().includes("connect");
+      toast.error(isNetworkError ? "Unable to connect. Please try again." : error.message);
       setLoading(false);
       return;
     }
@@ -154,7 +157,7 @@ export default function Signup() {
 
         {/* Plan badge */}
         <div className="flex items-center justify-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm">
+          <div className="inline-flex flex-wrap justify-center items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-4 py-1.5 text-sm">
             {foundersEnabled && foundersRemaining > 0 ? (
               <>
                 <Flame className="h-3.5 w-3.5 text-orange-500" />
