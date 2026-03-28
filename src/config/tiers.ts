@@ -21,7 +21,7 @@ export const TIERS = {
     price: 199,
     annualPrice: 1990, // 10 months
     price_id: "price_1TAEtmCXvW6EawHaPozbgWQC",
-    annual_price_id: "price_1TAH30CXvW6EawHaj30zHdk3",
+    annual_price_id: "price_1TAEtmCXvW6EawHaPozbgWQC",
     product_id: "prod_U71y5TWZAmWkws",
     features: [
       "Everything in Pro",
@@ -36,7 +36,11 @@ export const TIERS = {
 
 export type TierKey = keyof typeof TIERS;
 
-/** Founders tier info (not in TIERS because it's a limited-time offer) */
+/**
+ * Founders tier — NOT a separate product. It's the Starter (Pro) tier
+ * with a lifetime price lock for the first 100 signups.
+ * Same features as Pro, just locked at $29/mo forever.
+ */
 export const FOUNDERS_TIER = {
   name: "Founders",
   price: 29,
@@ -44,12 +48,11 @@ export const FOUNDERS_TIER = {
   product_id: "prod_U8YBZTWW1GV2Vi",
   price_id: "price_1TAH5CCXvW6EawHaUJyQHJIu",
   features: [
-    "Everything in Enterprise",
     "Unlimited trailers & staff",
+    "Full analytics & reports",
     "AI forecasting & discovery",
-    "Multi-org management",
-    "Custom integrations & API",
-    "White-label receipts",
+    "Time clock & labor tracking",
+    "Fleet overview",
     "Priority support",
     "Price locked for life",
   ],

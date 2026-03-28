@@ -78,7 +78,7 @@ export default function Landing() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
-        navigate("/signup");
+        navigate(`/signup?plan=${label}`);
         return;
       }
 

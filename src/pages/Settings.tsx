@@ -348,7 +348,7 @@ export default function SettingsPage() {
     localStorage.removeItem("vf_pending_plan");
     const planPriceMap: Record<string, string> = {
       founders: "price_1TAH5CCXvW6EawHaUJyQHJIu",
-      pro: "price_1TAEtmCXvW6EawHaqDM6Na37",
+      pro: "price_1TAH44CXvW6EawHamaG7QXUW",
       enterprise: "price_1TAEtmCXvW6EawHaPozbgWQC",
     };
     const priceId = planPriceMap[pending];

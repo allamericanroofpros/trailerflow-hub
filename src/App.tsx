@@ -34,6 +34,7 @@ import OrdersQueue from "./pages/OrdersQueue";
 import TimeClockPage from "./pages/TimeClockPage";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
+import AcceptInvite from "./pages/AcceptInvite";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminOrganizations from "./pages/admin/AdminOrganizations";
 import AdminUsers from "./pages/admin/AdminUsers";
@@ -63,6 +64,7 @@ const App = () => (
               <Route path="/book" element={<PublicBooking />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
+              <Route path="/accept-invite" element={<AcceptInvite />} />
               <Route path="/admin" element={<SuperAdminRoute><AdminOverview /></SuperAdminRoute>} />
               <Route path="/super-admin" element={<SuperAdminRoute><AdminOverview /></SuperAdminRoute>} />
               <Route path="/admin/organizations" element={<SuperAdminRoute><AdminOrganizations /></SuperAdminRoute>} />

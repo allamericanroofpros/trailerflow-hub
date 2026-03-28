@@ -81,7 +81,8 @@ export function useSubscription() {
     // Derive plan tier from price ID
     const tierMap: Record<string, string> = {
       price_1TAH5CCXvW6EawHaUJyQHJIu: "founders",
-      price_1TAEtmCXvW6EawHaqDM6Na37: "pro",
+      price_1TAH44CXvW6EawHamaG7QXUW: "pro",
+      price_1TAEtmCXvW6EawHaqDM6Na37: "pro", // legacy monthly price ID
       price_1TAEtmCXvW6EawHaPozbgWQC: "enterprise",
     };
     const { data, error } = await supabase.functions.invoke("create-checkout", {
