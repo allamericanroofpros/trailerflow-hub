@@ -83,8 +83,8 @@ export default function AcceptInvite() {
 
       setStatus("success");
       setTimeout(() => navigate("/dashboard"), 1500);
-    } catch (err: any) {
-      setErrorMessage(err?.message ?? "Failed to accept invite.");
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Failed to accept invite.");
       setStatus("error");
     }
   };
