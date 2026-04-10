@@ -12,6 +12,7 @@ import { FOUNDERS_TIER, TIERS } from "@/config/tiers";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 /* ─── Feature data ─── */
 const features = [
@@ -70,6 +71,7 @@ export default function Landing() {
   const [billingInterval, setBillingInterval] = useState<"monthly" | "annual">("monthly");
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const navigate = useNavigate();
+  const { session } = useAuth();
 
   const showFounders = foundersEnabled && foundersRemaining > 0;
 
@@ -136,12 +138,20 @@ export default function Landing() {
             <a href="#testimonials" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Reviews</a>
           </nav>
           <div className="flex items-center gap-3">
-            <Button variant="ghost" asChild>
-              <Link to="/login">Log In</Link>
-            </Button>
-            <Button asChild>
-              <Link to="/signup">Get Started <ArrowRight className="ml-1 h-4 w-4" /></Link>
-            </Button>
+            {session ? (
+              <Button asChild>
+                <Link to="/dashboard">Dashboard <ArrowRight className="ml-1 h-4 w-4" /></Link>
+              </Button>
+            ) : (
+              <>
+                <Button variant="ghost" asChild className="hidden sm:inline-flex">
+                  <Link to="/login">Log In</Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/signup">Get Started <ArrowRight className="ml-1 h-4 w-4" /></Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </header>
