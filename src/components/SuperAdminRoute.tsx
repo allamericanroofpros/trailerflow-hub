@@ -13,7 +13,7 @@ export function SuperAdminRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (!session) return <Navigate to="/login" replace />;
-  if (role !== "super_admin") return <Navigate to="/" replace />;
+  if (role !== "super_admin") return <Navigate to="/dashboard" replace />;
 
   return <>{children}</>;
 }

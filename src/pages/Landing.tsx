@@ -71,7 +71,7 @@ export default function Landing() {
   const [billingInterval, setBillingInterval] = useState<"monthly" | "annual">("monthly");
   const [checkoutLoading, setCheckoutLoading] = useState<string | null>(null);
   const navigate = useNavigate();
-  const { session } = useAuth();
+  const { session, loading: authLoading } = useAuth();
 
   const showFounders = foundersEnabled && foundersRemaining > 0;
 
@@ -138,11 +138,11 @@ export default function Landing() {
             <a href="#testimonials" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Reviews</a>
           </nav>
           <div className="flex items-center gap-3">
-            {session ? (
+            {!authLoading && session ? (
               <Button asChild>
                 <Link to="/dashboard">Dashboard <ArrowRight className="ml-1 h-4 w-4" /></Link>
               </Button>
-            ) : (
+            ) : !authLoading ? (
               <>
                 <Button variant="ghost" asChild className="hidden sm:inline-flex">
                   <Link to="/login">Log In</Link>
@@ -151,7 +151,7 @@ export default function Landing() {
                   <Link to="/signup">Get Started <ArrowRight className="ml-1 h-4 w-4" /></Link>
                 </Button>
               </>
-            )}
+            ) : null}
           </div>
         </div>
       </header>
