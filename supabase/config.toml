@@ -1,5 +1,13 @@
 project_id = "zwpjpvqcepbxlddqvjff"
 
+[auth]
+site_url = "https://www.getvendorflow.app"
+additional_redirect_urls = [
+  "https://www.getvendorflow.app/auth/callback",
+  "https://trailerflow-hub.vercel.app/auth/callback",
+  "https://trailerflow-hub.vercel.app/**",
+]
+
 [functions.claude-ai]
 verify_jwt = false
 
