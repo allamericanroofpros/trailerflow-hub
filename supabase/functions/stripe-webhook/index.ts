@@ -43,6 +43,9 @@ Deno.serve(async (req) => {
     return new Response(`Webhook signature verification failed: ${msg}`, { status: 400 });
   }
 
+  // Fetch full event so all object fields are populated (handles Thin payload endpoints)
+  event = await stripe.events.retrieve(event.id);
+
   log("Event received", { type: event.type, id: event.id });
 
   const handled = [

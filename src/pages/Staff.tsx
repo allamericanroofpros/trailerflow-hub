@@ -3,7 +3,7 @@ import { TeamInvitePanel } from "@/components/onboarding/TeamInvitePanel";
 import {
   Users as UsersIcon, AlertTriangle, Clock, Shield, Eye, Plus, Pencil,
   Trash2, X, Save, Calendar, Loader2, ChevronLeft, ChevronRight, UserPlus, CalendarClock, Sparkles, Lock,
-  CheckCircle,
+  CheckCircle, Truck,
 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { useStaffMembers, useCreateStaffMember, useUpdateStaffMember, useDeleteStaffMember } from "@/hooks/useStaffMembers";
@@ -182,6 +182,30 @@ export default function Staff() {
   const deleteStaff = useDeleteStaffMember();
   const qc = useQueryClient();
 
+  // Trailers for this org (used in assignment UI)
+  const { data: trailers } = useQuery({
+    queryKey: ["trailers_list", orgId],
+    enabled: !!orgId,
+    queryFn: async () => {
+      const { data, error } = await supabase.from("trailers").select("id, name").eq("org_id", orgId!).order("name");
+      if (error) throw error;
+      return data as { id: string; name: string }[];
+    },
+  });
+
+  // Direct staff→trailer assignments
+  const { data: staffTrailers } = useQuery({
+    queryKey: ["staff_trailers", orgId],
+    enabled: !!orgId,
+    queryFn: async () => {
+      const { data, error } = await (supabase.from("staff_trailers" as any) as any)
+        .select("staff_id, trailer_id")
+        .eq("org_id", orgId!);
+      if (error) throw error;
+      return (data ?? []) as { staff_id: string; trailer_id: string }[];
+    },
+  });
+
   // Team roles data scoped to current org
   const { data: teamMembers, isLoading: teamLoading } = useQuery({
     queryKey: ["team_roles", orgId],
@@ -285,7 +309,7 @@ export default function Staff() {
   const [tab, setTab] = useState<"roles" | "roster" | "schedule" | "availability">(isOwner ? "roles" : "roster");
   const [addingNew, setAddingNew] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: "", email: "", phone: "", hourly_rate: "", status: "active" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", hourly_rate: "", status: "active", trailerIds: [] as string[] });
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 0 }));
 
   // Schedule assign form
@@ -372,9 +396,21 @@ export default function Staff() {
   }, [calendarData, weekDays]);
 
   const resetForm = () => {
-    setForm({ name: "", email: "", phone: "", hourly_rate: "", status: "active" });
+    setForm({ name: "", email: "", phone: "", hourly_rate: "", status: "active", trailerIds: [] });
     setAddingNew(false);
     setEditingId(null);
+  };
+
+  const syncTrailerAssignments = async (staffId: string, trailerIds: string[]) => {
+    if (!orgId) return;
+    // Delete existing then re-insert selected
+    await (supabase.from("staff_trailers" as any) as any).delete().eq("staff_id", staffId).eq("org_id", orgId);
+    if (trailerIds.length > 0) {
+      await (supabase.from("staff_trailers" as any) as any).insert(
+        trailerIds.map((tid) => ({ staff_id: staffId, trailer_id: tid, org_id: orgId }))
+      );
+    }
+    qc.invalidateQueries({ queryKey: ["staff_trailers"] });
   };
 
   const handleSave = async () => {
@@ -387,20 +423,32 @@ export default function Staff() {
       status: form.status,
     };
     if (editingId) {
-      updateStaff.mutate({ id: editingId, ...payload }, { onSuccess: resetForm });
+      updateStaff.mutate({ id: editingId, ...payload }, {
+        onSuccess: async () => {
+          await syncTrailerAssignments(editingId, form.trailerIds);
+          resetForm();
+        }
+      });
     } else {
-      createStaff.mutate(payload, { onSuccess: resetForm });
+      createStaff.mutate(payload, {
+        onSuccess: async (newStaff) => {
+          if (newStaff) await syncTrailerAssignments(newStaff.id, form.trailerIds);
+          resetForm();
+        }
+      });
     }
   };
 
   const startEdit = (m: any) => {
     setEditingId(m.id);
+    const currentTrailerIds = staffTrailers?.filter((st) => st.staff_id === m.id).map((st) => st.trailer_id) ?? [];
     setForm({
       name: m.name,
       email: m.email || "",
       phone: m.phone || "",
       hourly_rate: m.hourly_rate?.toString() || "",
       status: m.status,
+      trailerIds: currentTrailerIds,
     });
     setAddingNew(true);
   };
@@ -518,6 +566,38 @@ export default function Staff() {
                 </select>
               </div>
             </div>
+            {trailers && trailers.length > 0 && (
+              <div className="mt-4">
+                <label className="text-xs font-medium text-muted-foreground">Assigned Trailers</label>
+                <div className="mt-1.5 flex flex-wrap gap-2">
+                  {trailers.map((t) => {
+                    const checked = form.trailerIds.includes(t.id);
+                    return (
+                      <button
+                        key={t.id}
+                        type="button"
+                        onClick={() =>
+                          setForm({
+                            ...form,
+                            trailerIds: checked
+                              ? form.trailerIds.filter((id) => id !== t.id)
+                              : [...form.trailerIds, t.id],
+                          })
+                        }
+                        className={`flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all ${
+                          checked
+                            ? "border-primary bg-primary/10 text-primary"
+                            : "border-border bg-card text-muted-foreground hover:border-primary/40"
+                        }`}
+                      >
+                        <Truck className="h-3 w-3" />
+                        {t.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
             <div className="flex items-center gap-2 mt-4">
               <Button onClick={handleSave} disabled={createStaff.isPending || updateStaff.isPending} className="gap-1.5">
                 <Save className="h-3.5 w-3.5" />
@@ -664,7 +744,7 @@ export default function Staff() {
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-border bg-muted/50">
-                      {["Name", "Email", "Phone", "Rate", "Status", "Actions"].map((h) => (
+                      {["Name", "Email", "Phone", "Rate", "Trailers", "Status", "Actions"].map((h) => (
                         <th key={h} className="px-4 py-3 text-left text-xs font-semibold text-muted-foreground">{h}</th>
                       ))}
                     </tr>
@@ -676,6 +756,25 @@ export default function Staff() {
                         <td className="px-4 py-3 text-muted-foreground">{m.email || "—"}</td>
                         <td className="px-4 py-3 text-muted-foreground">{m.phone || "—"}</td>
                         <td className="px-4 py-3 text-muted-foreground">{m.hourly_rate ? `$${m.hourly_rate}/hr` : "—"}</td>
+                        <td className="px-4 py-3">
+                          {(() => {
+                            const assigned = staffTrailers
+                              ?.filter((st) => st.staff_id === m.id)
+                              .map((st) => trailers?.find((t) => t.id === st.trailer_id)?.name)
+                              .filter(Boolean) as string[] | undefined;
+                            return assigned && assigned.length > 0 ? (
+                              <div className="flex flex-wrap gap-1">
+                                {assigned.map((name) => (
+                                  <span key={name} className="flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
+                                    <Truck className="h-2.5 w-2.5" />{name}
+                                  </span>
+                                ))}
+                              </div>
+                            ) : (
+                              <span className="text-muted-foreground">—</span>
+                            );
+                          })()}
+                        </td>
                         <td className="px-4 py-3">
                           <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
                             m.status === "active" ? "bg-success/10 text-success" : "bg-warning/10 text-warning"

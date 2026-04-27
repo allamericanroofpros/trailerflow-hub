@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
     }
 
     // Generate onboarding link
-    const origin = req.headers.get("origin") || "https://vendorflow.app";
+    const origin = req.headers.get("origin") || "https://www.getvendorflow.app";
     const accountLink = await stripe.accountLinks.create({
       account: accountId,
       refresh_url: `${origin}/settings?section=payments&connect=refresh`,
