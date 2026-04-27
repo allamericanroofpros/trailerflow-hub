@@ -67,9 +67,12 @@ export function useStripeConnect() {
 
   const connectMutation = useMutation({
     mutationFn: async () => {
+      if (!orgId) throw new Error("No org selected — cannot connect Stripe");
+      console.log("[useStripeConnect] invoking create-connect-account with org_id:", orgId);
       const { data, error } = await supabase.functions.invoke("create-connect-account", {
         body: { org_id: orgId },
       });
+      console.log("[useStripeConnect] raw response — data:", JSON.stringify(data), "error:", JSON.stringify(error));
       if (error || data?.error) {
         const msg = await extractFnError(error, data);
         console.error("[useStripeConnect] create-connect-account:", msg, { error, data });
