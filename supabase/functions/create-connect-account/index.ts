@@ -60,7 +60,8 @@ Deno.serve(async (req) => {
       .eq("is_active", true)
       .maybeSingle();
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
+    // Use basil preview API to access v2 endpoints
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" as any });
     let accountId: string;
 
     if (existing?.stripe_connected_account_id) {
@@ -74,20 +75,37 @@ Deno.serve(async (req) => {
         .eq("id", org_id)
         .single();
 
-      // Create a Standard connected account
-      const account = await stripe.accounts.create({
-        type: "standard",
-        email: user.email,
+      // Create a V2 connected account — does not require Stripe Connect enrollment
+      const account = await (stripe as any).v2.core.accounts.create({
+        display_name: org?.name || undefined,
+        contact_email: user.email,
+        identity: {
+          country: "us",
+        },
+        dashboard: "full",
+        defaults: {
+          responsibilities: {
+            fees_collector: "stripe",
+            losses_collector: "stripe",
+          },
+        },
+        configuration: {
+          customer: {},
+          merchant: {
+            capabilities: {
+              card_payments: {
+                requested: true,
+              },
+            },
+          },
+        },
         metadata: {
           vendorflow_org_id: org_id,
           vendorflow_user_id: user.id,
         },
-        business_profile: {
-          name: org?.name || undefined,
-        },
       });
       accountId = account.id;
-      log("Created Stripe connected account", { accountId });
+      log("Created V2 connected account", { accountId });
 
       // Store in DB
       await supabase.from("organization_payment_accounts").insert({
@@ -99,16 +117,21 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Generate onboarding link
+    // Generate V2 onboarding link
     const origin = req.headers.get("origin") || "https://www.getvendorflow.app";
-    const accountLink = await stripe.accountLinks.create({
+    const accountLink = await (stripe as any).v2.core.accountLinks.create({
       account: accountId,
-      refresh_url: `${origin}/settings?section=payments&connect=refresh`,
-      return_url: `${origin}/settings?section=payments&connect=return`,
-      type: "account_onboarding",
+      use_case: {
+        type: "account_onboarding",
+        account_onboarding: {
+          configurations: ["merchant", "customer"],
+          refresh_url: `${origin}/settings?section=payments&connect=refresh`,
+          return_url: `${origin}/settings?section=payments&connect=return`,
+        },
+      },
     });
 
-    log("Onboarding link created", { url: accountLink.url });
+    log("V2 onboarding link created", { url: accountLink.url });
 
     return new Response(
       JSON.stringify({ url: accountLink.url, account_id: accountId }),

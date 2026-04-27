@@ -62,41 +62,53 @@ Deno.serve(async (req) => {
       );
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
-    const account = await stripe.accounts.retrieve(paymentAccount.stripe_connected_account_id);
+    // Use basil preview API to access v2 endpoints
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" as any });
 
-    log("Account retrieved", {
+    const account = await (stripe as any).v2.core.accounts.retrieve(
+      paymentAccount.stripe_connected_account_id,
+      { include: ["configuration.merchant", "requirements"] }
+    );
+
+    const cardPaymentsStatus = account?.configuration?.merchant?.capabilities?.card_payments?.status;
+    const isReady = cardPaymentsStatus === "active";
+    const isPending = cardPaymentsStatus === "pending";
+    const requirements = account?.requirements || {};
+    const hasOpenRequirements =
+      (requirements?.currently_due?.length || 0) > 0 ||
+      (requirements?.past_due?.length || 0) > 0;
+
+    log("V2 account retrieved", {
       accountId: account.id,
-      charges_enabled: account.charges_enabled,
-      payouts_enabled: account.payouts_enabled,
-      details_submitted: account.details_submitted,
+      cardPaymentsStatus,
+      isReady,
+      hasOpenRequirements,
     });
 
-    // Determine status
-    let connectStatus = "pending";
-    if (account.details_submitted && account.charges_enabled && account.payouts_enabled) {
+    // Derive connect status from V2 fields
+    let connectStatus: string;
+    if (isReady) {
       connectStatus = "connected";
-    } else if (account.details_submitted) {
+    } else if (hasOpenRequirements) {
       connectStatus = "restricted";
-    } else if (paymentAccount.stripe_onboarding_started_at) {
+    } else if (isPending || paymentAccount.stripe_onboarding_started_at) {
       connectStatus = "onboarding_started";
+    } else {
+      connectStatus = "pending";
     }
 
-    const requirements = {
-      currently_due: account.requirements?.currently_due || [],
-      eventually_due: account.requirements?.eventually_due || [],
-      past_due: account.requirements?.past_due || [],
-      disabled_reason: account.requirements?.disabled_reason || null,
-    };
-
-    // Update DB
     const updates: Record<string, unknown> = {
-      stripe_charges_enabled: account.charges_enabled ?? false,
-      stripe_payouts_enabled: account.payouts_enabled ?? false,
-      stripe_details_submitted: account.details_submitted ?? false,
+      stripe_charges_enabled: isReady,
+      stripe_payouts_enabled: isReady,
+      stripe_details_submitted: isReady || hasOpenRequirements,
       stripe_connect_status: connectStatus,
-      stripe_requirements_json: requirements,
-      stripe_connect_email: account.email || paymentAccount.stripe_connect_email,
+      stripe_requirements_json: {
+        currently_due: requirements?.currently_due || [],
+        eventually_due: requirements?.eventually_due || [],
+        past_due: requirements?.past_due || [],
+        disabled_reason: requirements?.disabled_reason || null,
+      },
+      stripe_connect_email: account.contact_email || paymentAccount.stripe_connect_email,
     };
 
     if (connectStatus === "connected" && !paymentAccount.stripe_onboarding_completed_at) {
@@ -113,16 +125,15 @@ Deno.serve(async (req) => {
       throw new Error("Failed to update payment account status");
     }
 
-    log("Status refreshed", { connectStatus });
+    log("Status refreshed", { connectStatus, cardPaymentsStatus });
 
     return new Response(
       JSON.stringify({
         connected: true,
         status: connectStatus,
-        charges_enabled: account.charges_enabled,
-        payouts_enabled: account.payouts_enabled,
-        details_submitted: account.details_submitted,
-        email: account.email,
+        charges_enabled: isReady,
+        payouts_enabled: isReady,
+        details_submitted: isReady || hasOpenRequirements,
         requirements,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }

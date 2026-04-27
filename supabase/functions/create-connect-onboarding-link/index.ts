@@ -59,17 +59,23 @@ Deno.serve(async (req) => {
       throw new Error("No connected Stripe account found. Please connect first.");
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
+    // Use basil preview API to access v2 endpoints
+    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" as any });
     const origin = req.headers.get("origin") || "https://www.getvendorflow.app";
 
-    const accountLink = await stripe.accountLinks.create({
+    const accountLink = await (stripe as any).v2.core.accountLinks.create({
       account: paymentAccount.stripe_connected_account_id,
-      refresh_url: `${origin}/settings?section=payments&connect=refresh`,
-      return_url: `${origin}/settings?section=payments&connect=return`,
-      type: "account_onboarding",
+      use_case: {
+        type: "account_onboarding",
+        account_onboarding: {
+          configurations: ["merchant", "customer"],
+          refresh_url: `${origin}/settings?section=payments&connect=refresh`,
+          return_url: `${origin}/settings?section=payments&connect=return`,
+        },
+      },
     });
 
-    log("Onboarding link created", { accountId: paymentAccount.stripe_connected_account_id });
+    log("V2 onboarding link created", { accountId: paymentAccount.stripe_connected_account_id });
 
     return new Response(
       JSON.stringify({ url: accountLink.url }),
