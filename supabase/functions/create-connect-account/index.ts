@@ -60,7 +60,7 @@ Deno.serve(async (req) => {
       .eq("is_active", true)
       .maybeSingle();
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
     let accountId: string;
 
     if (existing?.stripe_connected_account_id) {

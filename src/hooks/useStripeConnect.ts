@@ -45,13 +45,36 @@ export function useStripeConnect() {
     },
   });
 
+  /** Extract a human-readable message from a Supabase FunctionsHttpError or plain Error. */
+  async function extractFnError(error: unknown, data: unknown): Promise<string> {
+    // If the function returned { error: "..." } in the body, use that first.
+    if (data && typeof data === "object" && "error" in data && typeof (data as any).error === "string") {
+      return (data as any).error;
+    }
+    if (error instanceof Error) {
+      // FunctionsHttpError exposes the raw Response on .context
+      try {
+        const ctx = (error as any).context;
+        if (ctx && typeof ctx.json === "function") {
+          const body = await ctx.json();
+          if (body?.error) return body.error;
+        }
+      } catch {/* ignore */}
+      return error.message;
+    }
+    return String(error);
+  }
+
   const connectMutation = useMutation({
     mutationFn: async () => {
       const { data, error } = await supabase.functions.invoke("create-connect-account", {
         body: { org_id: orgId },
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error || data?.error) {
+        const msg = await extractFnError(error, data);
+        console.error("[useStripeConnect] create-connect-account:", msg, { error, data });
+        throw new Error(msg);
+      }
       return data as { url: string; account_id: string };
     },
     onSuccess: (data) => {
@@ -65,8 +88,11 @@ export function useStripeConnect() {
       const { data, error } = await supabase.functions.invoke("create-connect-onboarding-link", {
         body: { org_id: orgId },
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error || data?.error) {
+        const msg = await extractFnError(error, data);
+        console.error("[useStripeConnect] create-connect-onboarding-link:", msg, { error, data });
+        throw new Error(msg);
+      }
       return data as { url: string };
     },
     onSuccess: (data) => {
@@ -79,8 +105,11 @@ export function useStripeConnect() {
       const { data, error } = await supabase.functions.invoke("refresh-connect-status", {
         body: { org_id: orgId },
       });
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
+      if (error || data?.error) {
+        const msg = await extractFnError(error, data);
+        console.error("[useStripeConnect] refresh-connect-status:", msg, { error, data });
+        throw new Error(msg);
+      }
       return data;
     },
     onSuccess: () => {

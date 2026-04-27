@@ -59,8 +59,8 @@ Deno.serve(async (req) => {
       throw new Error("No connected Stripe account found. Please connect first.");
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    const origin = req.headers.get("origin") || "https://vendorflow.app";
+    const stripe = new Stripe(stripeKey, { apiVersion: "2024-06-20" });
+    const origin = req.headers.get("origin") || "https://www.getvendorflow.app";
 
     const accountLink = await stripe.accountLinks.create({
       account: paymentAccount.stripe_connected_account_id,
