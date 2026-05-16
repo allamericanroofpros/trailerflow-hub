@@ -50,7 +50,7 @@ serve(async (req) => {
     const orgName = org_name || "VendorFlow";
     const inviterDisplay = inviter_name || "A team member";
     const roleDisplay = (role || "staff").charAt(0).toUpperCase() + (role || "staff").slice(1);
-    const acceptUrl = `https://getvendorflow.app/accept-invite?token=${encodeURIComponent(invite_id)}`;
+    const acceptUrl = `https://www.getvendorflow.app/accept-invite?token=${encodeURIComponent(invite_id)}`;
 
     const html = `
 <!DOCTYPE html>
