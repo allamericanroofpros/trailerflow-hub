@@ -77,8 +77,7 @@ export function useSubscription() {
     return () => clearInterval(interval);
   }, [checkSubscription]);
 
-  const startCheckout = async (priceId: string) => {
-    // Derive plan tier from price ID
+  const startCheckout = useCallback(async (priceId: string) => {
     const tierMap: Record<string, string> = {
       price_1TAEtmCXvW6EawHa4ABtDwYk: "founders",
       price_1TAH44CXvW6EawHamaG7QXUW: "pro",
@@ -94,7 +93,7 @@ export function useSubscription() {
     });
     if (error) throw error;
     if (data?.url) window.open(data.url, "_blank");
-  };
+  }, [orgId]);
 
   const openPortal = async () => {
     const { data, error } = await supabase.functions.invoke("customer-portal");

@@ -340,9 +340,12 @@ export default function SettingsPage() {
     }
   }, [activeSection, refreshOrg]);
 
-  // Auto-trigger checkout for pending plan from signup flow
+  // Auto-trigger checkout for pending plan from signup flow.
+  // Guard on currentOrg so we never call startCheckout while orgId is still null
+  // (OrgContext may finish loading after the subscription check completes).
   useEffect(() => {
     if (subLoading) return;
+    if (!currentOrg) return;
     const pending = localStorage.getItem("vf_pending_plan");
     if (!pending || subscribed) return;
     localStorage.removeItem("vf_pending_plan");
@@ -353,7 +356,7 @@ export default function SettingsPage() {
     };
     const priceId = planPriceMap[pending];
     if (priceId) startCheckout(priceId);
-  }, [subLoading, subscribed, startCheckout]);
+  }, [subLoading, subscribed, startCheckout, currentOrg]);
 
   const [paymentSettingsLoaded, setPaymentSettingsLoaded] = useState(false);
 

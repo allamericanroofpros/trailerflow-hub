@@ -15,9 +15,16 @@ Deno.serve(async (req) => {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
     if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
+    // Auth client (anon key) — only for verifying the user JWT
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? ""
+    );
+    // Admin client — for privileged lookups (org membership)
+    const supabaseAdmin = createClient(
+      Deno.env.get("SUPABASE_URL") ?? "",
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
+      { auth: { persistSession: false } }
     );
 
     const authHeader = req.headers.get("Authorization")!;
@@ -29,9 +36,22 @@ Deno.serve(async (req) => {
     const { price_id, organization_id, plan_tier } = await req.json();
     if (!price_id) throw new Error("price_id is required");
 
+    // Resolve org_id — prefer what the client sent, fall back to DB lookup so
+    // the webhook always has a valid org to update even if the client raced.
+    let orgId: string = organization_id || "";
+    if (!orgId) {
+      const { data: membership } = await supabaseAdmin
+        .from("organization_members")
+        .select("org_id")
+        .eq("user_id", user.id)
+        .limit(1)
+        .single();
+      orgId = membership?.org_id ?? "";
+    }
+
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Check for existing customer
+    // Check for existing Stripe customer
     const customers = await stripe.customers.list({ email: user.email, limit: 1 });
     let customerId: string | undefined;
     if (customers.data.length > 0) {
@@ -51,7 +71,7 @@ Deno.serve(async (req) => {
       success_url: `${origin}/settings?subscription=success`,
       cancel_url: `${origin}/settings?subscription=cancelled`,
       metadata: {
-        organization_id: organization_id || "",
+        organization_id: orgId,
         plan_tier: plan_tier || "",
         user_id: user.id,
       },
