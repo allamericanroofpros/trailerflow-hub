@@ -256,7 +256,7 @@ function derivePlanFromPrice(priceId: string | null): string {
   // Maps Stripe price IDs to plan names — keep in sync with src/config/tiers.ts
   const map: Record<string, string> = {
     // Monthly
-    price_1TAH5CCXvW6EawHaUJyQHJIu: "founders",
+    price_1TAEtmCXvW6EawHa4ABtDwYk: "founders",
     price_1TAEtmCXvW6EawHaqDM6Na37: "pro",
     price_1TAEtmCXvW6EawHaPozbgWQC: "enterprise",
     // Annual

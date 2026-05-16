@@ -46,7 +46,7 @@ export const FOUNDERS_TIER = {
   price: 29,
   annualPrice: 290, // 10 months
   product_id: "prod_U8YBZTWW1GV2Vi",
-  price_id: "price_1TAH5CCXvW6EawHaUJyQHJIu",
+  price_id: "price_1TAEtmCXvW6EawHa4ABtDwYk",
   features: [
     "Unlimited trailers & staff",
     "Full analytics & reports",
