@@ -217,7 +217,7 @@ function BillingSection({ subLoading, subscribed, tier, subscriptionEnd, cancelA
               {isCurrent || isFounder ? (
                 <Button variant="outline" size="sm" className="w-full" disabled>{isFounder ? "Founders Plan Active" : "Current Plan"}</Button>
               ) : (
-                <Button size="sm" className="w-full" variant={key === "pro" ? "default" : "outline"} onClick={async () => { try { await startCheckout(t.price_id); } catch (e: any) { toast.error(e.message || "Checkout failed"); } }}>
+                <Button size="sm" className="w-full" variant={key === "pro" ? "default" : "outline"} onClick={async () => { try { await startCheckout(billingInterval === "annual" ? t.annual_price_id : t.price_id); } catch (e: any) { toast.error(e.message || "Checkout failed"); } }}>
                   {subscribed ? `Switch to ${t.name}` : `Get ${t.name}`}
                 </Button>
               )}
@@ -347,8 +347,8 @@ export default function SettingsPage() {
     if (!pending || subscribed) return;
     localStorage.removeItem("vf_pending_plan");
     const planPriceMap: Record<string, string> = {
-      founders: "price_1TAH5CCXvW6EawHaUJyQHJIu",
-      pro: "price_1TAH44CXvW6EawHamaG7QXUW",
+      founders: "price_1TAEtmCXvW6EawHa4ABtDwYk",
+      pro: "price_1TAEtmCXvW6EawHaqDM6Na37",
       enterprise: "price_1TAEtmCXvW6EawHaPozbgWQC",
     };
     const priceId = planPriceMap[pending];
