@@ -31,23 +31,11 @@ export default function PublicOrder() {
   useEffect(() => {
     (async () => {
       try {
-        const { data: res, error } = await supabase.functions.invoke("public-trailer-menu", {
-          body: null,
-          method: "GET",
-          headers: {},
-        } as any);
-        // fallback to fetch URL with query
-        if (error || !res) {
-          const url = `https://vtobvrsbmymcdfwzcigo.supabase.co/functions/v1/public-trailer-menu?slug=${encodeURIComponent(slug)}`;
-          const r = await fetch(url);
-          setData(await r.json());
-        } else {
-          setData(res);
-        }
-      } catch {
         const url = `https://vtobvrsbmymcdfwzcigo.supabase.co/functions/v1/public-trailer-menu?slug=${encodeURIComponent(slug)}`;
         const r = await fetch(url);
         setData(await r.json());
+      } catch (e: any) {
+        setData({ error: e.message });
       }
       setLoading(false);
     })();
