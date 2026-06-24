@@ -33,6 +33,9 @@ import ReceiptPage from "./pages/Receipt";
 import PublicBooking from "./pages/PublicBooking";
 import FleetOverview from "./pages/FleetOverview";
 import OrdersQueue from "./pages/OrdersQueue";
+import OnlineOrdering from "./pages/OnlineOrdering";
+import PublicOrder from "./pages/PublicOrder";
+import PublicOrderSuccess from "./pages/PublicOrderSuccess";
 import TimeClockPage from "./pages/TimeClockPage";
 import Terms from "./pages/Terms";
 import Privacy from "./pages/Privacy";
@@ -79,6 +82,8 @@ const App = () => (
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/receipt/:orderId" element={<ReceiptPage />} />
               <Route path="/book" element={<PublicBooking />} />
+              <Route path="/order/:slug" element={<PublicOrder />} />
+              <Route path="/order/:slug/success" element={<PublicOrderSuccess />} />
               <Route path="/terms" element={<Terms />} />
               <Route path="/privacy" element={<Privacy />} />
               <Route path="/accept-invite" element={<AcceptInvite />} />
@@ -106,6 +111,7 @@ const App = () => (
               <Route path="/maintenance" element={<ProtectedRoute><Maintenance /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
               <Route path="/orders-queue" element={<ProtectedRoute><OrdersQueue /></ProtectedRoute>} />
+              <Route path="/online-ordering" element={<ProtectedRoute><OnlineOrdering /></ProtectedRoute>} />
               <Route path="/time-clock" element={<ProtectedRoute><TimeClockPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>

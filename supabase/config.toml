@@ -63,3 +63,12 @@ verify_jwt = false
 
 [functions.stripe-create-payment-intent]
 verify_jwt = false
+
+[functions.public-trailer-menu]
+verify_jwt = false
+
+[functions.create-online-order-checkout]
+verify_jwt = false
+
+[functions.confirm-online-order]
+verify_jwt = false

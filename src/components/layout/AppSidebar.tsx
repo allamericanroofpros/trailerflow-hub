@@ -19,6 +19,7 @@ import {
   Briefcase,
   Clock,
   Compass,
+  Smartphone,
 } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState } from "react";
@@ -55,6 +56,7 @@ const sidebarEntries: SidebarEntry[] = [
   { title: "Team", url: "/staff", icon: Users, viewKey: "staff" },
   { title: "Bookings", url: "/bookings", icon: ClipboardList, viewKey: "bookings" },
   { title: "Trailers", url: "/trailers", icon: Truck, viewKey: "trailers" },
+  { title: "Online Ordering", url: "/online-ordering", icon: Smartphone, viewKey: "online_ordering" },
   {
     title: "Management",
     icon: Briefcase,
