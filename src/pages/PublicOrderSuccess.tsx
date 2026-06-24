@@ -14,10 +14,12 @@ export default function PublicOrderSuccess() {
   useEffect(() => {
     if (!sessionId) return setStatus("error");
     let cancelled = false;
+    const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+    const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
     const poll = async () => {
       try {
-        const url = `https://vtobvrsbmymcdfwzcigo.supabase.co/functions/v1/confirm-online-order?session_id=${encodeURIComponent(sessionId)}`;
-        const r = await fetch(url);
+        const url = `https://${projectId}.supabase.co/functions/v1/confirm-online-order?session_id=${encodeURIComponent(sessionId)}`;
+        const r = await fetch(url, { headers: { apikey: key, Authorization: `Bearer ${key}` } });
         const data = await r.json();
         if (cancelled) return;
         if (data.paid) {

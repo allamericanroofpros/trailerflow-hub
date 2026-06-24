@@ -31,8 +31,12 @@ export default function PublicOrder() {
   useEffect(() => {
     (async () => {
       try {
-        const url = `https://vtobvrsbmymcdfwzcigo.supabase.co/functions/v1/public-trailer-menu?slug=${encodeURIComponent(slug)}`;
-        const r = await fetch(url);
+        const projectId = import.meta.env.VITE_SUPABASE_PROJECT_ID;
+        const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+        const url = `https://${projectId}.supabase.co/functions/v1/public-trailer-menu?slug=${encodeURIComponent(slug)}`;
+        const r = await fetch(url, {
+          headers: { apikey: key, Authorization: `Bearer ${key}` },
+        });
         setData(await r.json());
       } catch (e: any) {
         setData({ error: e.message });
