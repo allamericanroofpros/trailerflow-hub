@@ -870,6 +870,7 @@ export type Database = {
       }
       orders: {
         Row: {
+          booking_id: string | null
           created_at: string
           created_by: string | null
           customer_email: string | null
@@ -882,6 +883,7 @@ export type Database = {
           org_id: string | null
           payment_method: Database["public"]["Enums"]["payment_method"] | null
           payment_received: boolean
+          pickup_at: string | null
           pickup_location: string | null
           source: string | null
           status: Database["public"]["Enums"]["order_status"]
@@ -898,6 +900,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          booking_id?: string | null
           created_at?: string
           created_by?: string | null
           customer_email?: string | null
@@ -910,6 +913,7 @@ export type Database = {
           org_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           payment_received?: boolean
+          pickup_at?: string | null
           pickup_location?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -926,6 +930,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          booking_id?: string | null
           created_at?: string
           created_by?: string | null
           customer_email?: string | null
@@ -938,6 +943,7 @@ export type Database = {
           org_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           payment_received?: boolean
+          pickup_at?: string | null
           pickup_location?: string | null
           source?: string | null
           status?: Database["public"]["Enums"]["order_status"]
@@ -954,6 +960,13 @@ export type Database = {
           updated_at?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "orders_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "orders_event_id_fkey"
             columns: ["event_id"]
@@ -1617,66 +1630,6 @@ export type Database = {
           },
         ]
       }
-      trailer_daily_setup: {
-        Row: {
-          available_menu_item_ids: string[]
-          closes_at: string | null
-          created_at: string
-          id: string
-          location: string | null
-          note: string | null
-          opens_at: string | null
-          ordering_enabled: boolean
-          org_id: string
-          setup_date: string
-          trailer_id: string
-          updated_at: string
-        }
-        Insert: {
-          available_menu_item_ids?: string[]
-          closes_at?: string | null
-          created_at?: string
-          id?: string
-          location?: string | null
-          note?: string | null
-          opens_at?: string | null
-          ordering_enabled?: boolean
-          org_id: string
-          setup_date?: string
-          trailer_id: string
-          updated_at?: string
-        }
-        Update: {
-          available_menu_item_ids?: string[]
-          closes_at?: string | null
-          created_at?: string
-          id?: string
-          location?: string | null
-          note?: string | null
-          opens_at?: string | null
-          ordering_enabled?: boolean
-          org_id?: string
-          setup_date?: string
-          trailer_id?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "trailer_daily_setup_org_id_fkey"
-            columns: ["org_id"]
-            isOneToOne: false
-            referencedRelation: "organizations"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "trailer_daily_setup_trailer_id_fkey"
-            columns: ["trailer_id"]
-            isOneToOne: false
-            referencedRelation: "trailers"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       trailers: {
         Row: {
           avg_customers_per_hour: number | null
@@ -1691,6 +1644,7 @@ export type Database = {
           menu_items: Json | null
           name: string
           online_ordering_enabled: boolean
+          online_ordering_force_closed: boolean
           org_id: string | null
           owner_id: string
           setup_cost_per_event: number | null
@@ -1717,6 +1671,7 @@ export type Database = {
           menu_items?: Json | null
           name: string
           online_ordering_enabled?: boolean
+          online_ordering_force_closed?: boolean
           org_id?: string | null
           owner_id: string
           setup_cost_per_event?: number | null
@@ -1743,6 +1698,7 @@ export type Database = {
           menu_items?: Json | null
           name?: string
           online_ordering_enabled?: boolean
+          online_ordering_force_closed?: boolean
           org_id?: string | null
           owner_id?: string
           setup_cost_per_event?: number | null
