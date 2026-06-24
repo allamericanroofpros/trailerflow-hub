@@ -872,6 +872,9 @@ export type Database = {
         Row: {
           created_at: string
           created_by: string | null
+          customer_email: string | null
+          customer_name: string | null
+          customer_phone: string | null
           event_id: string | null
           id: string
           notes: string | null
@@ -879,7 +882,10 @@ export type Database = {
           org_id: string | null
           payment_method: Database["public"]["Enums"]["payment_method"] | null
           payment_received: boolean
+          pickup_location: string | null
+          source: string | null
           status: Database["public"]["Enums"]["order_status"]
+          stripe_session_id: string | null
           subtotal: number
           surcharge_amount: number | null
           surcharge_label: string | null
@@ -894,6 +900,9 @@ export type Database = {
         Insert: {
           created_at?: string
           created_by?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           event_id?: string | null
           id?: string
           notes?: string | null
@@ -901,7 +910,10 @@ export type Database = {
           org_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           payment_received?: boolean
+          pickup_location?: string | null
+          source?: string | null
           status?: Database["public"]["Enums"]["order_status"]
+          stripe_session_id?: string | null
           subtotal?: number
           surcharge_amount?: number | null
           surcharge_label?: string | null
@@ -916,6 +928,9 @@ export type Database = {
         Update: {
           created_at?: string
           created_by?: string | null
+          customer_email?: string | null
+          customer_name?: string | null
+          customer_phone?: string | null
           event_id?: string | null
           id?: string
           notes?: string | null
@@ -923,7 +938,10 @@ export type Database = {
           org_id?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"] | null
           payment_received?: boolean
+          pickup_location?: string | null
+          source?: string | null
           status?: Database["public"]["Enums"]["order_status"]
+          stripe_session_id?: string | null
           subtotal?: number
           surcharge_amount?: number | null
           surcharge_label?: string | null
@@ -1599,6 +1617,66 @@ export type Database = {
           },
         ]
       }
+      trailer_daily_setup: {
+        Row: {
+          available_menu_item_ids: string[]
+          closes_at: string | null
+          created_at: string
+          id: string
+          location: string | null
+          note: string | null
+          opens_at: string | null
+          ordering_enabled: boolean
+          org_id: string
+          setup_date: string
+          trailer_id: string
+          updated_at: string
+        }
+        Insert: {
+          available_menu_item_ids?: string[]
+          closes_at?: string | null
+          created_at?: string
+          id?: string
+          location?: string | null
+          note?: string | null
+          opens_at?: string | null
+          ordering_enabled?: boolean
+          org_id: string
+          setup_date?: string
+          trailer_id: string
+          updated_at?: string
+        }
+        Update: {
+          available_menu_item_ids?: string[]
+          closes_at?: string | null
+          created_at?: string
+          id?: string
+          location?: string | null
+          note?: string | null
+          opens_at?: string | null
+          ordering_enabled?: boolean
+          org_id?: string
+          setup_date?: string
+          trailer_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "trailer_daily_setup_org_id_fkey"
+            columns: ["org_id"]
+            isOneToOne: false
+            referencedRelation: "organizations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "trailer_daily_setup_trailer_id_fkey"
+            columns: ["trailer_id"]
+            isOneToOne: false
+            referencedRelation: "trailers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       trailers: {
         Row: {
           avg_customers_per_hour: number | null
@@ -1612,10 +1690,12 @@ export type Database = {
           image_url: string | null
           menu_items: Json | null
           name: string
+          online_ordering_enabled: boolean
           org_id: string | null
           owner_id: string
           setup_cost_per_event: number | null
           setup_teardown_hours: number | null
+          slug: string | null
           specialties: string | null
           staff_hourly_rate: number | null
           staff_required: number | null
@@ -1636,10 +1716,12 @@ export type Database = {
           image_url?: string | null
           menu_items?: Json | null
           name: string
+          online_ordering_enabled?: boolean
           org_id?: string | null
           owner_id: string
           setup_cost_per_event?: number | null
           setup_teardown_hours?: number | null
+          slug?: string | null
           specialties?: string | null
           staff_hourly_rate?: number | null
           staff_required?: number | null
@@ -1660,10 +1742,12 @@ export type Database = {
           image_url?: string | null
           menu_items?: Json | null
           name?: string
+          online_ordering_enabled?: boolean
           org_id?: string | null
           owner_id?: string
           setup_cost_per_event?: number | null
           setup_teardown_hours?: number | null
+          slug?: string | null
           specialties?: string | null
           staff_hourly_rate?: number | null
           staff_required?: number | null
