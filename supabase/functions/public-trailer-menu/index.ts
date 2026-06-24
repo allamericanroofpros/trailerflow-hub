@@ -3,14 +3,11 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.98.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
-  }
+  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
     const url = new URL(req.url);
@@ -25,10 +22,9 @@ serve(async (req) => {
 
     const { data: trailer, error: tErr } = await supabase
       .from("trailers")
-      .select("id, name, description, image_url, slug, online_ordering_enabled, org_id")
+      .select("id, name, description, image_url, slug, online_ordering_enabled, online_ordering_force_closed, org_id")
       .eq("slug", slug)
       .maybeSingle();
-
     if (tErr) throw tErr;
     if (!trailer) {
       return new Response(JSON.stringify({ error: "Trailer not found" }), {
@@ -39,26 +35,32 @@ serve(async (req) => {
 
     const today = new Date().toISOString().slice(0, 10);
 
-    const { data: setup } = await supabase
-      .from("trailer_daily_setup")
-      .select("location, ordering_enabled, note, available_menu_item_ids, opens_at, closes_at")
+    // Today's booking for this trailer (schedule-driven location/window)
+    const { data: bookings } = await supabase
+      .from("bookings")
+      .select("id, event_name, location, start_time, end_time, status")
       .eq("trailer_id", trailer.id)
-      .eq("setup_date", today)
-      .maybeSingle();
+      .eq("event_date", today)
+      .in("status", ["confirmed", "pending"])
+      .order("start_time", { ascending: true });
 
+    const todaysBooking = bookings?.[0] ?? null;
+
+    const hasSchedule = !!todaysBooking && !!todaysBooking.location;
     const acceptingOrders =
-      !!trailer.online_ordering_enabled && !!setup?.ordering_enabled;
+      !!trailer.online_ordering_enabled &&
+      !trailer.online_ordering_force_closed &&
+      hasSchedule;
 
-    let menuItems: any[] = [];
-    if (acceptingOrders && setup?.available_menu_item_ids?.length) {
-      const { data: items } = await supabase
-        .from("menu_items")
-        .select("id, name, description, price, image_url, category, modifiers")
-        .in("id", setup.available_menu_item_ids)
-        .eq("is_active", true)
-        .order("sort_order");
-      menuItems = items ?? [];
-    }
+    // Menu items: all active for this trailer + org-wide (trailer_id IS NULL) items
+    const { data: items } = await supabase
+      .from("menu_items")
+      .select("id, name, description, price, image_url, category, modifiers")
+      .eq("org_id", trailer.org_id)
+      .or(`trailer_id.eq.${trailer.id},trailer_id.is.null`)
+      .eq("is_active", true)
+      .order("category")
+      .order("sort_order");
 
     return new Response(
       JSON.stringify({
@@ -70,11 +72,10 @@ serve(async (req) => {
           slug: trailer.slug,
         },
         acceptingOrders,
-        location: setup?.location ?? null,
-        note: setup?.note ?? null,
-        opens_at: setup?.opens_at ?? null,
-        closes_at: setup?.closes_at ?? null,
-        menuItems,
+        forceClosed: !!trailer.online_ordering_force_closed,
+        enabled: !!trailer.online_ordering_enabled,
+        booking: todaysBooking,
+        menuItems: acceptingOrders ? (items ?? []) : [],
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
